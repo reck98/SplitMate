@@ -29,24 +29,30 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
     </header>
 
-    <div class="mb-6 glass rounded-glass-xl p-1 flex animate-fade-in-up" role="tablist">
-      <button data-tab="expenses" class="tab-btn flex-1 rounded-glass-lg px-4 py-2.5 text-sm font-medium transition-all duration-200" role="tab" aria-selected="true">
-        <svg class="h-4 w-4 inline-block mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+    <div class="mb-6 glass rounded-glass-xl p-1 grid grid-cols-4 gap-1 animate-fade-in-up" role="tablist">
+      <button data-tab="expenses" class="tab-btn flex items-center justify-center rounded-glass-lg px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-medium transition-all duration-200" role="tab" aria-selected="true">
+        <svg class="h-4 w-4 shrink-0 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        Expenses
+        <span class="truncate">Expenses</span>
       </button>
-      <button data-tab="balances" class="tab-btn flex-1 rounded-glass-lg px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200" role="tab" aria-selected="false">
-        <svg class="h-4 w-4 inline-block mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <button data-tab="balances" class="tab-btn flex items-center justify-center rounded-glass-lg px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200" role="tab" aria-selected="false">
+        <svg class="h-4 w-4 shrink-0 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5m.75-9l3-3 2.148 2.148A12.061 12.061 0 0116.5 7.605" />
         </svg>
-        Balances
+        <span class="truncate">Balances</span>
       </button>
-      <button data-tab="members" class="tab-btn flex-1 rounded-glass-lg px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200" role="tab" aria-selected="false">
-        <svg class="h-4 w-4 inline-block mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <button data-tab="settlements" class="tab-btn flex items-center justify-center rounded-glass-lg px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200" role="tab" aria-selected="false">
+        <svg class="h-4 w-4 shrink-0 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="truncate">Settlements</span>
+      </button>
+      <button data-tab="members" class="tab-btn flex items-center justify-center rounded-glass-lg px-2 py-2 sm:px-3 sm:py-2.5 text-xs sm:text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200" role="tab" aria-selected="false">
+        <svg class="h-4 w-4 shrink-0 mr-1 sm:mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
         </svg>
-        Members
+        <span class="truncate">Members</span>
       </button>
     </div>
 
@@ -67,23 +73,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         </a>
       </div>
       <div id="expenses-list" class="space-y-3"></div>
-
-      <div class="mt-8">
-        <div class="flex items-center justify-between gap-2 mb-4">
-          <div class="flex items-center gap-2">
-            <svg class="h-5 w-5 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Settlements</h3>
-          </div>
-        </div>
-        <div id="settlements-suggestions" class="space-y-2 mb-4"></div>
-        <div id="settlements-history" class="space-y-2"></div>
-      </div>
     </div>
 
     <div id="balances-tab" class="tab-content hidden">
       <div id="balances-list" class="space-y-3"></div>
+    </div>
+
+    <div id="settlements-tab" class="tab-content hidden">
+      <div id="settlements-suggestions" class="space-y-2 mb-4"></div>
+      <div id="settlements-history" class="space-y-2"></div>
     </div>
 
     <div id="members-tab" class="tab-content hidden">
@@ -419,40 +417,42 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               const showSettleCashBtn = isDebtor || isCreditor;
 
               return `
-            <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
-              <div class="text-sm text-[var(--color-text-secondary)]">
+            <div class="glass rounded-glass-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 animate-fade-in-up" style="animation-delay: ${i * 40}ms">
+              <div class="text-sm text-[var(--color-text-secondary)] flex-1 min-w-0">
                 ${label}
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <span class="font-semibold text-[var(--color-text-primary)] mr-1">${formatCurrency(d.amount)}</span>
-                ${showPayBtn
-                  ? `<button
-                      data-payer="${d.from.user_id}"
-                      data-receiver="${d.to.user_id}"
-                      data-amount="${d.amount}"
-                      class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200"
-                    >
-                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
-                      </svg>
-                      Pay via UPI
-                    </button>`
-                  : ""
-                }
-                ${showSettleCashBtn
-                  ? `<button
-                      data-payer="${d.from.user_id}"
-                      data-receiver="${d.to.user_id}"
-                      data-amount="${d.amount}"
-                      class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
-                    >
-                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      Settle Cash
-                    </button>`
-                  : ""
-                }
+              <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
+                <span class="font-semibold text-[var(--color-text-primary)] mr-1 text-base sm:text-sm">${formatCurrency(d.amount)}</span>
+                <div class="flex items-center gap-2">
+                  ${showPayBtn
+                    ? `<button
+                        data-payer="${d.from.user_id}"
+                        data-receiver="${d.to.user_id}"
+                        data-amount="${d.amount}"
+                        class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200"
+                      >
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                        </svg>
+                        Pay via UPI
+                      </button>`
+                    : ""
+                  }
+                  ${showSettleCashBtn
+                    ? `<button
+                        data-payer="${d.from.user_id}"
+                        data-receiver="${d.to.user_id}"
+                        data-amount="${d.amount}"
+                        class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
+                      >
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Settle Cash
+                      </button>`
+                    : ""
+                  }
+                </div>
               </div>
             </div>
           `;
