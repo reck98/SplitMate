@@ -1,0 +1,22 @@
+{
+  "name": "splitmate-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "lint": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.7.0",
+    "@astrojs/node": "^8.3.0",
+    "@astrojs/tailwind": "^5.1.0",
+    "astro": "^4.9.0",
+    "firebase": "^12.16.0",
+    "nanostores": "^0.10.3",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  }
+}

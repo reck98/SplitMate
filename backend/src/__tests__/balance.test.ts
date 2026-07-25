@@ -1,0 +1,117 @@
+import { describe, it, expect } from "vitest";
+import { simplifyDebts } from "../services/settlement.js";
+import { BalanceInfo } from "../types/index.js";
+
+const makeBalance = (
+  user_id: string,
+  name: string,
+  net_balance: number
+): BalanceInfo => ({
+  user_id,
+  name,
+  net_balance,
+  paid: 0,
+  share: 0,
+  received: 0,
+  paid_out: 0,
+});
+
+describe("simplifyDebts", () => {
+  it("returns empty array when all balances are zero", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 0),
+      makeBalance("2", "Bob", 0),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result).toEqual([]);
+  });
+
+  it("simplifies a single debt between two people", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 100),
+      makeBalance("2", "Bob", -100),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual({
+      from: { user_id: "2", name: "Bob" },
+      to: { user_id: "1", name: "Alice" },
+      amount: 100,
+    });
+  });
+
+  it("handles multiple creditors and debtors", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 150),
+      makeBalance("2", "Bob", 300),
+      makeBalance("3", "Charlie", -200),
+      makeBalance("4", "Diana", -250),
+    ];
+
+    const result = simplifyDebts(balances);
+
+    const totalOwed = result.reduce((sum, d) => sum + d.amount, 0);
+    expect(totalOwed).toBeCloseTo(450, 1);
+
+    result.forEach((debt) => {
+      expect(debt.from.user_id).not.toBe(debt.to.user_id);
+      expect(debt.amount).toBeGreaterThan(0);
+    });
+  });
+
+  it("produces the minimum number of transactions for a simple case", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 200),
+      makeBalance("2", "Bob", -100),
+      makeBalance("3", "Charlie", -100),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result.length).toBeLessThanOrEqual(2);
+  });
+
+  it("handles equal total credits and debts", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 150),
+      makeBalance("2", "Bob", 50),
+      makeBalance("3", "Charlie", -100),
+      makeBalance("4", "Diana", -100),
+    ];
+
+    const result = simplifyDebts(balances);
+
+    const totalCreditor = result.reduce((sum, d) => sum + d.amount, 0);
+    expect(totalCreditor).toBeCloseTo(200, 1);
+  });
+
+  it("handles single person (no debts)", () => {
+    const balances: BalanceInfo[] = [makeBalance("1", "Alice", 0)];
+    const result = simplifyDebts(balances);
+    expect(result).toEqual([]);
+  });
+
+  it("handles everyone being creditors (unlikely but valid)", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 100),
+      makeBalance("2", "Bob", 200),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result).toEqual([]);
+  });
+
+  it("respects rounding to avoid tiny floating point debts", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("1", "Alice", 0.005),
+      makeBalance("2", "Bob", -0.005),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result.length).toBeLessThanOrEqual(1);
+    if (result.length === 1) {
+      expect(result[0].amount).toBe(0.01);
+    }
+  });
+});

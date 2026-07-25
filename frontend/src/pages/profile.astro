@@ -1,0 +1,79 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6">
+      <a href="/dashboard" class="btn-ghost -ml-2 mb-4">
+        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
+    </header>
+
+    <div id="profile-content" class="space-y-4">
+      <div class="card text-center py-6 text-gray-500">Loading...</div>
+    </div>
+  </main>
+
+  <script>
+    import { api } from "../lib/api";
+    import { auth } from "../lib/firebase";
+    import { $user, setUser } from "../stores/auth";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const user = await api.auth.me();
+        setUser(user);
+
+        const container = document.getElementById("profile-content")!;
+        container.innerHTML = `
+          <div class="card text-center">
+            <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-700">
+              ${user.name.charAt(0).toUpperCase()}
+            </div>
+            <h2 class="text-xl font-bold text-gray-900">${user.name}</h2>
+            <p class="text-sm text-gray-500">${user.email}</p>
+          </div>
+
+          <div class="card">
+            <label class="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="upi_id" value="${user.upi_id || ""}" class="flex-1" placeholder="Set your UPI ID" />
+              <button id="save-upi-btn" class="btn-primary">Save</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="font-medium text-gray-900 mb-2">Account</h3>
+            <p class="text-sm text-gray-500">Connected with Google</p>
+          </div>
+
+          <button id="logout-btn" class="btn-secondary w-full text-red-600 border-red-200 hover:bg-red-50">
+            Sign Out
+          </button>
+        `;
+
+        document.getElementById("save-upi-btn")?.addEventListener("click", async () => {
+          const upiId = (document.getElementById("upi_id") as HTMLInputElement).value;
+          try {
+            await api.auth.updateProfile(upiId);
+            alert("UPI ID updated.");
+          } catch (error: any) {
+            alert(error.message);
+          }
+        });
+
+        document.getElementById("logout-btn")?.addEventListener("click", async () => {
+          await auth.signOut();
+          window.location.href = "/";
+        });
+      } catch {
+        window.location.href = "/";
+      }
+    });
+  </script>
+</BaseLayout>

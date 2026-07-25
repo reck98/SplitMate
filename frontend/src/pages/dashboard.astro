@@ -1,0 +1,90 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6 flex items-center justify-between">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">SplitMate</h1>
+        <p id="user-name" class="text-sm text-gray-600">Loading...</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/profile" class="btn-ghost p-2">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </a>
+      </div>
+    </header>
+
+    <div class="mb-6 flex gap-3">
+      <a href="/create-group" class="btn-primary flex-1">Create Group</a>
+      <a href="/join-group" class="btn-secondary flex-1">Join Group</a>
+    </div>
+
+    <section>
+      <h2 class="mb-3 text-lg font-semibold text-gray-900">Your Groups</h2>
+      <div id="groups-list" class="space-y-3">
+        <div class="card text-center text-gray-500 py-8">
+          Loading your groups...
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    import { api } from "../lib/api";
+    import { $user, setUser } from "../stores/auth";
+    import { $groups, setGroups } from "../stores/groups";
+
+    async function loadDashboard() {
+      try {
+        const user = await api.auth.me();
+        setUser(user);
+        document.getElementById("user-name")!.textContent = `Welcome, ${user.name}`;
+
+        const groups = await api.groups.list();
+        setGroups(groups);
+
+        const container = document.getElementById("groups-list")!;
+
+        if (groups.length === 0) {
+          container.innerHTML = `
+            <div class="card text-center py-8">
+              <p class="text-gray-500">No groups yet</p>
+              <p class="mt-1 text-sm text-gray-400">Create a group or join one with an invite code</p>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = groups
+          .map(
+            (g) => `
+            <a href="/groups/${g.id}" class="card flex items-center justify-between hover:border-primary-300 transition-colors">
+              <div>
+                <h3 class="font-medium text-gray-900">${g.name}</h3>
+                <p class="text-sm text-gray-500">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
+              </div>
+              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          `
+          )
+          .join("");
+      } catch (error) {
+        document.getElementById("user-name")!.textContent = "Failed to load";
+        document.getElementById("groups-list")!.innerHTML = `
+          <div class="card text-center py-8">
+            <p class="text-red-500">Failed to load groups</p>
+            <button onclick="location.reload()" class="btn-secondary mt-3">Retry</button>
+          </div>
+        `;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadDashboard);
+  </script>
+</BaseLayout>

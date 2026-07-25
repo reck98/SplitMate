@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*
+*.turso*
+.DS_Store
+*.log
+.vercel/
+frontend/.astro/
+.vscode/
+*.tsbuildinfo

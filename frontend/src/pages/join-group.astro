@@ -1,0 +1,93 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6">
+      <a href="/dashboard" class="btn-ghost -ml-2 mb-4">
+        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Join Group</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        Enter the invite code shared by a friend.
+      </p>
+    </header>
+
+    <form id="join-group-form" class="space-y-4">
+      <div>
+        <label for="invite_code" class="block text-sm font-medium text-gray-700">
+          Invite Code
+        </label>
+        <input
+          type="text"
+          id="invite_code"
+          name="invite_code"
+          placeholder="e.g., A82DKP"
+          required
+          class="mt-1 block w-full uppercase"
+          maxlength="6"
+          autocomplete="off"
+          style="letter-spacing: 0.25em; font-family: monospace;"
+        />
+        <p class="mt-1 text-xs text-gray-500">
+          Ask the group creator for the 6-character invite code.
+        </p>
+      </div>
+
+      <button type="submit" class="btn-primary w-full">
+        Join Group
+      </button>
+    </form>
+
+    <div id="invite-link-section" class="mt-6 hidden">
+      <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="bg-gray-50 px-2 text-gray-500">or via invite link</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    import { api } from "../lib/api";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeParam = urlParams.get("code");
+
+    if (codeParam) {
+      document.getElementById("invite_code")?.setAttribute("value", codeParam);
+    }
+
+    document
+      .getElementById("join-group-form")
+      ?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById("invite_code") as HTMLInputElement;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Joining...";
+        }
+
+        try {
+          await api.groups.join(input.value.toUpperCase());
+          window.location.href = "/dashboard";
+        } catch (error: any) {
+          alert(error.message || "Failed to join group.");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Join Group";
+          }
+        }
+      });
+  </script>
+</BaseLayout>

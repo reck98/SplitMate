@@ -1,0 +1,69 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="flex min-h-screen flex-col items-center justify-center px-4">
+    <div class="w-full max-w-sm">
+      <div class="mb-8 text-center">
+        <h1 class="text-2xl font-bold text-gray-900">Complete Your Profile</h1>
+        <p class="mt-1 text-sm text-gray-600">
+          Enter your UPI ID to start splitting expenses.
+        </p>
+      </div>
+
+      <form id="profile-form" class="space-y-4">
+        <div>
+          <label for="upi_id" class="block text-sm font-medium text-gray-700">
+            UPI ID
+          </label>
+          <input
+            type="text"
+            id="upi_id"
+            name="upi_id"
+            placeholder="e.g., name@okaxis"
+            required
+            class="mt-1 block w-full"
+            autocomplete="off"
+          />
+          <p class="mt-1 text-xs text-gray-500">
+            Your UPI ID is used to generate payment links. Only one UPI ID per account.
+          </p>
+        </div>
+
+        <button type="submit" class="btn-primary w-full">
+          Activate Profile
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    import { api } from "../lib/api";
+
+    document
+      .getElementById("profile-form")
+      ?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById("upi_id") as HTMLInputElement;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Saving...";
+        }
+
+        try {
+          await api.auth.updateProfile(input.value);
+          window.location.href = "/dashboard";
+        } catch (error: any) {
+          alert(error.message || "Failed to save profile.");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Activate Profile";
+          }
+        }
+      });
+  </script>
+</BaseLayout>

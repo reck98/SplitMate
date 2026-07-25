@@ -1,0 +1,440 @@
+---
+export const prerender = false;
+
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import type { GetStaticPaths } from "astro";
+
+export const getStaticPaths = (() => {
+  return [];
+}) satisfies GetStaticPaths;
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6">
+      <a href="/dashboard" class="btn-ghost -ml-2 mb-4">
+        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 id="group-name" class="text-2xl font-bold text-gray-900">Loading...</h1>
+          <p id="group-invite" class="text-sm text-gray-500"></p>
+        </div>
+        <div id="owner-actions" class="hidden">
+          <button id="delete-group-btn" class="btn-danger text-sm px-3 py-1.5">
+            Delete
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="mb-4 flex gap-2 border-b border-gray-200">
+      <button data-tab="expenses" class="tab-btn flex-1 pb-3 text-sm font-medium text-primary-600 border-b-2 border-primary-600">
+        Expenses
+      </button>
+      <button data-tab="balances" class="tab-btn flex-1 pb-3 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+        Balances
+      </button>
+      <button data-tab="members" class="tab-btn flex-1 pb-3 text-sm font-medium text-gray-500 border-b-2 border-transparent">
+        Members
+      </button>
+    </div>
+
+    <div id="loading-state" class="card text-center py-8 text-gray-500">
+      Loading group details...
+    </div>
+
+    <div id="expenses-tab" class="tab-content hidden">
+      <div class="mb-4">
+        <a href="/groups/__ID__/add-expense" id="add-expense-link" class="btn-primary w-full">
+          Add Expense
+        </a>
+      </div>
+      <div id="expenses-list" class="space-y-3">
+        <div class="card text-center py-6 text-gray-400">
+          No expenses yet
+        </div>
+      </div>
+
+      <div class="mt-8">
+        <h3 class="mb-3 text-lg font-semibold text-gray-900">Settlements</h3>
+        <div id="settlements-suggestions" class="space-y-2 mb-4"></div>
+        <div id="settlements-history" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <div id="balances-tab" class="tab-content hidden">
+      <div id="balances-list" class="space-y-3">
+        <div class="card text-center py-6 text-gray-400">
+          Loading balances...
+        </div>
+      </div>
+    </div>
+
+    <div id="members-tab" class="tab-content hidden">
+      <div class="mb-4">
+        <button id="leave-group-btn" class="btn-secondary w-full text-red-600 border-red-200 hover:bg-red-50">
+          Leave Group
+        </button>
+      </div>
+      <div id="members-list" class="space-y-2">
+        <div class="card text-center py-6 text-gray-400">
+          Loading members...
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    import { api } from "../../lib/api";
+    import { generateUpiLink, openUpiApp } from "../../lib/upi";
+    import { $user, setUser } from "../../stores/auth";
+    import { startPolling, stopPolling, resetPollInterval, increasePollInterval } from "../../stores/polling";
+
+    const groupId = window.location.pathname.split("/groups/")[1];
+    let currentData: any = null;
+    let currentUserId: string | null = null;
+
+    function formatCurrency(amount: number): string {
+      return `₹${Math.abs(amount).toFixed(2)}`;
+    }
+
+    function switchTab(tab: string) {
+      document.querySelectorAll(".tab-content").forEach((el) => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach((el) => {
+        el.classList.remove("text-primary-600", "border-primary-600");
+        el.classList.add("text-gray-500", "border-transparent");
+      });
+
+      document.getElementById(`${tab}-tab`)?.classList.remove("hidden");
+      document.querySelector(`[data-tab="${tab}"]`)?.classList.add("text-primary-600", "border-primary-600");
+      document.querySelector(`[data-tab="${tab}"]`)?.classList.remove("text-gray-500", "border-transparent");
+    }
+
+    function renderGroup(data: any) {
+      currentData = data;
+
+      document.getElementById("loading-state")?.classList.add("hidden");
+
+      document.getElementById("group-name")!.textContent = data.group.name;
+      document.getElementById("group-invite")!.innerHTML = `
+        Invite Code: <strong>${data.group.invite_code}</strong>
+      `;
+
+      const addExpenseLink = document.getElementById("add-expense-link") as HTMLAnchorElement;
+      if (addExpenseLink) {
+        addExpenseLink.href = `/groups/${groupId}/add-expense`;
+      }
+
+      if (data.group.owner_id === currentUserId) {
+        document.getElementById("owner-actions")?.classList.remove("hidden");
+      }
+
+      renderExpenses(data);
+      renderBalances(data);
+      renderMembers(data);
+      renderSettlements(data);
+    }
+
+    function renderExpenses(data: any) {
+      const container = document.getElementById("expenses-list")!;
+
+      if (!data.expenses || data.expenses.length === 0) {
+        container.innerHTML = `
+          <div class="card text-center py-6 text-gray-400">
+            No expenses yet
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = data.expenses
+        .map(
+          (exp: any) => `
+          <div class="card">
+            <div class="flex items-start justify-between">
+              <div>
+                <h4 class="font-medium text-gray-900">${exp.description}</h4>
+                <p class="text-sm text-gray-500">Paid by ${exp.paid_by_name}</p>
+              </div>
+              <div class="text-right">
+                <p class="font-semibold text-gray-900">${formatCurrency(exp.amount)}</p>
+              </div>
+            </div>
+            <div class="mt-2 text-xs text-gray-500">
+              ${exp.participants
+                .map(
+                  (p: any) =>
+                    `${data.members.find((m: any) => m.user_id === p.user_id)?.name || "Unknown"}: ${formatCurrency(p.share_amount)}`
+                )
+                .join(" | ")}
+            </div>
+            ${
+              exp.created_by === currentUserId
+                ? `
+              <div class="mt-2 flex gap-2">
+                <a href="/groups/${groupId}/edit-expense/${exp.id}" class="text-xs text-primary-600 hover:underline">Edit</a>
+                <button data-expense-id="${exp.id}" class="delete-expense-btn text-xs text-red-600 hover:underline">Delete</button>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        `
+        )
+        .join("");
+
+      container.querySelectorAll(".delete-expense-btn").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          if (!confirm("Delete this expense?")) return;
+          try {
+            await api.expenses.delete((btn as HTMLElement).dataset.expenseId!);
+            resetPollInterval();
+            await loadGroupData();
+          } catch (error: any) {
+            alert(error.message);
+          }
+        });
+      });
+    }
+
+    function renderBalances(data: any) {
+      const container = document.getElementById("balances-list")!;
+
+      if (!data.balances || data.balances.length === 0) {
+        container.innerHTML = `<div class="card text-center py-6 text-gray-400">No balances</div>`;
+        return;
+      }
+
+      container.innerHTML = data.balances
+        .map(
+          (b: any) => `
+          <div class="card flex items-center justify-between">
+            <span class="font-medium text-gray-900">${b.name}</span>
+            <span class="${b.net_balance >= 0 ? "text-green-600" : "text-red-600"} font-semibold">
+              ${b.net_balance >= 0 ? "+" : ""}${formatCurrency(b.net_balance)}
+            </span>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    function renderMembers(data: any) {
+      const container = document.getElementById("members-list")!;
+
+      container.innerHTML = data.members
+        .map(
+          (m: any) => `
+          <div class="card flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-sm font-medium text-primary-700">
+              ${m.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p class="font-medium text-gray-900">${m.name}</p>
+              <p class="text-xs text-gray-500">${m.email}</p>
+            </div>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    function renderSettlements(data: any) {
+      const suggestionsContainer = document.getElementById("settlements-suggestions")!;
+      const historyContainer = document.getElementById("settlements-history")!;
+
+      if (!data.simplified_debts || data.simplified_debts.length === 0) {
+        suggestionsContainer.innerHTML = `
+          <div class="card text-center py-4 text-gray-500">
+            <p>All settled up!</p>
+          </div>
+        `;
+      } else {
+        suggestionsContainer.innerHTML = `
+          <h4 class="mb-2 text-sm font-medium text-gray-700">Suggested Payments</h4>
+          ${data.simplified_debts
+            .map(
+              (d: any) => `
+            <div class="card flex items-center justify-between">
+              <div class="text-sm">
+                <span class="font-medium">${d.from.name}</span>
+                <span class="text-gray-400"> → </span>
+                <span class="font-medium">${d.to.name}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-semibold">${formatCurrency(d.amount)}</span>
+                <button
+                  data-payer="${d.from.user_id}"
+                  data-receiver="${d.to.user_id}"
+                  data-amount="${d.amount}"
+                  class="settle-upi-btn btn-primary text-xs px-3 py-1.5"
+                >
+                  Pay via UPI
+                </button>
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        `;
+
+        suggestionsContainer.querySelectorAll(".settle-upi-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const payerId = (btn as HTMLElement).dataset.payer!;
+            const receiverId = (btn as HTMLElement).dataset.receiver!;
+            const amount = parseFloat((btn as HTMLElement).dataset.amount!);
+
+            const payer = currentData.members.find((m: any) => m.user_id === payerId);
+            const receiver = currentData.members.find((m: any) => m.user_id === receiverId);
+
+            if (!receiver?.upi_id) {
+              alert(`${receiver?.name || "Receiver"} has not set a UPI ID.`);
+              return;
+            }
+
+            const upiLink = generateUpiLink({
+              payeeAddress: receiver.upi_id,
+              amount,
+            });
+
+            openUpiApp(upiLink);
+
+            setTimeout(async () => {
+              if (
+                confirm(
+                  `Did you complete the payment of ${formatCurrency(amount)} to ${receiver.name}? Mark as settled?`
+                )
+              ) {
+                try {
+                  await api.settlements.create(groupId, {
+                    payer_id: payerId,
+                    receiver_id: receiverId,
+                    amount,
+                  });
+                  resetPollInterval();
+                  await loadGroupData();
+                } catch (error: any) {
+                  alert(error.message);
+                }
+              }
+            }, 1000);
+          });
+        });
+      }
+
+      if (data.settlements && data.settlements.length > 0) {
+        historyContainer.innerHTML = `
+          <h4 class="mb-2 mt-4 text-sm font-medium text-gray-700">Settlement History</h4>
+          ${data.settlements
+            .map(
+              (s: any) => `
+            <div class="card flex items-center justify-between text-sm">
+              <span>
+                <span class="font-medium">${s.payer_name}</span>
+                <span class="text-gray-400"> paid </span>
+                <span class="font-medium">${s.receiver_name}</span>
+              </span>
+              <span class="font-semibold text-green-600">${formatCurrency(s.amount)}</span>
+            </div>
+          `
+            )
+            .join("")}
+        `;
+      } else {
+        historyContainer.innerHTML = "";
+      }
+    }
+
+    async function loadGroupData() {
+      try {
+        const data = await api.groups.get(groupId);
+        renderGroup(data);
+      } catch (error: any) {
+        document.getElementById("loading-state")!.innerHTML = `
+          <div class="text-red-500">${error.message}</div>
+          <button onclick="location.reload()" class="btn-secondary mt-3">Retry</button>
+        `;
+      }
+    }
+
+    // Polling
+    let pollTimer: ReturnType<typeof setTimeout>;
+
+    async function pollGroup() {
+      if (!document.getElementById("expenses-tab")) return;
+
+      try {
+        const data = await api.groups.get(groupId);
+        const hash = JSON.stringify(data);
+
+        if (hash === (window as any).__lastHash) {
+          increasePollInterval();
+        } else {
+          (window as any).__lastHash = hash;
+          resetPollInterval();
+          renderGroup(data);
+        }
+      } catch {}
+
+      const interval = (window as any).__pollInterval || 1000;
+      pollTimer = setTimeout(pollGroup, interval);
+    }
+
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        switchTab((btn as HTMLElement).dataset.tab!);
+        resetPollInterval();
+      });
+    });
+
+    // Delete group
+    document.getElementById("delete-group-btn")?.addEventListener("click", async () => {
+      if (!confirm("Delete this group permanently? This cannot be undone.")) return;
+      try {
+        await api.groups.delete(groupId);
+        window.location.href = "/dashboard";
+      } catch (error: any) {
+        alert(error.message);
+      }
+    });
+
+    // Leave group
+    document.getElementById("leave-group-btn")?.addEventListener("click", async () => {
+      if (!confirm("Leave this group? You can only leave if you have no outstanding balance.")) return;
+      try {
+        await api.groups.leave(groupId);
+        window.location.href = "/dashboard";
+      } catch (error: any) {
+        alert(error.message);
+      }
+    });
+
+    // Init
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const user = await api.auth.me();
+        currentUserId = user.id;
+        setUser(user);
+      } catch {
+        window.location.href = "/";
+        return;
+      }
+
+      await loadGroupData();
+      switchTab("expenses");
+
+      startPolling();
+      pollGroup();
+    });
+
+    window.addEventListener("beforeunload", () => {
+      stopPolling();
+      clearTimeout(pollTimer);
+    });
+  </script>
+</BaseLayout>

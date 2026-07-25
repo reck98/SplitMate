@@ -1,0 +1,71 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6">
+      <a href="/dashboard" class="btn-ghost -ml-2 mb-4">
+        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Create Group</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        Create a group to start sharing expenses with friends.
+      </p>
+    </header>
+
+    <form id="create-group-form" class="space-y-4">
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">
+          Group Name
+        </label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          placeholder="e.g., Trip to Goa"
+          required
+          maxlength="100"
+          class="mt-1 block w-full"
+          autocomplete="off"
+        />
+      </div>
+
+      <button type="submit" class="btn-primary w-full">
+        Create Group
+      </button>
+    </form>
+  </main>
+
+  <script>
+    import { api } from "../lib/api";
+
+    document
+      .getElementById("create-group-form")
+      ?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById("name") as HTMLInputElement;
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Creating...";
+        }
+
+        try {
+          await api.groups.create(input.value);
+          window.location.href = "/dashboard";
+        } catch (error: any) {
+          alert(error.message || "Failed to create group.");
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Create Group";
+          }
+        }
+      });
+  </script>
+</BaseLayout>

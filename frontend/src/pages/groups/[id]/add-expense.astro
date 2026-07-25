@@ -1,0 +1,219 @@
+---
+export const prerender = false;
+
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+---
+
+<BaseLayout>
+  <main class="mx-auto max-w-lg px-4 py-6">
+    <header class="mb-6">
+      <a href="/groups/__ID__" class="btn-ghost -ml-2 mb-4" id="back-link">
+        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        Back
+      </a>
+      <h1 class="text-2xl font-bold text-gray-900">Add Expense</h1>
+    </header>
+
+    <form id="expense-form" class="space-y-4">
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+        <input type="text" id="description" required class="mt-1 block w-full" placeholder="e.g., Dinner" />
+      </div>
+
+      <div>
+        <label for="amount" class="block text-sm font-medium text-gray-700">Amount (₹)</label>
+        <input type="number" id="amount" required min="1" step="0.01" class="mt-1 block w-full" placeholder="0.00" />
+      </div>
+
+      <div>
+        <label for="paid_by" class="block text-sm font-medium text-gray-700">Paid By</label>
+        <select id="paid_by" required class="mt-1 block w-full"></select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Split Type</label>
+        <div class="mt-1 flex gap-2">
+          <button type="button" id="equal-split-btn" class="btn-primary flex-1">Equal</button>
+          <button type="button" id="custom-split-btn" class="btn-secondary flex-1">Custom</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Participants</label>
+        <div id="participants-list" class="mt-2 space-y-2"></div>
+      </div>
+
+      <div id="custom-split-section" class="hidden space-y-2">
+        <label class="block text-sm font-medium text-gray-700">Custom Split Amounts</label>
+        <p id="split-total" class="text-xs text-gray-500">Total: ₹0.00</p>
+      </div>
+
+      <button type="submit" class="btn-primary w-full">Add Expense</button>
+    </form>
+  </main>
+
+  <script>
+    import { api } from "../../../lib/api";
+
+    const groupId = window.location.pathname.split("/groups/")[1]?.split("/")[0];
+    let currentSplit = "equal";
+    let members: any[] = [];
+
+    document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+
+    async function loadMembers() {
+      try {
+        const data = await api.groups.get(groupId);
+        members = data.members;
+
+        const paidBySelect = document.getElementById("paid_by") as HTMLSelectElement;
+        paidBySelect.innerHTML = members
+          .map((m) => `<option value="${m.user_id}">${m.name}</option>`)
+          .join("");
+
+        const participantsList = document.getElementById("participants-list")!;
+        participantsList.innerHTML = members
+          .map(
+            (m) => `
+            <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
+              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-gray-300 text-primary-600" />
+              <span class="text-sm text-gray-700">${m.name}</span>
+            </label>
+          `
+          )
+          .join("");
+
+        participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
+          cb.addEventListener("change", updateCustomSplitInputs);
+        });
+      } catch (error: any) {
+        alert(error.message);
+      }
+    }
+
+    function updateCustomSplitInputs() {
+      const checkboxes = document.querySelectorAll(".participant-checkbox:checked");
+      const section = document.getElementById("custom-split-section")!;
+
+      if (currentSplit === "custom") {
+        section.classList.remove("hidden");
+        const container = section.querySelector(".space-y-2") || section;
+        container.innerHTML = "";
+
+        checkboxes.forEach((cb) => {
+          const userId = (cb as HTMLInputElement).value;
+          const member = members.find((m) => m.user_id === userId);
+          const input = document.createElement("div");
+          input.className = "flex items-center gap-2";
+          input.innerHTML = `
+            <span class="w-24 text-sm text-gray-700">${member?.name || "Unknown"}</span>
+            <input type="number" step="0.01" min="0" data-user-id="${userId}" class="custom-share flex-1" placeholder="0.00" />
+          `;
+          container.appendChild(input);
+        });
+
+        container.querySelectorAll(".custom-share").forEach((input) => {
+          input.addEventListener("input", updateSplitTotal);
+        });
+      } else {
+        section.classList.add("hidden");
+      }
+    }
+
+    function updateSplitTotal() {
+      const inputs = document.querySelectorAll(".custom-share");
+      let total = 0;
+      inputs.forEach((input) => {
+        total += parseFloat((input as HTMLInputElement).value) || 0;
+      });
+      document.getElementById("split-total")!.textContent = `Total: ₹${total.toFixed(2)}`;
+    }
+
+    document.getElementById("equal-split-btn")?.addEventListener("click", () => {
+      currentSplit = "equal";
+      document.getElementById("equal-split-btn")!.className = "btn-primary flex-1";
+      document.getElementById("custom-split-btn")!.className = "btn-secondary flex-1";
+      document.getElementById("custom-split-section")!.classList.add("hidden");
+    });
+
+    document.getElementById("custom-split-btn")?.addEventListener("click", () => {
+      currentSplit = "custom";
+      document.getElementById("custom-split-btn")!.className = "btn-primary flex-1";
+      document.getElementById("equal-split-btn")!.className = "btn-secondary flex-1";
+      updateCustomSplitInputs();
+    });
+
+    document.getElementById("expense-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        (submitBtn as HTMLButtonElement).disabled = true;
+        submitBtn.textContent = "Adding...";
+      }
+
+      try {
+        const description = (document.getElementById("description") as HTMLInputElement).value;
+        const amount = parseFloat((document.getElementById("amount") as HTMLInputElement).value);
+        const paid_by = (document.getElementById("paid_by") as HTMLSelectElement).value;
+
+        const checkedBoxes = document.querySelectorAll(".participant-checkbox:checked");
+
+        if (checkedBoxes.length === 0) {
+          alert("Please select at least one participant.");
+          if (submitBtn) {
+            (submitBtn as HTMLButtonElement).disabled = false;
+            submitBtn.textContent = "Add Expense";
+          }
+          return;
+        }
+
+        let participants: any[];
+
+        if (currentSplit === "equal") {
+          participants = Array.from(checkedBoxes).map((cb) => (cb as HTMLInputElement).value);
+        } else {
+          participants = [];
+          let totalCustom = 0;
+          document.querySelectorAll(".custom-share").forEach((input) => {
+            const val = parseFloat((input as HTMLInputElement).value) || 0;
+            participants.push({
+              user_id: (input as HTMLElement).dataset.userId!,
+              share_amount: val,
+            });
+            totalCustom += val;
+          });
+
+          if (Math.abs(totalCustom - amount) > 0.01) {
+            alert(`Custom split total (₹${totalCustom.toFixed(2)}) must equal expense amount (₹${amount.toFixed(2)}).`);
+            if (submitBtn) {
+              (submitBtn as HTMLButtonElement).disabled = false;
+              submitBtn.textContent = "Add Expense";
+            }
+            return;
+          }
+        }
+
+        await api.expenses.create(groupId, {
+          description,
+          amount,
+          paid_by,
+          split_type: currentSplit as "equal" | "custom",
+          participants,
+        });
+
+        window.location.href = `/groups/${groupId}`;
+      } catch (error: any) {
+        alert(error.message);
+        if (submitBtn) {
+          (submitBtn as HTMLButtonElement).disabled = false;
+          submitBtn.textContent = "Add Expense";
+        }
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", loadMembers);
+  </script>
+</BaseLayout>
