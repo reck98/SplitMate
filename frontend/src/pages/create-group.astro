@@ -47,6 +47,15 @@ import GlassButton from "../components/GlassButton.astro";
 
   <script>
     import { api } from "../lib/api";
+    import { authInit } from "../lib/firebase";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const firebaseUser = await authInit;
+      if (!firebaseUser) {
+        window.location.href = "/";
+        return;
+      }
+    });
 
     document
       .getElementById("create-group-form")

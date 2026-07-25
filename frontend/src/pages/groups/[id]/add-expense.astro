@@ -74,7 +74,8 @@ import GlassButton from "../../../components/GlassButton.astro";
 
   <script>
     import { api } from "../../../lib/api";
-    import { $user } from "../../../stores/auth";
+    import { authInit } from "../../../lib/firebase";
+    import { $user, setUser } from "../../../stores/auth";
 
     const groupId = window.location.pathname.split("/groups/")[1]?.split("/")[0];
     let currentSplit = "equal";
@@ -83,7 +84,10 @@ import GlassButton from "../../../components/GlassButton.astro";
 
     document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
 
-    $user.subscribe((u) => { currentUser = u; });
+    $user.subscribe((u) => {
+      currentUser = u;
+      updatePayerDisplay();
+    });
 
     function updatePayerDisplay() {
       if (!currentUser || !members.length) return;
@@ -96,6 +100,24 @@ import GlassButton from "../../../components/GlassButton.astro";
         const initial = (member.name || "?").charAt(0).toUpperCase();
         avatarEl.textContent = initial;
       }
+    }
+
+    async function initPage() {
+      const fbUser = await authInit;
+      if (!fbUser) {
+        window.location.href = "/";
+        return;
+      }
+
+      try {
+        currentUser = await api.auth.me();
+        setUser(currentUser);
+      } catch {
+        window.location.href = "/";
+        return;
+      }
+
+      await loadMembers();
     }
 
     async function loadMembers() {
@@ -245,6 +267,6 @@ import GlassButton from "../../../components/GlassButton.astro";
       }
     });
 
-    document.addEventListener("DOMContentLoaded", loadMembers);
+    document.addEventListener("DOMContentLoaded", initPage);
   </script>
 </BaseLayout>

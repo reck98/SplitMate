@@ -74,6 +74,8 @@ import GlassButton from "../../../../components/GlassButton.astro";
 
   <script>
     import { api } from "../../../../lib/api";
+    import { authInit } from "../../../../lib/firebase";
+    import { setUser } from "../../../../stores/auth";
 
     const pathParts = window.location.pathname.split("/");
     const groupId = pathParts[2];
@@ -83,6 +85,24 @@ import GlassButton from "../../../../components/GlassButton.astro";
     let members: any[] = [];
 
     document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+
+    async function initPage() {
+      const fbUser = await authInit;
+      if (!fbUser) {
+        window.location.href = "/";
+        return;
+      }
+
+      try {
+        const user = await api.auth.me();
+        setUser(user);
+      } catch {
+        window.location.href = "/";
+        return;
+      }
+
+      await loadExpense();
+    }
 
     async function loadExpense() {
       try {
@@ -121,7 +141,7 @@ import GlassButton from "../../../../components/GlassButton.astro";
           )
           .join("");
 
-        const isCustom = expense.participants?.some(
+        const isCustom = expense.split_type === "custom" || expense.participants?.some(
           (p: any, _i: number, arr: any[]) => arr[0]?.share_amount !== p.share_amount
         );
 
@@ -272,6 +292,6 @@ import GlassButton from "../../../../components/GlassButton.astro";
       }
     });
 
-    document.addEventListener("DOMContentLoaded", loadExpense);
+    document.addEventListener("DOMContentLoaded", initPage);
   </script>
 </BaseLayout>

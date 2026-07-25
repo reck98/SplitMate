@@ -51,13 +51,22 @@ import GlassButton from "../components/GlassButton.astro";
 
   <script>
     import { api } from "../lib/api";
+    import { authInit } from "../lib/firebase";
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const codeParam = urlParams.get("code");
+    document.addEventListener("DOMContentLoaded", async () => {
+      const firebaseUser = await authInit;
+      if (!firebaseUser) {
+        window.location.href = "/";
+        return;
+      }
 
-    if (codeParam) {
-      document.getElementById("invite_code")?.setAttribute("value", codeParam);
-    }
+      const urlParams = new URLSearchParams(window.location.search);
+      const codeParam = urlParams.get("code");
+
+      if (codeParam) {
+        document.getElementById("invite_code")?.setAttribute("value", codeParam);
+      }
+    });
 
     document
       .getElementById("join-group-form")
