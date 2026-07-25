@@ -21,39 +21,32 @@ interface Props {
   </svg>
 </button>
 
-<script>
+<script is:inline>
   (function () {
-    const toggle = document.getElementById("theme-toggle");
-    const sun = document.getElementById("sun-icon");
-    const moon = document.getElementById("moon-icon");
-    const html = document.documentElement;
+    var toggle = document.getElementById("theme-toggle");
+    var sun = document.getElementById("sun-icon");
+    var moon = document.getElementById("moon-icon");
+    var html = document.documentElement;
 
-    function setThemeMeta(theme: string) {
-      const color = theme === "dark" ? "#09090b" : "#f1f5f9";
-      const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) {
-        meta.setAttribute("content", color);
-      }
+    var theme = html.getAttribute("data-theme") || "light";
+    if (sun && moon) {
+      sun.classList.toggle("hidden", theme !== "light");
+      moon.classList.toggle("hidden", theme !== "dark");
     }
 
-    function setTheme(theme: string) {
-      html.setAttribute("data-theme", theme);
-      localStorage.setItem("splitmate-theme", theme);
-      setThemeMeta(theme);
-      if (sun && moon) {
-        sun.classList.toggle("hidden", theme !== "light");
-        moon.classList.toggle("hidden", theme !== "dark");
-      }
+    if (toggle) {
+      toggle.addEventListener("click", function () {
+        var current = html.getAttribute("data-theme");
+        var next = current === "dark" ? "light" : "dark";
+        html.setAttribute("data-theme", next);
+        localStorage.setItem("splitmate-theme", next);
+        var meta = document.querySelector("meta[name=theme-color]");
+        if (meta) meta.content = next === "dark" ? "#09090b" : "#f1f5f9";
+        if (sun && moon) {
+          sun.classList.toggle("hidden", next !== "light");
+          moon.classList.toggle("hidden", next !== "dark");
+        }
+      });
     }
-
-    const stored = localStorage.getItem("splitmate-theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initial = stored || (prefersDark ? "dark" : "light");
-    setTheme(initial);
-
-    toggle?.addEventListener("click", () => {
-      const current = html.getAttribute("data-theme");
-      setTheme(current === "dark" ? "light" : "dark");
-    });
   })();
 </script>

@@ -18,7 +18,7 @@
 - [x] Phase 2: Groups — CRUD, join/leave, invite codes, member management
 - [x] Phase 3: Expenses — CRUD with equal/custom splits, participant validation
 - [x] Phase 4: Balance calculation — dynamic computation, greedy debt simplification, UPI deep links, settlement recording
-- [x] Phase 5: Adaptive polling — 1s active / 5s idle, hash-based change detection
+- [x] Phase 5: Server-Sent Events — real-time updates via SSE, in-memory event bus, auto-reconnect with token refresh
 - [x] Phase 6: Security — Zod validation, rate limiting, parameterized queries, consistent error format
 - [x] Tests for critical business logic (18 tests across 3 test files)
 
@@ -30,22 +30,25 @@
 - `getStaticPaths` warning on dynamic group page (expected for SSR with Astro)
 - Frontend stores are defined but not yet deeply integrated with all page scripts
 - `getFirebaseToken()` in `firebase.ts` still has a fallback observer path for first-time calls — consider fully removing after verifying cached path works in all browsers
+- SSE connections are stored in-memory (module-level Map) — will not survive server restart. The auto-reconnect mechanism handles this transparently.
 
 ### Future Improvements
-- Migrate to WebSockets when real-time collaboration is needed
+- Replace in-memory SSE event bus with Redis pub/sub for horizontal scaling
+- Add SSE endpoint for dashboard (`GET /api/me/events`) to provide real-time group list updates
 - Add caching for balance calculation on large groups
 - Add integration tests with test database
 - Add CI/CD pipeline configuration
 - Service worker scope: currently set to root (`/`) — verify sub-path deployment behavior
-- Remove temporary `[PERF]` logging from `requireAuth` middleware after performance verification
 - Consider server-side caching for the `/api/dashboard` endpoint (e.g., 30s TTL with invalidation on group/expense changes)
 
 ### Performance Notes
 - Dashboard load uses a single `/api/dashboard` endpoint instead of two separate API calls, halving Firebase token verification overhead
 - N+1 query pattern in `GET /api/groups` was eliminated by using a correlated subquery for member counts
-- 8 database indexes added via migration `0001_add_performance_indexes` to accelerate foreign key lookups (group_members.user_id, group_members.group_id, expenses.group_id, expenses.paid_by, expense_participants.expense_id, settlements.group_id, settlements.payer_id, settlements.receiver_id)
+- 8 database indexes added via migration `0001_add_performance_indexes` to accelerate foreign key lookups
 - Frontend `getFirebaseToken()` caches tokens at module scope to avoid re-subscribing to `onAuthStateChanged` on every request
-- `[PERF]` logging is active in `requireAuth` middleware for measuring Firebase verification and database lookup times
+- Real-time updates use SSE instead of polling: zero idle API requests, immediate push on data changes
+- SSE broadcasts full group state after mutations — one DB query per mutation serves all connected clients
+- Refresh-on-focus strategy handles consistency without periodic polling
 
 ### PWA Development
 

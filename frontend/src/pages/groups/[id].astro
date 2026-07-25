@@ -103,10 +103,11 @@ export const getStaticPaths = (() => {
   </main>
 
   <script>
+    import { authInit } from "../../lib/firebase";
     import { api } from "../../lib/api";
     import { generateUpiLink, openUpiApp } from "../../lib/upi";
     import { setUser } from "../../stores/auth";
-    import { $pollInterval, startPolling, stopPolling, resetPollInterval, increasePollInterval } from "../../stores/polling";
+    import { connectGroupSSE, disconnectGroupSSE } from "../../lib/sse";
 
     const groupId = window.location.pathname.split("/groups/")[1];
     let currentData: any = null;
@@ -128,7 +129,6 @@ export const getStaticPaths = (() => {
       btn?.classList.add("bg-[var(--color-accent)]", "text-white");
       btn?.classList.remove("text-[var(--color-text-secondary)]");
       btn?.setAttribute("aria-selected", "true");
-      resetPollInterval();
     }
 
     function renderGroup(data: any) {
@@ -233,8 +233,6 @@ export const getStaticPaths = (() => {
           (window as any).showToast?.({ message: "Deleting expense...", type: "info" });
           try {
             await api.expenses.delete((btn as HTMLElement).dataset.expenseId!);
-            resetPollInterval();
-            await loadGroupData();
             (window as any).showToast?.({ message: "Expense deleted", type: "success" });
           } catch (error: any) {
             (window as any).showToast?.({ message: error.message || "Failed to delete expense", type: "error" });
@@ -386,15 +384,13 @@ export const getStaticPaths = (() => {
                   `Did you complete the payment of ${formatCurrency(amount)} to ${receiver.name}? Mark as settled?`
                 )
               ) {
-                try {
-                  await api.settlements.create(groupId, {
-                    payer_id: payerId,
-                    receiver_id: receiverId,
-                    amount,
-                  });
-                  resetPollInterval();
-                  await loadGroupData();
-                  (window as any).showToast?.({ message: "Settlement recorded", type: "success" });
+                  try {
+                    await api.settlements.create(groupId, {
+                      payer_id: payerId,
+                      receiver_id: receiverId,
+                      amount,
+                    });
+                    (window as any).showToast?.({ message: "Settlement recorded", type: "success" });
                 } catch (error: any) {
                   (window as any).showToast?.({ message: error.message || "Failed to record settlement", type: "error" });
                 }
@@ -459,28 +455,6 @@ export const getStaticPaths = (() => {
       }
     }
 
-    let pollTimer: ReturnType<typeof setTimeout>;
-
-    async function pollGroup() {
-      if (!document.getElementById("expenses-tab")) return;
-
-      try {
-        const data = await api.groups.get(groupId);
-        const hash = JSON.stringify(data);
-
-        if (hash === (window as any).__lastHash) {
-          increasePollInterval();
-        } else {
-          (window as any).__lastHash = hash;
-          resetPollInterval();
-          renderGroup(data);
-        }
-      } catch {}
-
-      const interval = $pollInterval.get();
-      pollTimer = setTimeout(pollGroup, interval);
-    }
-
     document.querySelectorAll(".tab-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         switchTab((btn as HTMLElement).dataset.tab!);
@@ -508,6 +482,12 @@ export const getStaticPaths = (() => {
     });
 
     document.addEventListener("DOMContentLoaded", async () => {
+      const fbUser = await authInit;
+      if (!fbUser) {
+        window.location.href = "/";
+        return;
+      }
+
       const userPromise = api.auth.me();
       const dataPromise = api.groups.get(groupId).catch(() => null);
 
@@ -529,13 +509,21 @@ export const getStaticPaths = (() => {
       }
       switchTab("expenses");
 
-      startPolling();
-      pollTimer = setTimeout(pollGroup, $pollInterval.get());
+      connectGroupSSE(groupId, { onUpdate: renderGroup });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        loadGroupData().catch(() => {});
+      }
+    });
+
+    window.addEventListener("online", () => {
+      loadGroupData().catch(() => {});
     });
 
     window.addEventListener("beforeunload", () => {
-      stopPolling();
-      clearTimeout(pollTimer);
+      disconnectGroupSSE();
     });
   </script>
 </BaseLayout>

@@ -9,6 +9,8 @@ import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { AppError } from "../middleware/error.js";
 import { AuthenticatedRequest } from "../types/index.js";
+import { getGroupData } from "../services/group.js";
+import { broadcast } from "../services/sse.js";
 
 const router = Router();
 
@@ -94,6 +96,11 @@ router.post(
         success: true,
         data: created,
       });
+
+      try {
+        const groupData = await getGroupData(groupId, req.user!.id);
+        broadcast(groupId, "group_updated", groupData);
+      } catch {}
     } catch (error) {
       next(error);
     }

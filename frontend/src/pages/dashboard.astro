@@ -64,11 +64,18 @@ import Skeleton from "../components/Skeleton.astro";
   </main>
 
   <script>
+    import { authInit } from "../lib/firebase";
     import { api } from "../lib/api";
     import { setUser } from "../stores/auth";
     import { setGroups } from "../stores/groups";
 
     async function loadDashboard() {
+      const firebaseUser = await authInit;
+      if (!firebaseUser) {
+        window.location.href = "/";
+        return;
+      }
+
       try {
         const data = await api.dashboard.get();
         setUser(data.user);

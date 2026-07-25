@@ -160,13 +160,16 @@ Algorithm:
 
 ---
 
-## Polling Strategy
+## Real-Time Updates via Server-Sent Events (SSE)
 
-- Frontend polls `GET /groups/:id` every 10s while group detail page is active
-- If 3 consecutive polls return identical data (hash comparison), back off to 15s
-- On any user action (add expense, settle), reset to 1s immediately
-- Polling stops when user navigates away from group detail
-- Adaptive polling reduces server load during idle periods
+- Frontend establishes a single persistent SSE connection to `GET /api/groups/:id/sse` when viewing a group
+- Connection is authenticated via Firebase ID token passed as a query parameter (`?token=`)
+- Backend broadcasts full group state to all connected members immediately after any mutation (expense created/updated/deleted, settlement recorded, member joined/left)
+- Each broadcast targets only members of the affected group — no global broadcast
+- Keepalive pings every 30s prevent proxy timeouts
+- On tab visibility change or network reconnect, the frontend performs a one-time full data refresh for consistency
+- The SSE client auto-reconnects with a fresh Firebase token on connection loss
+- No periodic polling — zero API requests during idle viewing
 
 ---
 
@@ -197,11 +200,11 @@ expenses ──< expense_participants
 
 ## Important Architectural Decisions
 
-- No WebSockets — polling is simpler, stateless, and sufficient for V1
+- Server-Sent Events for real-time updates — immediate push without polling overhead
 - No stored balances — computed on every request to prevent sync bugs
 - Firebase ID Tokens via Authorization header — verified by Firebase Admin SDK, auto-refresh via Firebase client SDK
 - Greedy debt simplification — O(n log n), near-minimal transactions
-- Adaptive polling — reduces server load while maintaining responsiveness
+- In-memory SSE event bus — lightweight, no external dependency
 - CSS custom properties design system — no component framework needed for theming
 - Toast notifications over alert() — non-blocking, styled, accessible
 - Progressive Web App support — installable, offline fallback, auto-updating service worker

@@ -31,11 +31,18 @@ import Skeleton from "../components/Skeleton.astro";
   </main>
 
   <script>
+    import { authInit, auth } from "../lib/firebase";
     import { api } from "../lib/api";
-    import { auth } from "../lib/firebase";
-    import { setUser } from "../stores/auth";
+    import { setUser, clearAuth } from "../stores/auth";
+    import { disconnectGroupSSE } from "../lib/sse";
 
     document.addEventListener("DOMContentLoaded", async () => {
+      const firebaseUser = await authInit;
+      if (!firebaseUser) {
+        window.location.href = "/";
+        return;
+      }
+
       try {
         const user = await api.auth.me();
         setUser(user);
@@ -96,6 +103,8 @@ import Skeleton from "../components/Skeleton.astro";
         });
 
         document.getElementById("logout-btn")?.addEventListener("click", async () => {
+          disconnectGroupSSE();
+          clearAuth();
           await auth.signOut();
           window.location.href = "/";
         });

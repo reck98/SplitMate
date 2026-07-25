@@ -1,5 +1,65 @@
 # Changelog
 
+## v0.7.2
+
+### Added
+- **Persistent Firebase Auth sessions**: Explicit `setPersistence(auth, browserLocalPersistence)` ensures auth state survives browser restarts via IndexedDB.
+- **`authInit` Promise**: A shared Promise that resolves when Firebase Auth has determined the initial auth state. All protected pages now `await authInit` before rendering, eliminating flash of login page for authenticated users.
+- **Login page redirect**: `index.astro` now checks for an existing Firebase session on load. If the user is already authenticated, they are redirected to `/dashboard` (or `/complete-profile`) without seeing the sign-in button.
+- **Loading splash on auth-protected pages**: `index.astro`, `complete-profile.astro` show a centered spinner while Firebase initializes. No "flash of login page" for returning users.
+- **SSE + state cleanup on logout**: `profile.astro` now calls `disconnectGroupSSE()` and `clearAuth()` before signing out, preventing stale connections and store state.
+
+### Changed
+- **`onIdTokenChanged` replaces `onAuthStateChanged` for token caching**: The ID token cache is now updated on token refresh (which Firebase performs automatically every ~1 hour). Previously, `onAuthStateChanged` only fired on sign in/out, so the cached token would go stale after 1 hour, causing 401 responses and forcing users to re-authenticate.
+- **`getFirebaseToken()` simplified**: Removed the complex `tokenPromise` fallback with duplicate `onAuthStateChanged` subscription. Now waits for `authInit` if no cached token is available, then calls `getIdToken(false)` once — no forced refresh.
+- **Auth guard on all protected pages**: `dashboard.astro`, `complete-profile.astro`, `profile.astro`, and `groups/[id].astro` now await `authInit` before proceeding. If no Firebase user exists, they immediately redirect to `/`.
+
+### Fixed
+- **Stale token cache after 1 hour**: The root cause of "asks me to log in repeatedly" — `onAuthStateChanged` doesn't fire on token refresh. `onIdTokenChanged` does, so `cachedToken` stays current.
+- **Login page showing sign-in button to already-authenticated users**: `index.astro` now redirects automatically.
+- **Logout not cleaning up SSE connections**: `profile.astro` now disconnects SSE before signing out.
+
+## v0.7.1
+
+### Fixed
+- **Theme flash on page navigation**: Eliminated the brief dark-to-light flicker when navigating between pages. A blocking inline script in `<head>` now reads the persisted theme preference from `localStorage` (or falls back to `prefers-color-scheme`) and sets `data-theme` on `<html>` before the browser paints — zero flash, zero delay.
+
+### Changed
+- **Theme initialization architecture**: Previously, `BaseLayout.astro` hardcoded `data-theme="dark"` at SSR time, and a deferred module script in `ThemeToggle.astro` corrected the theme after DOMContentLoaded — causing a visible flash. Now a ~300 byte blocking inline script runs synchronously during HTML parsing, before any CSS is applied or any pixels are painted.
+- **`ThemeToggle.astro`**: Changed from Astro-processed module script to `is:inline` for synchronous execution. Script no longer re-initializes the theme (handled by the blocking script) — only syncs the sun/moon icon and attaches the click handler.
+- **`theme-color` meta tag**: Replaced the dual-tag approach with media queries (one per OS color scheme) with a single dynamic meta tag updated by the blocking script. Ensures the browser chrome (status bar, PWA title bar) matches the selected theme from the first paint.
+
+### Removed
+- **Hardcoded `data-theme="dark"`**: Removed from `<html>` in `BaseLayout.astro`. The correct theme is now determined at runtime by the blocking script.
+- **Redundant theme initialization**: Removed `localStorage.getItem()`, `window.matchMedia()`, and `setTheme(initial)` calls from `ThemeToggle.astro` — all handled once by the blocking script.
+
+## v0.7.0
+
+### Added
+- **Server-Sent Events (SSE)**: Real-time group updates via `GET /api/groups/:id/sse`. Backend broadcasts full group state to all connected members immediately after mutations — no more polling.
+- **SSE event bus** (`backend/src/services/sse.ts`): In-memory pub/sub managing per-group connections with automatic cleanup.
+- **Shared data service** (`backend/src/services/group.ts`): Extracted `getGroupData()` used by both REST endpoints and SSE broadcasts, ensuring consistent data formatting.
+- **SSE client** (`frontend/src/lib/sse.ts`): Reusable EventSource wrapper with automatic reconnection, Firebase token refresh on reconnect, and callback-based update handling.
+- **Refresh-on-focus**: Group page re-fetches data when tab becomes visible or network reconnects, ensuring consistency after long idle periods.
+
+### Removed
+- **All polling mechanisms**: The adaptive polling strategy (3s active / 15s idle backoff) is completely removed. No more `pollGroup()`, `pollTimer`, hash-based change detection, or interval management.
+- **Polling store** (`frontend/src/stores/polling.ts`): Entire file deleted — no longer needed.
+- **`[PERF]` console.log logging**: Removed temporary performance logging from `requireAuth` middleware and dashboard route.
+
+### Changed
+- **Group detail page** (`[id].astro`): Now connects to SSE on load, disconnects on unload. In-page mutations (delete expense, settle) no longer trigger manual re-fetches — SSE handles all updates.
+- **Group REST endpoint** (`GET /api/groups/:id`): Now delegates to the shared `getGroupData()` service instead of inline query logic.
+- **All mutation handlers**: After successful mutations (create/update/delete expense, create settlement, join/leave group, delete group), the backend broadcasts the full updated group state to all SSE subscribers.
+- **SSE authentication**: Uses Firebase ID token passed as query parameter (`?token=`) since EventSource does not support custom headers.
+
+### Performance
+- **Idle API requests**: ~240-1200/hour → **0** (zero idle requests)
+- **Update latency**: Up to 3000ms → ~100ms (network round trip)
+- **Backend work during idle**: Full group query every 3-15s → **zero** (connection alive only)
+- **Thundering herd**: Eliminated — one DB query per mutation, broadcast to N subscribers
+- **Network traffic (idle/hour)**: ~2-10MB → ~1KB (keepalive pings)
+
 ## v0.6.0
 
 ### Added

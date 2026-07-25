@@ -4,6 +4,7 @@ import dashboardRoutes from "./dashboard.js";
 import groupRoutes from "./groups.js";
 import expenseRoutes from "./expenses.js";
 import settlementRoutes from "./settlements.js";
+import sseRoutes from "./sse.js";
 
 const router = Router();
 
@@ -16,5 +17,6 @@ router.use("/", dashboardRoutes);
 router.use("/groups", groupRoutes);
 router.use("/", expenseRoutes);
 router.use("/", settlementRoutes);
+router.use("/", sseRoutes);
 
 export default router;

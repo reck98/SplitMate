@@ -1,9 +1,155 @@
 # Engineering Decision Records
 
+## D-016: Persistent Firebase Authentication Sessions
+
+**Date:** 2026-07-26
+**Status:** Accepted
+
+**Context:**
+Users were being asked to log in repeatedly — on browser refresh, browser restart, and especially after using the app for more than an hour. The underlying causes were:
+1. The ID token cache used `onAuthStateChanged`, which does NOT fire when Firebase auto-refreshes tokens (~hourly). After 1 hour, `cachedToken` held an expired token, every API call returned 401, and pages redirected to login.
+2. Firebase persistence was not explicitly configured, relying on the default (`browserLocalPersistence`). While the default should persist, some browser environments (iOS Safari, private mode) have inconsistent IndexedDB behavior.
+3. The login page (`/`) did not check for an existing Firebase session — already-authenticated users saw the sign-in button and had to click it again.
+4. Protected pages had inconsistent auth guards — some redirected to login on API error, others showed a retry button. None waited for Firebase Auth initialization before rendering.
+5. Logout only called `auth.signOut()` without cleaning up SSE connections or Nanostores, potentially leaving stale state.
+
+**Decision:**
+Restructure Firebase Auth initialization to use `onIdTokenChanged` (fires on token refresh) instead of `onAuthStateChanged` for the token cache, explicitly set `browserLocalPersistence`, add a shared `authInit` Promise for coordinated auth-aware page loading, and add proper auth guards to all pages.
+
+**Alternatives Considered:**
+- **Manual token refresh with `getIdToken(true)`**: Force-refresh the token on every API call. Rejected because it wastes bandwidth and Firebase quota, and contradicts Firebase's recommended pattern of relying on automatic token refresh.
+- **Backend-only session with cookies**: Use Firebase Admin to create a session cookie on login, verify it on every request. Rejected because it adds server-side state and the Firebase client SDK already handles persistence.
+- **Service worker auth proxy**: Have the service worker intercept requests and refresh tokens. Rejected because it adds unnecessary complexity when `onIdTokenChanged` solves the problem directly.
+
+**Reasoning:**
+- `onIdTokenChanged` is the correct Firebase API for keeping a token cache current — it fires on initial load, sign in/out, AND automatic token refresh. `onAuthStateChanged` only covers sign in/out.
+- A shared `authInit` Promise provides a single coordination point: every page can `await authInit` to know whether the user is authenticated before rendering, eliminating race conditions between Firebase initialization and page logic.
+- Explicit `setPersistence(auth, browserLocalPersistence)` documents the intent and ensures consistency across browser environments.
+- The loading splash pattern (shown while `authInit` is pending, hidden once auth state is known) provides a clean user experience: no flash of login page, no flash of protected content.
+
+**Changes:**
+- `frontend/src/lib/firebase.ts`: Added `setPersistence()`, replaced `onAuthStateChanged` with `onIdTokenChanged` for token cache, added `authInit` Promise, simplified `getFirebaseToken()`.
+- `frontend/src/pages/index.astro`: Added loading splash + `await authInit` check → redirect if authenticated.
+- `frontend/src/pages/dashboard.astro`: Added `await authInit` guard before loading data.
+- `frontend/src/pages/complete-profile.astro`: Added loading splash + `await authInit` guard.
+- `frontend/src/pages/profile.astro`: Added `await authInit` guard + `disconnectGroupSSE()` and `clearAuth()` on logout.
+- `frontend/src/pages/groups/[id].astro`: Added `await authInit` guard.
+
+**Benefits:**
+- **Session persists across browser restarts** — Firebase Auth with `browserLocalPersistence` stores session in IndexedDB
+- **No re-login after 1 hour** — `onIdTokenChanged` keeps the token cache current through automatic refreshes
+- **Login page redirects authenticated users** — no extra click needed
+- **Consistent auth guard on all protected pages** — redirect before rendering protected content
+- **Clean logout** — SSE disconnected, stores cleared, Firebase sign out
+
+**Trade-offs:**
+- `authInit` adds a brief loading splash (~10-50ms for IndexedDB read) on every page load, even for authenticated users. This is imperceptible and preferable to flashing wrong content.
+- `onIdTokenChanged` fires more often than `onAuthStateChanged` (on every token refresh), but the callback is lightweight (one `getIdToken()` call and a variable assignment).
+
+---
+
+## D-015: Pre-Paint Theme Initialization via Blocking Inline Script
+
+**Date:** 2026-07-26
+**Status:** Accepted
+
+**Context:**
+The application had a persistent theme-flash issue: when navigating between pages with Light Mode enabled, the page would briefly render in Dark Mode before switching to Light. The root cause was that the SSR template hardcoded `data-theme="dark"` on `<html>`, and the theme initialization ran in a deferred Astro-processed module script that executed after `DOMContentLoaded`. This meant the browser painted the dark theme first, then the script corrected it — causing a visible flash on every navigation.
+
+**Decision:**
+Replace the deferred theme initialization with a blocking inline script in `<head>` that reads `localStorage` (or falls back to `prefers-color-scheme`) and sets `data-theme` before the browser paints. The script must:
+1. Be placed in `<head>` before any CSS or external resources
+2. Be `is:inline` (blocking, synchronous) — no bundling, no deferring
+3. Handle `localStorage` unavailability gracefully (try-catch)
+4. Also update the `theme-color` meta tag for browser chrome consistency
+
+**Alternatives Considered:**
+- **Server-side cookie read:** Set a cookie with the theme preference and read it at SSR time to set `data-theme` on the server. Rejected because it adds complexity, requires a cookie on every request, and doesn't handle first-visit system preference without JS.
+- **CSS-only `prefers-color-scheme`:** Use only the CSS media query without any JS. Rejected because it doesn't persist user choice — switching themes manually would reset on navigation.
+- **Theme in URL/query param:** Read theme from URL at SSR time. Rejected because persistence requires session management and manual toggle would need URL updates.
+
+**Reasoning:**
+- A blocking inline script is the only way to guarantee the correct theme is applied before the first paint — no async/defer/module strategy can provide this guarantee.
+- The script is ~300 bytes gzipped — negligible performance cost for zero visual flash.
+- `localStorage` is available synchronously during initial HTML parsing — no async needed.
+- `window.matchMedia` for `prefers-color-scheme` is also synchronous and available immediately.
+- Placing the script before CSS `<link>` tags means the theme attribute is set before any styles are applied, preventing even a single frame of incorrect theming.
+
+**Benefits:**
+- **Zero theme flash** — every navigation, including hard reloads, PWA launches, and deep links
+- **No delay** — the script runs synchronously during HTML parsing, adding ~0.3ms of blocking time
+- **Persistence preserved** — `localStorage` continues to store user preference
+- **System mode preserved** — falls back to `prefers-color-scheme` when no stored preference exists
+- **Simpler frontend code** — `ThemeToggle.astro` no longer needs to re-initialize the theme
+- **Browser chrome consistency** — `theme-color` meta tag is updated before the first paint
+
+**Trade-offs:**
+- The script is inline HTML and cannot be cached separately (but it's only ~300 bytes)
+- Changing the theme persistence key requires updating both the blocking script and the toggle handler
+- The theme-color in the static PWA manifest (`astro.config.mjs`) remains hardcoded to dark — the manifest is served once at install time and cannot be dynamically customized per-user without a server-side manifest endpoint. The `theme-color` meta tag takes over at runtime.
+
+**Verification:**
+- Light Mode: page loads with light background, no flash
+- Dark Mode: page loads with dark background, no flash
+- System Mode: follows OS preference on first visit
+- Hard reload: theme is correct from the first frame
+- Client-side navigation: no flash between pages
+- PWA launch: splash screen may mismatch (manifest is static), but app loads with correct theme immediately
+- Mobile Chrome/Safari: status bar color matches theme from initial render
+
+---
+
+## D-014: Replace Polling with Server-Sent Events
+
+**Date:** 2026-07-26
+**Status:** Accepted
+
+**Context:**
+The application used adaptive HTTP polling (3s active, 15s idle) on the group detail page to reflect data changes. This meant constant API requests even when no data changed, wasting bandwidth and backend resources. Polling also introduced up to 3 seconds of delay before updates appeared. The dashboard page had no real-time updates at all. As the app approached production, a more efficient real-time strategy was needed.
+
+**Decision:**
+Remove all polling mechanisms and replace them with Server-Sent Events (SSE). The backend maintains an in-memory event bus that broadcasts full group state to all connected members immediately after any mutation.
+
+**Alternatives Considered:**
+- **Adaptive polling (current):** Simple stateless approach but wasteful during idle periods, introduces latency, and doesn't scale well.
+- **WebSockets (Socket.IO):** Full-duplex communication, widely supported, but adds complexity to deployment (sticky sessions), requires a library dependency, and is overkill for a mostly-read application.
+- **WebSockets (native `ws`):** Lower overhead than Socket.IO but still requires sticky sessions or a shared pub/sub for multi-instance deployment.
+- **Long polling:** No persistent connection but still creates constant HTTP request churn.
+
+**Reasoning:**
+- SSE is simpler than WebSockets for unidirectional server-to-client updates — exactly what SplitMate needs
+- SSE uses standard HTTP — no sticky sessions, no extra library, works with existing Express deployment on Render
+- EventSource API is built into all modern browsers — no polyfill needed
+- In-memory event bus is sufficient for a single-instance deployment; can be swapped for Redis pub/sub if horizontal scaling is needed later
+- SSE connections are lightweight — a single TCP connection per logged-in user with no data transferred during idle periods
+- Broadcast after mutation means work is done once (one DB query) and pushed to N clients — no thundering herd
+
+**Benefits:**
+- **Zero idle API requests:** No polling requests during inactive viewing — saves ~240-1200 requests/hour per user
+- **Immediate updates:** Data propagates in ~100ms instead of up to 3s with polling
+- **Reduced backend load:** No repeated group data queries when data hasn't changed
+- **No thundering herd:** On data change, the mutation handler queries the DB once and broadcasts to all subscribers
+- **Simpler frontend code:** No adaptive interval logic, no hash-based change detection, no polling timer management
+- **Automatic reconnection:** EventSource reconnects on network drop; our module also refreshes the Firebase token on reconnect
+- **Refresh-on-focus:** Page re-fetches data when the browser tab regains visibility, ensuring consistency after sleeping tabs
+
+**Trade-offs:**
+- **Persistent connections:** Each logged-in user viewing a group maintains an open TCP connection. For the current scale (<1000 concurrent users), this is negligible on Render.
+- **In-memory state:** SSE connections are stored in a module-level Map. A server restart drops all connections (reconnect handles this transparently).
+- **No cross-instance broadcast:** If multiple backend instances are deployed, SSE events only reach clients connected to the same instance. Mitigation: use Redis pub/sub in the future.
+- **Auth via query parameter:** EventSource doesn't support custom headers, so the Firebase token is passed as a `?token=` query param. Logged in server logs briefly (URL params are sometimes logged by proxies).
+
+**Future Considerations:**
+- If horizontal scaling is needed, replace the in-memory `Map` with Redis pub/sub using the same API surface
+- If dashboard real-time updates become desirable, create `GET /api/me/events` following the same pattern
+- If the app outgrows SSE, the event bus abstraction makes it easy to swap to WebSockets without changing mutation handlers
+
+---
+
 ## D-001: Polling over WebSockets
 
 **Date:** 2024-07-25
-**Status:** Accepted
+**Status:** Superseded by D-014
 
 **Context:**
 The PRD specifies near real-time updates for group data. WebSockets were considered but polling was chosen.
@@ -128,7 +274,7 @@ Use a greedy algorithm: sort creditors descending, debtors descending, match lar
 ## D-005: Adaptive Polling
 
 **Date:** 2024-07-25
-**Status:** Accepted
+**Status:** Superseded by D-014
 
 **Context:**
 PRD specifies 1000ms polling. Continuous polling at 1s is wasteful when data isn't changing.
