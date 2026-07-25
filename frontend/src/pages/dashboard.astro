@@ -66,10 +66,66 @@ import Skeleton from "../components/Skeleton.astro";
   <script>
     import { authInit } from "../lib/firebase";
     import { api } from "../lib/api";
-    import { setUser } from "../stores/auth";
-    import { setGroups } from "../stores/groups";
+    import { setUser, $user } from "../stores/auth";
+    import { setGroups, loadGroupsCache, type GroupSummary } from "../stores/groups";
+
+    function renderGroupsList(groupsList: GroupSummary[]) {
+      const container = document.getElementById("groups-list");
+      if (!container) return;
+
+      const skeleton = document.getElementById("skeleton-loading");
+      if (skeleton) skeleton.remove();
+
+      if (groupsList.length === 0) {
+        container.innerHTML = `
+          <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-glass-hover)]">
+              <svg class="h-6 w-6 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">No groups yet</h3>
+            <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Create a group or join one with an invite code</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = groupsList
+        .map(
+          (g, i) => `
+        <a href="/groups/${g.id}" class="glass rounded-glass-lg p-4 flex items-center justify-between transition-all duration-200 glass-hover animate-fade-in-up" style="animation-delay: ${i * 40}ms">
+          <div class="flex items-center gap-3">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-sm">
+              ${g.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 class="font-medium text-[var(--color-text-primary)]">${g.name}</h3>
+              <p class="text-sm text-[var(--color-text-tertiary)]">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
+            </div>
+          </div>
+          <svg class="h-5 w-5 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
+        </a>
+      `
+        )
+        .join("");
+    }
 
     async function loadDashboard() {
+      // SWR: Render cached groups immediately if present
+      const cachedGroups = loadGroupsCache();
+      if (cachedGroups.length > 0) {
+        renderGroupsList(cachedGroups);
+      }
+
+      const cachedUser = $user.get();
+      if (cachedUser) {
+        const userNameEl = document.getElementById("user-name");
+        if (userNameEl) userNameEl.textContent = `Welcome, ${cachedUser.name}`;
+      }
+
       const firebaseUser = await authInit;
       if (!firebaseUser) {
         window.location.href = "/";
@@ -80,68 +136,29 @@ import Skeleton from "../components/Skeleton.astro";
         const data = await api.dashboard.get();
         setUser(data.user);
         setGroups(data.groups);
-        document.getElementById("user-name")!.textContent = `Welcome, ${data.user.name}`;
-
-        const container = document.getElementById("groups-list")!;
-        const skeleton = document.getElementById("skeleton-loading");
-
-        if (data.groups.length === 0) {
+        const userNameEl = document.getElementById("user-name");
+        if (userNameEl) userNameEl.textContent = `Welcome, ${data.user.name}`;
+        renderGroupsList(data.groups);
+      } catch (error) {
+        if (!cachedGroups.length) {
+          const container = document.getElementById("groups-list")!;
+          const skeleton = document.getElementById("skeleton-loading");
           if (skeleton) skeleton.remove();
           container.innerHTML = `
             <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
-              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-glass-hover)]">
-                <svg class="h-6 w-6 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-danger-soft)]">
+                <svg class="h-6 w-6 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">No groups yet</h3>
-              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Create a group or join one with an invite code</p>
+              <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Failed to load</h3>
+              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Could not load your groups</p>
+              <button onclick="location.reload()" class="mt-4 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
+                Retry
+              </button>
             </div>
           `;
-          return;
         }
-
-        container.innerHTML =
-          data.groups
-            .map(
-              (g, i) => `
-            <a href="/groups/${g.id}" class="glass rounded-glass-lg p-4 flex items-center justify-between transition-all duration-200 glass-hover animate-fade-in-up" style="animation-delay: ${i * 40}ms">
-              <div class="flex items-center gap-3">
-                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-sm">
-                  ${g.name.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 class="font-medium text-[var(--color-text-primary)]">${g.name}</h3>
-                  <p class="text-sm text-[var(--color-text-tertiary)]">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
-                </div>
-              </div>
-              <svg class="h-5 w-5 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-              </svg>
-            </a>
-          `
-            )
-            .join("");
-
-        if (skeleton) skeleton.remove();
-      } catch (error) {
-        const container = document.getElementById("groups-list")!;
-        const skeleton = document.getElementById("skeleton-loading");
-        if (skeleton) skeleton.remove();
-        container.innerHTML = `
-          <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
-            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-danger-soft)]">
-              <svg class="h-6 w-6 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-              </svg>
-            </div>
-            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Failed to load</h3>
-            <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Could not load your groups</p>
-            <button onclick="location.reload()" class="mt-4 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
-              Retry
-            </button>
-          </div>
-        `;
       }
     }
 

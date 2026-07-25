@@ -1,6 +1,24 @@
 # Changelog
 
-## v0.7.2
+## v0.8.0
+
+### Added
+- **Manual / Cash Settlement Options**:
+  - Direct **"Settle Cash"** button on every suggested debt card in group details.
+  - **"Record Settlement"** header button and glassmorphic Modal dialog to record custom or partial manual settlements between any group members (selecting Payer, Receiver, and Amount).
+  - **Automatic Cash Fallback**: If a receiver has no UPI ID configured, clicking "Pay via UPI" gracefully offers to record the payment as a manual cash settlement.
+- **Client-Side Stale-While-Revalidate (SWR) Caching**:
+  - `localStorage`-backed cache helpers in `stores/groups.ts` (`loadGroupsCache`, `saveGroupsCache`, `loadGroupDetailCache`, `saveGroupDetailCache`).
+  - Dashboard (`dashboard.astro`) and Group detail pages (`[id].astro`) now render **instantly (<10ms)** from local cache on mount, revalidating fresh data seamlessly in the background.
+- **Backend DB Query Parallelization**:
+  - Refactored `getGroupData()` in `backend/src/services/group.ts` to execute independent Turso DB queries in parallel via `Promise.all()`, reducing DB roundtrips from 5 sequential waits to 2 parallel stages.
+
+### Fixed
+- **Auth Redirect Loop on Landing Page (`index.astro`)**: Calling `auth.signOut()` when `api.auth.me()` fails clears stale Firebase sessions and shows an error toast instead of triggering an infinite browser reload loop (`/` -> `/`).
+- **Uninitialized Payer Display on Add/Edit Expense**: Added `authInit` check and `$user` store population on page load in `add-expense.astro` and `edit-expense/[expenseId].astro`, resolving the issue where Payer Name stayed on "Loading..." and avatar on "?".
+- **SSR Router Warning**: Removed invalid `export const getStaticPaths` from server-rendered dynamic route `frontend/src/pages/groups/[id].astro`.
+- **Custom Split Strategy Detection**: Fixed `isCustom` detection logic in `edit-expense/[expenseId].astro` to evaluate `expense.split_type === "custom"` directly.
+
 
 ### Added
 - **Persistent Firebase Auth sessions**: Explicit `setPersistence(auth, browserLocalPersistence)` ensures auth state survives browser restarts via IndexedDB.

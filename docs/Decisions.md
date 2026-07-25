@@ -1,5 +1,23 @@
 # Engineering Decision Records
 
+## D-017: Manual Settlements & Stale-While-Revalidate (SWR) Performance Architecture
+
+**Date:** 2026-07-26
+**Status:** Accepted
+
+**Context:**
+1. **Manual / Cash Settlements**:
+   - SplitMate previously relied primarily on UPI deep-linking for settlements. If a user settled a balance offline (cash, bank transfer, Paytm), or if the receiver had no UPI ID set, users were blocked from marking debts as settled up.
+2. **Page Loading Latency**:
+   - Opening `/dashboard` or `/groups/[id]` always showed skeleton loaders while waiting for network requests to complete over Render free tier and Turso DB HTTP roundtrips.
+
+**Decision:**
+1. **Manual Settlements UI**: Add inline **"Settle Cash"** buttons on suggested debt items, an automatic **Cash Fallback Prompt** when "Pay via UPI" fails due to missing UPI ID, and a **"Record Settlement"** header button with a glassmorphic Modal dialog to enter custom settlement details (Payer, Receiver, Amount).
+2. **Stale-While-Revalidate (SWR) Caching**: Store dashboard groups and group detail data in `localStorage` (`loadGroupDetailCache`, `saveGroupDetailCache`, `loadGroupsCache`, `saveGroupsCache`). On mount, render cached data **instantly (<10ms)**, while revalidating fresh data in the background.
+3. **Backend Parallelization**: Execute independent Turso DB queries in `getGroupData()` in parallel via `Promise.all()`, reducing DB network roundtrips from 5 sequential waits to 2 parallel stages.
+
+---
+
 ## D-016: Persistent Firebase Authentication Sessions
 
 **Date:** 2026-07-26

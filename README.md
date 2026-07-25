@@ -11,9 +11,10 @@ Lightweight expense-sharing application built for Indian users. Track expenses, 
 - Dynamic balance calculation (never stored)
 - Simplified debt settlement algorithm
 - One-click UPI deep links for payments
-- Manual settlement recording
-- Real-time updates via adaptive polling
-- Mobile-first responsive design
+- Manual & cash settlement recording (modal & inline cash settle)
+- Real-time updates via Server-Sent Events (SSE)
+- Instant SWR client caching (<10ms load time)
+- Mobile-first responsive glassmorphic design
 
 ## Technology Stack
 

@@ -50,15 +50,15 @@ node scripts/generate-pwa-icons.mjs
 
 ## Key Design Decisions
 
-- **Polling over WebSockets** (D-001): Simpler deployment, stateless backend
-- **No stored balances** (D-002): Always computed, prevents sync bugs
-- **JWT in httpOnly cookie** (D-003): More secure than localStorage (deprecated — now using Firebase tokens via Authorization header)
+- **SSE over Polling** (D-007 / D-013): Real-time updates via Server-Sent Events with automatic fallback
+- **No stored balances** (D-002): Always computed dynamically, prevents sync bugs
+- **Firebase Authentication** (D-008 / D-016): Google provider auth with persistent IndexedDB sessions
 - **Greedy debt simplification** (D-004): O(n log n), near-minimal transactions
-- **Adaptive polling** (D-005): 10s active / 15s idle
 - **Monorepo** (D-006): Single repo with frontend/ and backend/
 - **CSS Custom Properties Design System** (D-009): Theme and components via CSS, no React/Framer Motion
-- **Toast over alert()** (D-010): Non-blocking notification system via DOM
 - **PWA Support** (D-011): Installable app with service worker, offline fallback, auto-updates via `@vite-pwa/astro`
+- **SWR Client Caching & DB Parallelization** (D-017): Instant <10ms local storage cache rendering + parallelized Turso DB queries
+- **Manual / Cash Settlements** (D-017): Direct inline cash settlements, fallback for missing UPI IDs, and Record Settlement modal
 
 ## Code Conventions
 

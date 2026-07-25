@@ -54,46 +54,44 @@ export interface GroupData {
 }
 
 export async function getGroupData(groupId: string, currentUserId: string): Promise<GroupData> {
-  const [group] = await db
-    .select()
-    .from(groups)
-    .where(eq(groups.id, groupId))
-    .limit(1);
+  const [groupResult, isMemberResult] = await Promise.all([
+    db.select().from(groups).where(eq(groups.id, groupId)).limit(1),
+    db.select().from(groupMembers).where(and(eq(groupMembers.group_id, groupId), eq(groupMembers.user_id, currentUserId))).limit(1),
+  ]);
 
+  const group = groupResult[0];
   if (!group) {
     throw new AppError(404, "GROUP_NOT_FOUND", "The requested group does not exist.");
   }
 
-  const isMember = await db
-    .select()
-    .from(groupMembers)
-    .where(
-      and(eq(groupMembers.group_id, groupId), eq(groupMembers.user_id, currentUserId))
-    )
-    .limit(1);
-
-  if (isMember.length === 0) {
+  if (isMemberResult.length === 0) {
     throw new AppError(403, "NOT_MEMBER", "You are not a member of this group.");
   }
 
-  const members = await db
-    .select({
-      user_id: users.id,
-      name: users.name,
-      email: users.email,
-      avatar: users.avatar,
-      upi_id: users.upi_id,
-      joined_at: groupMembers.joined_at,
-    })
-    .from(groupMembers)
-    .innerJoin(users, eq(groupMembers.user_id, users.id))
-    .where(eq(groupMembers.group_id, groupId));
-
-  const groupExpenses = await db
-    .select()
-    .from(expenses)
-    .where(eq(expenses.group_id, groupId))
-    .orderBy(expenses.created_at);
+  const [members, groupExpenses, groupSettlements] = await Promise.all([
+    db
+      .select({
+        user_id: users.id,
+        name: users.name,
+        email: users.email,
+        avatar: users.avatar,
+        upi_id: users.upi_id,
+        joined_at: groupMembers.joined_at,
+      })
+      .from(groupMembers)
+      .innerJoin(users, eq(groupMembers.user_id, users.id))
+      .where(eq(groupMembers.group_id, groupId)),
+    db
+      .select()
+      .from(expenses)
+      .where(eq(expenses.group_id, groupId))
+      .orderBy(expenses.created_at),
+    db
+      .select()
+      .from(settlements)
+      .where(eq(settlements.group_id, groupId))
+      .orderBy(settlements.created_at),
+  ]);
 
   const expenseIds = groupExpenses.map((e) => e.id);
 
@@ -126,12 +124,6 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     created_at: e.created_at,
     updated_at: e.updated_at,
   }));
-
-  const groupSettlements = await db
-    .select()
-    .from(settlements)
-    .where(eq(settlements.group_id, groupId))
-    .orderBy(settlements.created_at);
 
   const settlementData = groupSettlements.map((s) => ({
     id: s.id,
