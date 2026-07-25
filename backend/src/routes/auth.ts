@@ -24,7 +24,7 @@ function generateAvatar(name: string): string {
 }
 
 router.post(
-  "/firebase",
+  "/auth/firebase",
   async (req, res: Response, next: NextFunction): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;

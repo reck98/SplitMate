@@ -29,6 +29,13 @@ const limiter = rateLimit({
 app.use("/api/auth", limiter);
 app.use("/api", routes);
 
+app.use((_req, res) => {
+  res.status(404).json({
+    success: false,
+    error: { code: "NOT_FOUND", message: "The requested resource does not exist." },
+  });
+});
+
 app.use(errorHandler);
 
 export default app;

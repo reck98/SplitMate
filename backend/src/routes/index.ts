@@ -10,7 +10,7 @@ router.get("/health", (_req: Request, res: Response) => {
   res.json({ success: true, data: { status: "ok", timestamp: new Date().toISOString() } });
 });
 
-router.use("/auth", authRoutes);
+router.use("/", authRoutes);
 router.use("/groups", groupRoutes);
 router.use("/", expenseRoutes);
 router.use("/", settlementRoutes);
