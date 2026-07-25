@@ -100,7 +100,6 @@ export const api = {
       data: {
         description: string;
         amount: number;
-        paid_by: string;
         split_type: "equal" | "custom";
         participants: string[] | { user_id: string; share_amount: number }[];
       }
@@ -114,7 +113,6 @@ export const api = {
       data: {
         description: string;
         amount: number;
-        paid_by: string;
         split_type: "equal" | "custom";
         participants: string[] | { user_id: string; share_amount: number }[];
       }
@@ -125,6 +123,28 @@ export const api = {
       }),
     delete: (id: string) =>
       request(`/expenses/${id}`, { method: "DELETE" }),
+  },
+
+  dashboard: {
+    get: () =>
+      request<{
+        user: {
+          id: string;
+          firebase_uid: string;
+          email: string;
+          name: string;
+          avatar: string | null;
+          upi_id: string | null;
+          is_profile_complete: boolean;
+        };
+        groups: Array<{
+          id: string;
+          name: string;
+          owner_id: string;
+          invite_code: string;
+          member_count: number;
+        }>;
+      }>("/dashboard"),
   },
 
   settlements: {

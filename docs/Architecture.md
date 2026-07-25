@@ -191,6 +191,7 @@ expenses ──< expense_participants
 - **Inter Font**: Google Fonts for typography
 - **Lucide Icons**: via `astro-icon` integration
 - **UPI Deep Links**: `upi://pay` URI scheme to launch native UPI apps
+- **@vite-pwa/astro**: PWA integration — web app manifest, service worker via Workbox, install prompt handling
 
 ---
 
@@ -203,3 +204,94 @@ expenses ──< expense_participants
 - Adaptive polling — reduces server load while maintaining responsiveness
 - CSS custom properties design system — no component framework needed for theming
 - Toast notifications over alert() — non-blocking, styled, accessible
+- Progressive Web App support — installable, offline fallback, auto-updating service worker
+
+---
+
+## Progressive Web App (PWA) Architecture
+
+SplitMate is configured as a fully installable Progressive Web App:
+
+```
+┌─────────────────────────────────────┐
+│         Browser / Standalone        │
+├─────────────────────────────────────┤
+│    Service Worker (Workbox)         │
+│  ┌───────────────────────────────┐  │
+│  │  Precache: CSS, JS, Fonts,   │  │
+│  │  Images, Icons                │  │
+│  └───────────────────────────────┘  │
+│  ┌───────────────────────────────┐  │
+│  │  NetworkOnly: API requests    │  │
+│  └───────────────────────────────┘  │
+│  ┌───────────────────────────────┐  │
+│  │  NavigateFallback: /offline   │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+### Service Worker Strategy
+
+- **Strategy:** `generateSW` (via `@vite-pwa/astro`)
+- **Registration:** Auto-update (`registerType: 'autoUpdate'`)
+- **Precache:** CSS, JavaScript, web fonts, SVG icons, PNG icons — all versioned static assets
+- **API:** NetworkOnly — never cache any backend response
+- **Navigation:** NetworkFirst with offline fallback to `/offline`
+
+### Caching Rules
+
+| Asset Type | Strategy | Purpose |
+|---|---|---|
+| CSS, JS | Precache | Always available, versioned by build hash |
+| Fonts (woff/woff2) | Precache | Inter font files |
+| Images, Icons | Precache | Logo, PWA icons, favicon |
+| API (`/api/*`) | NetworkOnly | Never cached, always fresh data |
+| Navigation (HTML) | NavigateFallback | Offline page when no network |
+
+### Offline Experience
+
+- A dedicated `/offline` page is prerendered and served when the device is offline
+- The page features SplitMate branding and a "Retry" button
+- No attempt is made to cache or sync expense/group data offline
+
+### Install Experience
+
+- **Browser Prompt:** The `beforeinstallprompt` event is captured and displayed as a polished glassmorphism install banner at the bottom of the screen
+- **Smart Display:** The banner auto-hides if the app is already installed (standalone mode)
+- **Dismiss Tracking:** "Not now" dismissal is persisted to `localStorage` (key: `splitmate-install-dismissed`)
+- **Post-Install:** The `appinstalled` event clears the dismiss flag
+
+### Icons
+
+| File | Size | Purpose |
+|---|---|---|
+| `pwa-192x192.png` | 192×192 | Standard manifest icon |
+| `pwa-512x512.png` | 512×512 | Large manifest icon |
+| `pwa-192x192-maskable.png` | 192×192 | Adaptive maskable icon (Android) |
+| `pwa-512x512-maskable.png` | 512×512 | Adaptive maskable icon (Android) |
+| `apple-touch-icon.png` | 180×180 | Apple Touch Icon (iPhone/iPad) |
+| `favicon.svg` | 24×24 | Browser favicon |
+
+All icons use an emerald gradient background (`#10b981` → `#059669`) with a white clock symbol.
+
+### Apple Support
+
+- `apple-mobile-web-app-capable`: Enables standalone launch on iOS
+- `apple-mobile-web-app-status-bar-style`: Default styling
+- `apple-mobile-web-app-title`: SplitMate
+- `apple-touch-icon`: 180x180 PNG
+
+### Theme Color
+
+- `theme-color` meta tag is dynamically updated via JavaScript when the user toggles dark/light mode
+- Manifest `theme_color` is set to `#09090b` (dark) as the default installed-PWA appearance
+
+### Platform Support
+
+| Platform | Install | Standalone | Icons |
+|---|---|---|---|
+| Android Chrome | ✓ | ✓ | Adaptive maskable |
+| Samsung Internet | ✓ | ✓ | Standard |
+| Microsoft Edge | ✓ | ✓ | Standard |
+| iPhone Safari | ✓ | ✓ | Apple Touch Icon |
+| iPad Safari | ✓ | ✓ | Apple Touch Icon |

@@ -31,8 +31,14 @@ import GlassButton from "../../../../components/GlassButton.astro";
         </div>
 
         <div>
-          <label for="paid_by" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Paid By</label>
-          <select id="paid_by" required></select>
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Paid By</label>
+          <div class="flex items-center gap-3 glass rounded-[var(--radius-md)] px-4 py-3 opacity-70">
+            <div id="payer-avatar" class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-sm font-bold text-white">?</div>
+            <div>
+              <p id="payer-name" class="text-sm font-medium text-[var(--color-text-primary)]">Loading...</p>
+              <p class="text-xs text-[var(--color-text-tertiary)]">Payer cannot be changed</p>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -93,10 +99,13 @@ import GlassButton from "../../../../components/GlassButton.astro";
         (document.getElementById("description") as HTMLInputElement).value = expense.description;
         (document.getElementById("amount") as HTMLInputElement).value = expense.amount.toString();
 
-        const paidBySelect = document.getElementById("paid_by") as HTMLSelectElement;
-        paidBySelect.innerHTML = members
-          .map((m) => `<option value="${m.user_id}" ${m.user_id === expense.paid_by ? "selected" : ""}>${m.name}</option>`)
-          .join("");
+        const payerMember = members.find((m: any) => m.user_id === expense.paid_by);
+        const nameEl = document.getElementById("payer-name");
+        const avatarEl = document.getElementById("payer-avatar");
+        if (nameEl) nameEl.textContent = payerMember?.name || "Unknown";
+        if (avatarEl) {
+          avatarEl.textContent = (payerMember?.name || "?").charAt(0).toUpperCase();
+        }
 
         const participantIds = expense.participants?.map((p: any) => p.user_id) || [];
 
@@ -207,7 +216,6 @@ import GlassButton from "../../../../components/GlassButton.astro";
       try {
         const description = (document.getElementById("description") as HTMLInputElement).value;
         const amount = parseFloat((document.getElementById("amount") as HTMLInputElement).value);
-        const paid_by = (document.getElementById("paid_by") as HTMLSelectElement).value;
 
         const checkedBoxes = document.querySelectorAll(".participant-checkbox:checked");
 
@@ -249,7 +257,6 @@ import GlassButton from "../../../../components/GlassButton.astro";
         await api.expenses.update(expenseId, {
           description,
           amount,
-          paid_by,
           split_type: currentSplit as "equal" | "custom",
           participants,
         });

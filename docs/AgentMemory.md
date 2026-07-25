@@ -22,6 +22,32 @@ This file serves as persistent memory for AI agents working on this project.
 7. Read docs/API.md
 8. Read docs/Database.md
 
+## PWA Support
+
+SplitMate is a Progressive Web App using `@vite-pwa/astro`.
+
+- **Service Worker:** Workbox `generateSW`, auto-update strategy
+- **Precache:** CSS, JS, fonts, images, icons (static assets only)
+- **API:** NetworkOnly — never cached
+- **Offline Fallback:** Prerendered `/offline` page with branding and retry button
+- **Install Prompt:** Glassmorphism banner captured from `beforeinstallprompt` event; dismissible, hidden when already installed
+- **Icons:** 192×192, 512×512, maskable variants, and Apple Touch Icon (180×180) — all emerald gradient
+- **Manifest:** `display: standalone`, `orientation: portrait-primary`, categories: finance, productivity
+- **Theme Color:** Dynamically updated via JS when toggling dark/light mode; manifest uses dark theme color
+
+### Testing PWA
+
+```bash
+# Build and preview (SW only active in production)
+cd frontend && npm run build && npm run preview
+```
+
+### Generating Icons
+
+```bash
+node scripts/generate-pwa-icons.mjs
+```
+
 ## Key Design Decisions
 
 - **Polling over WebSockets** (D-001): Simpler deployment, stateless backend
@@ -32,6 +58,7 @@ This file serves as persistent memory for AI agents working on this project.
 - **Monorepo** (D-006): Single repo with frontend/ and backend/
 - **CSS Custom Properties Design System** (D-009): Theme and components via CSS, no React/Framer Motion
 - **Toast over alert()** (D-010): Non-blocking notification system via DOM
+- **PWA Support** (D-011): Installable app with service worker, offline fallback, auto-updates via `@vite-pwa/astro`
 
 ## Code Conventions
 
@@ -146,3 +173,42 @@ npm run build
 - `docs/Changelog.md` — v0.3.0 with all changes
 
 **Build verification:** ✅ Build passes (hybrid SSR), all pages compile
+
+### 2026-07-25 — Progressive Web App (PWA) Implementation
+
+**Completed:** Full PWA transformation — installable, auto-updating, offline fallback with glassmorphism design.
+
+**Key changes:**
+- Integrated `@vite-pwa/astro` with Workbox `generateSW` strategy
+- Configured manifest: standalone display, portrait orientation, finance/productivity categories
+- Generated 5 PWA icons (192, 512, maskable ×2, apple-touch-icon) via Sharp with emerald gradient
+- Created `/offline` prere rendered page with branding and retry button
+- Created InstallPrompt component: captures `beforeinstallprompt`, shows glassmorphism banner, persists dismissal
+- Updated BaseLayout: apple-touch-icon link, apple-mobile-web-app-title, PWA meta tags
+- Updated ThemeToggle: dynamically updates `theme-color` meta tag on mode switch
+- Caching strategy: precache static assets only, NetworkOnly for API, NavigateFallback for offline
+
+**Files created:**
+- `frontend/scripts/generate-pwa-icons.mjs` — Icon generation script (Sharp)
+- `frontend/src/pages/offline.astro` — Offline fallback page
+- `frontend/src/components/InstallPrompt.astro` — Install banner component
+- `frontend/public/pwa-192x192.png` — Standard manifest icon
+- `frontend/public/pwa-512x512.png` — Large manifest icon
+- `frontend/public/pwa-192x192-maskable.png` — Android maskable icon
+- `frontend/public/pwa-512x512-maskable.png` — Android maskable icon
+- `frontend/public/apple-touch-icon.png` — Apple Touch Icon
+
+**Files modified:**
+- `frontend/astro.config.mjs` — Added PWA integration with manifest, workbox, caching rules
+- `frontend/src/layouts/BaseLayout.astro` — Added apple-touch-icon, apple-mobile-web-app-title, InstallPrompt
+- `frontend/src/components/ThemeToggle.astro` — Syncs theme-color meta tag with theme changes
+- `frontend/package.json` — Added `@vite-pwa/astro` dependency
+
+**Docs updated:**
+- `docs/Architecture.md` — Added PWA architecture section with caching rules table and platform support
+- `docs/Development.md` — Added PWA development and icon generation notes
+- `docs/Decisions.md` — Added D-011 (PWA Support) with detailed context and reasoning
+- `docs/AgentMemory.md` — Added PWA support section, session log, key decision entry
+- `docs/Changelog.md` — Added v0.4.0 section
+
+**Build verification:** ✅ Build passes (hybrid SSR)

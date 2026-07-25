@@ -12,32 +12,53 @@ import { AuthenticatedRequest } from "../types/index.js";
 
 const router = Router();
 
-const equalSplitSchema = z.object({
-  description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().positive("Amount must be greater than 0"),
-  paid_by: z.string().min(1, "Paid by is required"),
-  split_type: z.literal("equal"),
-  participants: z
-    .array(z.string())
-    .min(1, "At least one participant is required"),
-});
+const createExpenseSchema = z.discriminatedUnion("split_type", [
+  z.object({
+    description: z.string().min(1, "Description is required").max(200),
+    amount: z.number().positive("Amount must be greater than 0"),
+    split_type: z.literal("equal"),
+    participants: z
+      .array(z.string())
+      .min(1, "At least one participant is required"),
+  }),
+  z.object({
+    description: z.string().min(1, "Description is required").max(200),
+    amount: z.number().positive("Amount must be greater than 0"),
+    split_type: z.literal("custom"),
+    participants: z
+      .array(
+        z.object({
+          user_id: z.string(),
+          share_amount: z.number().positive("Share amount must be positive"),
+        })
+      )
+      .min(1, "At least one participant is required"),
+  }),
+]);
 
-const customSplitSchema = z.object({
-  description: z.string().min(1, "Description is required").max(200),
-  amount: z.number().positive("Amount must be greater than 0"),
-  paid_by: z.string().min(1, "Paid by is required"),
-  split_type: z.literal("custom"),
-  participants: z
-    .array(
-      z.object({
-        user_id: z.string(),
-        share_amount: z.number().positive("Share amount must be positive"),
-      })
-    )
-    .min(1, "At least one participant is required"),
-});
-
-const updateExpenseSchema = z.union([equalSplitSchema, customSplitSchema]);
+const updateExpenseSchema = z.discriminatedUnion("split_type", [
+  z.object({
+    description: z.string().min(1, "Description is required").max(200),
+    amount: z.number().positive("Amount must be greater than 0"),
+    split_type: z.literal("equal"),
+    participants: z
+      .array(z.string())
+      .min(1, "At least one participant is required"),
+  }),
+  z.object({
+    description: z.string().min(1, "Description is required").max(200),
+    amount: z.number().positive("Amount must be greater than 0"),
+    split_type: z.literal("custom"),
+    participants: z
+      .array(
+        z.object({
+          user_id: z.string(),
+          share_amount: z.number().positive("Share amount must be positive"),
+        })
+      )
+      .min(1, "At least one participant is required"),
+  }),
+]);
 
 async function verifyGroupMembership(groupId: string, userIds: string[]): Promise<void> {
   if (userIds.length === 0) return;
@@ -64,7 +85,7 @@ async function verifyGroupMembership(groupId: string, userIds: string[]): Promis
 router.post(
   "/groups/:id/expenses",
   requireAuth,
-  validate(updateExpenseSchema),
+  validate(createExpenseSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
       const groupId = req.params.id;
@@ -94,10 +115,11 @@ router.post(
         throw new AppError(403, "NOT_MEMBER", "You are not a member of this group.");
       }
 
-      const { description, amount, paid_by, split_type, participants } = req.body;
+      const paid_by = req.user!.id;
+      const { description, amount, split_type, participants } = req.body;
 
       await verifyGroupMembership(groupId, [
-        paid_by,
+        req.user!.id,
         ...(split_type === "equal"
           ? participants
           : participants.map((p: { user_id: string }) => p.user_id)),
@@ -199,7 +221,7 @@ router.patch(
         throw new AppError(403, "FORBIDDEN", "You can only edit your own expenses.");
       }
 
-      const { description, amount, paid_by, split_type, participants } = req.body;
+      const { description, amount, split_type, participants } = req.body;
 
       const [group] = await db
         .select()
@@ -212,7 +234,7 @@ router.patch(
       }
 
       await verifyGroupMembership(expense.group_id, [
-        paid_by,
+        expense.paid_by,
         ...(split_type === "equal"
           ? participants
           : participants.map((p: { user_id: string }) => p.user_id)),
@@ -240,7 +262,6 @@ router.patch(
         .set({
           description,
           amount,
-          paid_by,
           updated_at: now,
         })
         .where(eq(expenses.id, expenseId));

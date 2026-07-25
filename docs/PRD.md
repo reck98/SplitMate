@@ -282,7 +282,7 @@ Description
 
 Amount
 
-Paid By
+Paid By (Authenticated user only)
 
 Participants
 
@@ -373,10 +373,11 @@ Editable fields
 
 - Description
 - Amount
-- Paid By
 - Participants
 - Split Type
 - Split Amounts
+
+The payer is immutable — editing cannot change who paid.
 
 Editing automatically recalculates balances.
 

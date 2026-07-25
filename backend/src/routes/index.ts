@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import authRoutes from "./auth.js";
+import dashboardRoutes from "./dashboard.js";
 import groupRoutes from "./groups.js";
 import expenseRoutes from "./expenses.js";
 import settlementRoutes from "./settlements.js";
@@ -11,6 +12,7 @@ router.get("/health", (_req: Request, res: Response) => {
 });
 
 router.use("/", authRoutes);
+router.use("/", dashboardRoutes);
 router.use("/groups", groupRoutes);
 router.use("/", expenseRoutes);
 router.use("/", settlementRoutes);

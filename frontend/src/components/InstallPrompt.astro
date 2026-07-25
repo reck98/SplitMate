@@ -1,0 +1,85 @@
+<div id="install-prompt" class="fixed inset-x-0 bottom-0 z-50 hidden animate-fade-in-up p-4">
+  <div class="glass-strong mx-auto max-w-sm rounded-[var(--radius-lg)] p-4 shadow-[var(--shadow-xl)]">
+    <div class="mb-3 flex items-center gap-3">
+      <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-accent)] text-lg font-bold text-white shadow-[var(--shadow-glow)]">
+        S
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-semibold text-[var(--color-text-primary)]">Install SplitMate</p>
+        <p class="text-xs text-[var(--color-text-secondary)]">Add to your home screen for a better experience</p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button
+        id="install-dismiss"
+        class="flex-1 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-bg-glass)] px-4 py-2.5 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-200 hover:bg-[var(--color-bg-glass-hover)]"
+      >
+        Not now
+      </button>
+      <button
+        id="install-confirm"
+        class="flex-1 rounded-[var(--radius-md)] bg-[var(--color-accent)] px-4 py-2.5 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition-all duration-200 hover:bg-[var(--color-accent-hover)] active:scale-[0.97]"
+      >
+        Install
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    interface BeforeInstallPromptEvent extends Event {
+      prompt: () => Promise<void>;
+      userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+    }
+
+    const promptEl = document.getElementById("install-prompt");
+    const confirmBtn = document.getElementById("install-confirm");
+    const dismissBtn = document.getElementById("install-dismiss");
+
+    let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    const isDismissed = localStorage.getItem("splitmate-install-dismissed");
+
+    if (isStandalone || isDismissed) {
+      return;
+    }
+
+    window.addEventListener("beforeinstallprompt", (e: Event) => {
+      e.preventDefault();
+      deferredPrompt = e as BeforeInstallPromptEvent;
+      if (promptEl) {
+        promptEl.classList.remove("hidden");
+      }
+    });
+
+    window.addEventListener("appinstalled", () => {
+      if (promptEl) {
+        promptEl.classList.add("hidden");
+      }
+      deferredPrompt = null;
+      localStorage.removeItem("splitmate-install-dismissed");
+    });
+
+    confirmBtn?.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      if (result.outcome === "accepted") {
+        if (promptEl) {
+          promptEl.classList.add("hidden");
+        }
+      }
+      deferredPrompt = null;
+    });
+
+    dismissBtn?.addEventListener("click", () => {
+      if (promptEl) {
+        promptEl.classList.add("hidden");
+      }
+      localStorage.setItem("splitmate-install-dismissed", "true");
+      deferredPrompt = null;
+    });
+  })();
+</script>

@@ -31,8 +31,14 @@ import GlassButton from "../../../components/GlassButton.astro";
         </div>
 
         <div>
-          <label for="paid_by" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Paid By</label>
-          <select id="paid_by" required></select>
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Paid By</label>
+          <div class="flex items-center gap-3 glass rounded-[var(--radius-md)] px-4 py-3 opacity-70">
+            <div id="payer-avatar" class="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--color-accent)] text-sm font-bold text-white">?</div>
+            <div>
+              <p id="payer-name" class="text-sm font-medium text-[var(--color-text-primary)]">Loading...</p>
+              <p class="text-xs text-[var(--color-text-tertiary)]">Your account</p>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -68,22 +74,35 @@ import GlassButton from "../../../components/GlassButton.astro";
 
   <script>
     import { api } from "../../../lib/api";
+    import { $user } from "../../../stores/auth";
 
     const groupId = window.location.pathname.split("/groups/")[1]?.split("/")[0];
     let currentSplit = "equal";
     let members: any[] = [];
+    let currentUser: any = null;
 
     document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+
+    $user.subscribe((u) => { currentUser = u; });
+
+    function updatePayerDisplay() {
+      if (!currentUser || !members.length) return;
+      const member = members.find((m: any) => m.user_id === currentUser.id);
+      if (!member) return;
+      const nameEl = document.getElementById("payer-name");
+      const avatarEl = document.getElementById("payer-avatar");
+      if (nameEl) nameEl.textContent = member.name;
+      if (avatarEl) {
+        const initial = (member.name || "?").charAt(0).toUpperCase();
+        avatarEl.textContent = initial;
+      }
+    }
 
     async function loadMembers() {
       try {
         const data = await api.groups.get(groupId);
         members = data.members;
-
-        const paidBySelect = document.getElementById("paid_by") as HTMLSelectElement;
-        paidBySelect.innerHTML = members
-          .map((m) => `<option value="${m.user_id}">${m.name}</option>`)
-          .join("");
+        updatePayerDisplay();
 
         const participantsList = document.getElementById("participants-list")!;
         participantsList.innerHTML = members
@@ -170,7 +189,6 @@ import GlassButton from "../../../components/GlassButton.astro";
       try {
         const description = (document.getElementById("description") as HTMLInputElement).value;
         const amount = parseFloat((document.getElementById("amount") as HTMLInputElement).value);
-        const paid_by = (document.getElementById("paid_by") as HTMLSelectElement).value;
 
         const checkedBoxes = document.querySelectorAll(".participant-checkbox:checked");
 
@@ -212,7 +230,6 @@ import GlassButton from "../../../components/GlassButton.astro";
         await api.expenses.create(groupId, {
           description,
           amount,
-          paid_by,
           split_type: currentSplit as "equal" | "custom",
           participants,
         });

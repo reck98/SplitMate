@@ -75,29 +75,19 @@ router.get(
           owner_id: groups.owner_id,
           invite_code: groups.invite_code,
           created_at: groups.created_at,
+          member_count: sql<number>`(
+            SELECT COUNT(*) FROM ${groupMembers}
+            WHERE ${groupMembers.group_id} = ${groups.id}
+          )`,
         })
         .from(groupMembers)
         .innerJoin(groups, eq(groupMembers.group_id, groups.id))
         .where(eq(groupMembers.user_id, req.user!.id))
         .orderBy(groups.created_at);
 
-      const groupsWithCounts = await Promise.all(
-        userGroups.map(async (g) => {
-          const [result] = await db
-            .select({ count: sql<number>`count(*)` })
-            .from(groupMembers)
-            .where(eq(groupMembers.group_id, g.id));
-
-          return {
-            ...g,
-            member_count: result.count,
-          };
-        })
-      );
-
       res.json({
         success: true,
-        data: groupsWithCounts,
+        data: userGroups,
       });
     } catch (error) {
       next(error);

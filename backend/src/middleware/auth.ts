@@ -11,6 +11,7 @@ export async function requireAuth(
   _res: Response,
   next: NextFunction
 ): Promise<void> {
+  const start = performance.now();
   try {
     const authHeader = req.headers.authorization;
 
@@ -20,13 +21,19 @@ export async function requireAuth(
 
     const token = authHeader.slice(7);
 
+    const verifyStart = performance.now();
     const decoded = await getAuth().verifyIdToken(token);
+    const verifyTime = performance.now() - verifyStart;
 
+    const dbStart = performance.now();
     const [user] = await db
       .select()
       .from(users)
       .where(eq(users.firebase_uid, decoded.uid))
       .limit(1);
+    const dbTime = performance.now() - dbStart;
+
+    console.log(`[PERF] requireAuth: verifyIdToken=${verifyTime.toFixed(1)}ms db=${dbTime.toFixed(1)}ms total=${(performance.now() - start).toFixed(1)}ms`);
 
     if (!user) {
       throw new AppError(401, "UNAUTHORIZED", "User not found.");

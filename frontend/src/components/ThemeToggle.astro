@@ -28,9 +28,18 @@ interface Props {
     const moon = document.getElementById("moon-icon");
     const html = document.documentElement;
 
+    function setThemeMeta(theme: string) {
+      const color = theme === "dark" ? "#09090b" : "#f1f5f9";
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute("content", color);
+      }
+    }
+
     function setTheme(theme: string) {
       html.setAttribute("data-theme", theme);
       localStorage.setItem("splitmate-theme", theme);
+      setThemeMeta(theme);
       if (sun && moon) {
         sun.classList.toggle("hidden", theme !== "light");
         moon.classList.toggle("hidden", theme !== "dark");

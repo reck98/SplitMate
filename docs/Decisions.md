@@ -328,3 +328,133 @@ Replace `alert()` with a DOM-based toast notification system accessible via `(wi
 **Future Considerations:**
 - Could be extended to support action buttons (undo, retry) for optimistic UI patterns
 - Could be migrated to a Web Component for better encapsulation
+
+---
+
+## D-011: Introduce Progressive Web App (PWA) Support
+
+**Date:** 2026-07-25
+**Status:** Accepted
+
+**Context:**
+The application needed to feel like a native mobile app while still running as a web application. Users should be able to install SplitMate on their home screen, launch it in standalone mode, and receive automatic updates without visiting the website.
+
+**Decision:**
+Integrate `@vite-pwa/astro` to add full PWA support: Web App Manifest, Service Worker with Workbox, install prompt, offline fallback, and Apple/Android platform meta tags.
+
+**Alternatives Considered:**
+- **Workbox directly:** More manual configuration but same underlying library. `@vite-pwa/astro` provides zero-config integration with Astro's build pipeline.
+- **Service Worker via custom script:** Writing and maintaining a custom SW adds significant complexity for caching, updating, and scope management.
+- **No PWA:** Users would need to bookmark the site — no installability, no offline fallback, no native-app feel.
+
+**Reasoning:**
+- `@vite-pwa/astro` provides seamless integration with Astro's build process (injects manifest, generates SW, handles registration)
+- Workbox generates a production-ready SW with minimal configuration
+- Auto-update strategy ensures users always get the latest frontend bundle
+- NetworkOnly for API requests guarantees data freshness and prevents stale cached data
+- The offline fallback page provides a friendly experience without complex offline data sync
+- Maskable icons provide proper adaptive icon support on Android
+- Apple meta tags ensure proper standalone behavior on iOS
+
+**Consequences:**
+- Added `@vite-pwa/astro` dependency (~264 packages, all transitive from Workbox)
+- Frontend now requires a production build + preview to test SW behavior
+- Users who install the app will see the offline page when disconnected (friendly, not broken)
+- All API responses always come from network — no risk of stale financial data
+- Install prompt is user-friendly and dismissible
+
+**Future Considerations:**
+- If offline expense creation becomes a requirement, switch from `autoUpdate` to `prompt` registration type and implement IndexedDB-based sync queues
+- If Firebase SDK bundle size becomes a concern, lazy-load auth on the landing page
+- Consider adding `pwa-assets-generator` to automate icon generation from a single source image
+
+---
+
+## D-012: Authenticated User Is Always the Expense Payer
+
+**Date:** 2026-07-25
+**Status:** Accepted
+
+**Context:**
+The expense creation form previously included a "Paid By" dropdown allowing users to select any group member as the payer. This added complexity to the UI, required an extra API field, and made it possible for users to accidentally (or intentionally) create expenses on behalf of others. The edit expense form also allowed changing the payer, which could lead to confusion about who actually paid.
+
+**Decision:**
+The payer for every expense is always the authenticated user. The "Paid By" dropdown is removed from both the create and edit expense forms. The backend derives the payer from `req.user.id` and rejects any client-supplied `paid_by` field.
+
+**Alternatives Considered:**
+- **Keep Paid By selector:** Adds UI complexity and enables payer spoofing (even if accidental). Requires additional validation on the backend.
+- **Allow changing payer on edit:** Could lead to disputes — if expense creator A changes the payer to B, B might disagree they paid.
+- **Per-group permission model:** Overly complex for a simple expense-sharing app.
+
+**Reasoning:**
+- Simplifies the UI: one fewer field, fewer decisions for the user
+- Prevents payer spoofing: the backend is the single source of truth
+- Eliminates an entire category of validation (checking that the selected payer is a group member)
+- Reduces the API surface: `paid_by` is no longer part of the request contract
+- Improves data integrity: expense ownership (creator) and payer are now logically aligned
+- The edit page no longer needs to handle payer changes, which avoids the complexity of recalculating balances based on who paid
+
+**Benefits:**
+- Removed `paid_by` from the API request body for both create and update
+- Simplified frontend form (removed a select dropdown, replaced it with a read-only display)
+- Strengthened security (backend ignores client-supplied payer ID)
+- Reduced validation surface (removed payer membership check from create expense validation)
+- Clearer UX: users see "Your account" under their name in the read-only payer field
+
+**Trade-offs:**
+- Users cannot record expenses paid by someone else. If a group member pays cash for dinner, the payer must create the expense from their own device
+- This requires all group members to have the app installed and be logged in to record expenses they paid
+- For group scenarios where one person always pays (e.g., a designated treasurer), this adds friction
+
+**Future Considerations:**
+- If group-level payer delegation becomes a requirement, implement a "pay on behalf of" feature with explicit consent (e.g., the payer receives a notification and must approve)
+- The current decision makes sense for V1 — the vast majority of expense-sharing apps follow this pattern
+
+---
+
+## D-013: Dedicated Dashboard Endpoint Over Multiple Independent Requests
+
+**Date:** 2026-07-25
+**Status:** Accepted
+
+**Context:**
+After login, the dashboard page made two parallel API requests (`GET /api/me` and `GET /api/groups`) to render the user's profile and group list. Each request independently went through the `requireAuth` middleware, which calls Firebase's `verifyIdToken` — a network-based JWT verification step that adds 200-600ms per call. This meant the dashboard paid the Firebase verification cost twice before any data could be displayed. Additionally, the groups endpoint suffered from an N+1 query pattern where each group's member count was fetched via a separate `COUNT(*)` query.
+
+Profiling revealed:
+- Two `verifyIdToken` calls: 400-1200ms combined
+- N+1 count queries: 20-50ms per group × N groups
+- Two HTTP round trips: 100-300ms combined network latency
+- No database indexes on queried foreign key columns (full table scans on remote Turso)
+
+**Decision:**
+Create a dedicated `GET /api/dashboard` endpoint that returns `{ user, groups[] }` in a single response. The groups include `member_count` via a correlated subquery, eliminating the N+1 pattern.
+
+**Alternatives Considered:**
+- **Keep two requests + optimize independently:** Fix N+1 and add indexes but keep 2 requests. Would still pay double Firebase verification cost.
+- **Client-side caching of /me response:** Would need to cache auth state across pages, adding complexity.
+- **Skip Firebase verification on one endpoint:** Security risk — every request must be authenticated independently.
+
+**Reasoning:**
+- Single endpoint means a single `verifyIdToken` call — cuts Firebase auth overhead in half
+- Eliminates an entire HTTP round trip — reduces network latency
+- Correlated subquery for `member_count` runs in constant time per row (O(n) instead of O(n²) for N+1)
+- Adding 8 database indexes makes all FK lookups index scans instead of full table scans
+- Frontend Firebase token caching further reduces per-request overhead
+- Combined optimizations projected to reduce dashboard load from 2500-5000ms to 600-1500ms
+
+**Consequences:**
+- New backend endpoint `/api/dashboard` to maintain
+- Frontend no longer uses `api.auth.me()` or `api.groups.list()` directly on dashboard
+- `GET /api/me` and `GET /api/groups` remain available for other pages
+- 8-index migration to apply before performance benefit is realized
+- Temporary `[PERF]` logging in `requireAuth` for verifying improvements
+
+**Remaining Bottlenecks:**
+- Firebase `verifyIdToken` is still the single largest contributor (~200-600ms) — this is unavoidable with Firebase Auth
+- First dashboard load after cold start may still be slower due to Firebase Auth SDK initialization and IndexedDB restoration
+- Turso (remote SQLite) has inherent network latency per query — local development is faster than production
+
+**Future Considerations:**
+- If Firebase token verification becomes a bottleneck for other pages, consider a lightweight server-side token cache
+- For the group detail page (`GET /api/groups/:id`), similar N+1 and query optimization opportunities exist in the balance calculation and data serialization logic
+- If cold starts remain an issue, evaluate Turso's "point-in-time recovery" vs "hot" database tier

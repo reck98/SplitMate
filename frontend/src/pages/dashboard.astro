@@ -70,18 +70,15 @@ import Skeleton from "../components/Skeleton.astro";
 
     async function loadDashboard() {
       try {
-        const [user, groups] = await Promise.all([
-          api.auth.me(),
-          api.groups.list(),
-        ]);
-        setUser(user);
-        setGroups(groups);
-        document.getElementById("user-name")!.textContent = `Welcome, ${user.name}`;
+        const data = await api.dashboard.get();
+        setUser(data.user);
+        setGroups(data.groups);
+        document.getElementById("user-name")!.textContent = `Welcome, ${data.user.name}`;
 
         const container = document.getElementById("groups-list")!;
         const skeleton = document.getElementById("skeleton-loading");
 
-        if (groups.length === 0) {
+        if (data.groups.length === 0) {
           if (skeleton) skeleton.remove();
           container.innerHTML = `
             <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
@@ -98,7 +95,7 @@ import Skeleton from "../components/Skeleton.astro";
         }
 
         container.innerHTML =
-          groups
+          data.groups
             .map(
               (g, i) => `
             <a href="/groups/${g.id}" class="glass rounded-glass-lg p-4 flex items-center justify-between transition-all duration-200 glass-hover animate-fade-in-up" style="animation-delay: ${i * 40}ms">

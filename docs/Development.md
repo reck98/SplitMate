@@ -29,9 +29,39 @@
 - Firebase SDK adds ~152KB to client bundle (31KB gzipped)
 - `getStaticPaths` warning on dynamic group page (expected for SSR with Astro)
 - Frontend stores are defined but not yet deeply integrated with all page scripts
+- `getFirebaseToken()` in `firebase.ts` still has a fallback observer path for first-time calls — consider fully removing after verifying cached path works in all browsers
 
 ### Future Improvements
 - Migrate to WebSockets when real-time collaboration is needed
 - Add caching for balance calculation on large groups
 - Add integration tests with test database
 - Add CI/CD pipeline configuration
+- Service worker scope: currently set to root (`/`) — verify sub-path deployment behavior
+- Remove temporary `[PERF]` logging from `requireAuth` middleware after performance verification
+- Consider server-side caching for the `/api/dashboard` endpoint (e.g., 30s TTL with invalidation on group/expense changes)
+
+### Performance Notes
+- Dashboard load uses a single `/api/dashboard` endpoint instead of two separate API calls, halving Firebase token verification overhead
+- N+1 query pattern in `GET /api/groups` was eliminated by using a correlated subquery for member counts
+- 8 database indexes added via migration `0001_add_performance_indexes` to accelerate foreign key lookups (group_members.user_id, group_members.group_id, expenses.group_id, expenses.paid_by, expense_participants.expense_id, settlements.group_id, settlements.payer_id, settlements.receiver_id)
+- Frontend `getFirebaseToken()` caches tokens at module scope to avoid re-subscribing to `onAuthStateChanged` on every request
+- `[PERF]` logging is active in `requireAuth` middleware for measuring Firebase verification and database lookup times
+
+### PWA Development
+
+The service worker is only active in production builds. To test PWA features:
+
+```bash
+# Build and preview
+npm run build && npm run preview
+```
+
+The service worker will register on first visit and precache all static assets. The install prompt appears after the SW is activated and the manifest is parsed by the browser.
+
+#### Generating Icons
+
+```bash
+node scripts/generate-pwa-icons.mjs
+```
+
+Regenerates all PWA icons in `public/` from the SVG template. Run this if the logo design changes.

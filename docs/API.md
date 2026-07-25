@@ -300,6 +300,8 @@ Leave a group.
 
 Create an expense in a group.
 
+The payer is always the authenticated user. The backend ignores any `paid_by` value sent by the client.
+
 **Auth:** Required (must be a member)
 
 **Request (Equal Split):**
@@ -307,7 +309,6 @@ Create an expense in a group.
 {
   "description": "Dinner",
   "amount": 1200,
-  "paid_by": "uuid",
   "split_type": "equal",
   "participants": ["uuid1", "uuid2", "uuid3", "uuid4"]
 }
@@ -318,7 +319,6 @@ Create an expense in a group.
 {
   "description": "Dinner",
   "amount": 1200,
-  "paid_by": "uuid",
   "split_type": "custom",
   "participants": [
     { "user_id": "uuid1", "share_amount": 100 },
@@ -332,22 +332,24 @@ Create an expense in a group.
 **Validation:**
 - `description`: Required, non-empty string
 - `amount`: Required, number > 0
-- `paid_by`: Required, must be a group member
 - `split_type`: Required, "equal" or "custom"
 - `participants`: Required array
   - Equal: array of user IDs, at least 1
   - Custom: array of `{ user_id, share_amount }`, sum must equal expense amount
 - All participants must be group members
+- `paid_by` is NOT accepted — the payer is always the authenticated user
 
 ---
 
 ### PATCH /expenses/:id
 
-Edit an expense. Only the creator can edit.
+Edit an expense. Only the creator can edit. The payer is immutable and cannot be changed via this endpoint.
 
 **Auth:** Required (must be creator)
 
-**Request:** Same shape as create expense.
+**Request:** Same shape as create expense (without `paid_by`).
+
+**Note:** The `paid_by` field is never updated — the original payer is preserved.
 
 **Errors:** `403` if not creator, `404` if not found.
 
