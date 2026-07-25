@@ -1,0 +1,48 @@
+---
+interface Props {
+  class?: string;
+}
+---
+
+<div
+  id="toast-container"
+  class:list={[
+    "fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex flex-col gap-2 pointer-events-none",
+    Astro.props.class,
+  ]}
+  aria-live="polite"
+  aria-atomic="true"
+/>
+
+<script>
+  interface ToastOptions {
+    message: string;
+    type?: "success" | "error" | "info";
+    duration?: number;
+  }
+
+  function showToast({ message, type = "info", duration = 3000 }: ToastOptions) {
+    const container = document.getElementById("toast-container");
+    if (!container) return;
+
+    const colors = {
+      success: "border-[var(--color-success)] bg-[var(--color-success-soft)] text-[var(--color-success)]",
+      error: "border-[var(--color-danger)] bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
+      info: "border-[var(--color-border-hover)] bg-[var(--color-bg-glass)] text-[var(--color-text-primary)]",
+    };
+
+    const toast = document.createElement("div");
+    toast.className = `pointer-events-auto glass-strong rounded-glass-lg px-4 py-3 text-sm font-medium border-l-2 animate-toast-in ${colors[type]}`;
+    toast.style.animation = "toastIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1) both";
+    toast.textContent = message;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.animation = "toastOut 200ms ease-in both";
+      setTimeout(() => toast.remove(), 200);
+    }, duration);
+  }
+
+  (window as any).showToast = showToast;
+</script>

@@ -9,11 +9,11 @@ SplitMate follows a monolithic backend serving a static frontend.
 │   Browser   │────▶│   Astro App  │────▶│  Express  │
 │  (Mobile)   │◀────│  (Vercel)    │◀────│  (Railway)│
 └─────────────┘     └──────────────┘     └─────┬─────┘
-                                               │
-                                        ┌──────▼──────┐
-                                        │    Turso    │
-                                        │   (SQLite)  │
-                                        └─────────────┘
+                                                │
+                                         ┌──────▼──────┐
+                                         │    Turso    │
+                                         │   (SQLite)  │
+                                         └─────────────┘
 ```
 
 - **Astro** serves the frontend. API requests are made from the browser directly to the Express backend.
@@ -40,13 +40,53 @@ SplitMate/
 │   └── src/
 │       ├── layouts/          # Astro layouts
 │       ├── pages/            # Astro pages
-│       ├── components/       # Reusable UI components
+│       ├── components/       # Reusable design system components (Astro)
 │       ├── stores/           # Nano Stores
 │       ├── lib/              # API client, helpers
-│       └── styles/           # Global CSS
+│       └── styles/           # Global CSS, design tokens, animations
 ├── docs/                     # Project documentation
 └── scripts/                  # Utility scripts
 ```
+
+---
+
+## Design System Architecture
+
+The design system is built with CSS custom properties and Astro components:
+
+```
+src/
+├── styles/
+│   ├── design-tokens.css     # CSS custom properties for theme (colors, spacing, shadows, blur)
+│   ├── animations.css        # Keyframe animations (fade, slide, scale, shimmer, stagger)
+│   └── global.css            # Imports design tokens + animations, Tailwind base/components/utilities
+├── components/
+│   ├── GlassCard.astro       # Glassmorphism card container
+│   ├── GlassButton.astro     # Button with primary/secondary/ghost/danger variants
+│   ├── GlassInput.astro      # Form input with label, hint, error states
+│   ├── GlassBadge.astro      # Badge/tag with variant colors
+│   ├── GlassAvatar.astro     # Avatar with image or initial-based fallback
+│   ├── GlassModal.astro      # Modal dialog with backdrop blur
+│   ├── Skeleton.astro        # Loading skeleton with shimmer animation
+│   ├── EmptyState.astro      # Empty state with icon, title, description, action slot
+│   ├── ThemeToggle.astro     # Dark/light mode toggle with sun/moon icons
+│   └── Toast.astro           # Toast notification container + showToast() API
+```
+
+### Theme System
+
+- CSS custom properties on `:root` (light) and `[data-theme="dark"]`
+- System preference detected via `prefers-color-scheme` media query
+- User preference persisted in `localStorage` under key `splitmate-theme`
+- Theme toggle script sets `data-theme` attribute on `<html>`
+- Smooth transition on `background` and `color` properties (200ms)
+
+### Animation System
+
+- CSS keyframes for: `fadeIn`, `fadeInUp`, `fadeInDown`, `fadeInScale`, `slideInRight`, `scaleIn`, `shimmer`, `spin`, `pulse`, `toastIn`, `toastOut`
+- Utility classes: `.animate-fade-in`, `.animate-fade-in-up`, `.stagger`, `.animate-shimmer`
+- Staggered lists via `:nth-child(n)` with incremental `animation-delay`
+- All animations respect `prefers-reduced-motion` (durations set to 0.01ms)
 
 ---
 
@@ -58,7 +98,7 @@ SplitMate/
 4. Service layer queries database via Drizzle ORM
 5. Response flows back through middleware
 6. Browser receives JSON response
-7. Nano Store updates → reactive UI re-render
+7. Nano Store updates → reactive DOM updates
 
 ---
 
@@ -122,8 +162,8 @@ Algorithm:
 
 ## Polling Strategy
 
-- Frontend polls `GET /groups/:id` every 1s while group detail page is active
-- If 3 consecutive polls return identical data (hash comparison), back off to 5s
+- Frontend polls `GET /groups/:id` every 10s while group detail page is active
+- If 3 consecutive polls return identical data (hash comparison), back off to 15s
 - On any user action (add expense, settle), reset to 1s immediately
 - Polling stops when user navigates away from group detail
 - Adaptive polling reduces server load during idle periods
@@ -148,7 +188,8 @@ expenses ──< expense_participants
 ## External Integrations
 
 - **Firebase Authentication**: Google Sign-In via Firebase Auth SDK (frontend) verified by Firebase Admin SDK (backend)
-- **DiceBear**: Avatar generation fallback
+- **Inter Font**: Google Fonts for typography
+- **Lucide Icons**: via `astro-icon` integration
 - **UPI Deep Links**: `upi://pay` URI scheme to launch native UPI apps
 
 ---
@@ -160,3 +201,5 @@ expenses ──< expense_participants
 - Firebase ID Tokens via Authorization header — verified by Firebase Admin SDK, auto-refresh via Firebase client SDK
 - Greedy debt simplification — O(n log n), near-minimal transactions
 - Adaptive polling — reduces server load while maintaining responsiveness
+- CSS custom properties design system — no component framework needed for theming
+- Toast notifications over alert() — non-blocking, styled, accessible

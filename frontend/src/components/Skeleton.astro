@@ -1,0 +1,34 @@
+---
+interface Props {
+  class?: string;
+  width?: string;
+  height?: string;
+  rounded?: "sm" | "md" | "lg" | "full";
+  variant?: "text" | "circle" | "rect";
+}
+
+const { width, height, rounded = "md", variant = "text" } = Astro.props;
+
+const roundedClasses = {
+  sm: "rounded",
+  md: "rounded-glass-lg",
+  lg: "rounded-glass-xl",
+  full: "rounded-full",
+}[rounded];
+
+const variantStyles = {
+  text: { width: width || "100%", height: height || "16px" },
+  circle: { width: width || "40px", height: height || "40px" },
+  rect: { width: width || "100%", height: height || "80px" },
+}[variant];
+---
+
+<div
+  class:list={[
+    "shimmer-bg",
+    roundedClasses,
+    Astro.props.class,
+  ]}
+  style={`width: ${variantStyles.width}; height: ${variantStyles.height};`}
+  aria-hidden="true"
+/>

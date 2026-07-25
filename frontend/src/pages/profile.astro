@@ -1,28 +1,39 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import GlassCard from "../components/GlassCard.astro";
+import Skeleton from "../components/Skeleton.astro";
 ---
 
-<BaseLayout>
-  <main class="mx-auto max-w-lg px-4 py-6">
-    <header class="mb-6">
-      <a href="/dashboard" class="btn-ghost -ml-2 mb-4">
-        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+<BaseLayout title="Profile - SplitMate">
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    <header class="mb-6 animate-fade-in-down">
+      <a href="/dashboard" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors mb-4">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
-        Back
+        Back to Dashboard
       </a>
-      <h1 class="text-2xl font-bold text-gray-900">Profile</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">Profile</h1>
+      <p class="mt-1 text-sm text-[var(--color-text-secondary)]">Manage your account settings</p>
     </header>
 
     <div id="profile-content" class="space-y-4">
-      <div class="card text-center py-6 text-gray-500">Loading...</div>
+      <GlassCard padding="lg">
+        <div class="flex items-center gap-4">
+          <Skeleton width="64px" height="64px" variant="circle" />
+          <div class="space-y-2 flex-1">
+            <Skeleton width="50%" height="24px" />
+            <Skeleton width="40%" height="14px" />
+          </div>
+        </div>
+      </GlassCard>
     </div>
   </main>
 
   <script>
     import { api } from "../lib/api";
     import { auth } from "../lib/firebase";
-    import { $user, setUser } from "../stores/auth";
+    import { setUser } from "../stores/auth";
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
@@ -31,28 +42,45 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
         const container = document.getElementById("profile-content")!;
         container.innerHTML = `
-          <div class="card text-center">
-            <div class="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary-100 text-2xl font-bold text-primary-700">
-              ${user.name.charAt(0).toUpperCase()}
+          <div class="glass rounded-glass-xl p-6 animate-fade-in-up">
+            <div class="flex items-center gap-4">
+              ${user.avatar
+                ? `<img src="${user.avatar}" alt="${user.name}" class="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--color-accent-soft)]" loading="lazy">`
+                : `<div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-2xl font-bold text-[var(--color-accent)] ring-2 ring-[var(--color-accent-soft)]">${user.name.charAt(0).toUpperCase()}</div>`
+              }
+              <div>
+                <h2 class="text-xl font-bold text-[var(--color-text-primary)]">${user.name}</h2>
+                <p class="text-sm text-[var(--color-text-tertiary)]">${user.email}</p>
+              </div>
             </div>
-            <h2 class="text-xl font-bold text-gray-900">${user.name}</h2>
-            <p class="text-sm text-gray-500">${user.email}</p>
           </div>
 
-          <div class="card">
-            <label class="block text-sm font-medium text-gray-700 mb-1">UPI ID</label>
+          <div class="glass rounded-glass-xl p-6 animate-fade-in-up" style="animation-delay: 40ms">
+            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">UPI ID</label>
             <div class="flex items-center gap-2">
-              <input type="text" id="upi_id" value="${user.upi_id || ""}" class="flex-1" placeholder="Set your UPI ID" />
-              <button id="save-upi-btn" class="btn-primary">Save</button>
+              <input type="text" id="upi_id" value="${user.upi_id || ""}" placeholder="Set your UPI ID" class="flex-1" />
+              <button id="save-upi-btn" class="inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200 shrink-0">Save</button>
             </div>
           </div>
 
-          <div class="card">
-            <h3 class="font-medium text-gray-900 mb-2">Account</h3>
-            <p class="text-sm text-gray-500">Connected with Google</p>
+          <div class="glass rounded-glass-xl p-6 animate-fade-in-up" style="animation-delay: 80ms">
+            <div class="flex items-center gap-3">
+              <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--color-info-soft)]">
+                <svg class="h-5 w-5 text-[var(--color-info)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="font-medium text-[var(--color-text-primary)]">Account</h3>
+                <p class="text-sm text-[var(--color-text-tertiary)]">Connected with Google</p>
+              </div>
+            </div>
           </div>
 
-          <button id="logout-btn" class="btn-secondary w-full text-red-600 border-red-200 hover:bg-red-50">
+          <button id="logout-btn" class="inline-flex w-full items-center justify-center gap-2 font-medium rounded-glass-xl px-4 py-3 text-sm glass glass-hover text-[var(--color-danger)] transition-all duration-200 animate-fade-in-up" style="animation-delay: 120ms">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+            </svg>
             Sign Out
           </button>
         `;
@@ -61,9 +89,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           const upiId = (document.getElementById("upi_id") as HTMLInputElement).value;
           try {
             await api.auth.updateProfile(upiId);
-            alert("UPI ID updated.");
+            (window as any).showToast?.({ message: "UPI ID updated successfully", type: "success" });
           } catch (error: any) {
-            alert(error.message);
+            (window as any).showToast?.({ message: error.message || "Failed to update UPI ID", type: "error" });
           }
         });
 

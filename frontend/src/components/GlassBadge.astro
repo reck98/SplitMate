@@ -1,0 +1,33 @@
+---
+interface Props {
+  class?: string;
+  variant?: "default" | "success" | "warning" | "danger" | "info";
+  size?: "sm" | "md";
+}
+
+const { variant = "default", size = "sm" } = Astro.props;
+
+const variantClasses = {
+  default: "bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]",
+  success: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+  warning: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+  danger: "bg-[var(--color-danger-soft)] text-[var(--color-danger)]",
+  info: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+}[variant];
+
+const sizeClasses = {
+  sm: "px-2 py-0.5 text-xs",
+  md: "px-3 py-1 text-sm",
+}[size];
+---
+
+<span
+  class:list={[
+    "inline-flex items-center gap-1.5 rounded-full font-medium",
+    variantClasses,
+    sizeClasses,
+    Astro.props.class,
+  ]}
+>
+  <slot />
+</span>

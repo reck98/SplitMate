@@ -1,0 +1,26 @@
+---
+interface Props {
+  class?: string;
+  padding?: "sm" | "md" | "lg" | "none";
+  hover?: boolean;
+}
+
+const { padding = "md", hover = false, class: className } = Astro.props;
+const padClass = {
+  sm: "p-3",
+  md: "p-4",
+  lg: "p-6",
+  none: "p-0",
+}[padding];
+---
+
+<div
+  class:list={[
+    "glass rounded-glass-lg transition-all duration-200",
+    padClass,
+    hover && "glass-hover cursor-pointer",
+    className,
+  ]}
+>
+  <slot />
+</div>

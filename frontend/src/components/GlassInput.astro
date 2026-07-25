@@ -1,0 +1,51 @@
+---
+interface Props {
+  class?: string;
+  type?: "text" | "email" | "number" | "password" | "tel" | "url" | "search";
+  id?: string;
+  name?: string;
+  placeholder?: string;
+  value?: string;
+  required?: boolean;
+  maxlength?: number;
+  min?: number;
+  step?: string;
+  autocomplete?: string;
+  label?: string;
+  hint?: string;
+  error?: string;
+}
+
+const { label, hint, error, class: className, ...inputProps } = Astro.props;
+---
+
+<div class="space-y-1.5">
+  {label && (
+    <label for={inputProps.id} class="block text-sm font-medium text-[var(--color-text-secondary)]">
+      {label}
+    </label>
+  )}
+  <input
+    type={inputProps.type}
+    id={inputProps.id}
+    name={inputProps.name}
+    placeholder={inputProps.placeholder}
+    value={inputProps.value}
+    required={inputProps.required}
+    maxlength={inputProps.maxlength}
+    min={inputProps.min}
+    step={inputProps.step}
+    autocomplete={inputProps.autocomplete}
+    class:list={[
+      "w-full rounded-glass-lg border bg-[var(--color-bg-glass)] px-4 py-2.5 text-sm text-[var(--color-text-primary)] placeholder:text-[var(--color-text-tertiary)] transition-all duration-150",
+      error ? "input-error" : "hover:border-[var(--color-border-active)] focus:border-accent focus:shadow-[0_0_0_3px_var(--color-accent-soft)]",
+      className,
+    ]}
+  />
+  {hint && !error && (
+    <p class="text-xs text-[var(--color-text-tertiary)]">{hint}</p>
+  )}
+  {error && (
+    <p class="text-xs text-[var(--color-danger)]">{error}</p>
+  )}
+</div>

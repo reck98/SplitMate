@@ -157,6 +157,35 @@ Implement adaptive polling: 1s interval while active, back off to 5s after 3 unc
 
 ---
 
+## D-006: Monorepo Structure
+
+**Date:** 2024-07-25
+**Status:** Accepted
+
+**Context:**
+The project has frontend (Astro) and backend (Express) components that must be developed and deployed together.
+
+**Decision:**
+Use a monorepo with frontend/ and backend/ directories at the root.
+
+**Alternatives Considered:**
+- Separate repositories: More isolation but harder to coordinate changes
+- npm workspaces / turborepo: Too much tooling overhead for two-package project
+
+**Reasoning:**
+- Single repository simplifies development workflow
+- Shared configuration and documentation
+- Easy to run both services with a single command
+- Frontend and backend versions stay in sync
+- No complex monorepo tooling required
+
+**Consequences:**
+- Both apps share the same CI/CD pipeline
+- Root scripts coordinate both packages
+- Each package independently deployable (Vercel + Railway)
+
+---
+
 ## D-007: Extracting Pure Functions for Testability
 
 **Date:** 2024-07-25
@@ -186,35 +215,6 @@ Extract `simplifyDebts` into its own file `services/settlement.ts`.
 **Future Considerations:**
 - Any new pure business logic should be extracted into its own file
 - Integration tests for `getBalances` would need a test database or mocked client
-
----
-
-## D-006: Monorepo Structure
-
-**Date:** 2024-07-25
-**Status:** Accepted
-
-**Context:**
-The project has frontend (Astro) and backend (Express) components that must be developed and deployed together.
-
-**Decision:**
-Use a monorepo with frontend/ and backend/ directories at the root.
-
-**Alternatives Considered:**
-- Separate repositories: More isolation but harder to coordinate changes
-- npm workspaces / turborepo: Too much tooling overhead for two-package project
-
-**Reasoning:**
-- Single repository simplifies development workflow
-- Shared configuration and documentation
-- Easy to run both services with a single command
-- Frontend and backend versions stay in sync
-- No complex monorepo tooling required
-
-**Consequences:**
-- Both apps share the same CI/CD pipeline
-- Root scripts coordinate both packages
-- Each package independently deployable (Vercel + Railway)
 
 ---
 
@@ -254,3 +254,77 @@ Replace Google OAuth with Firebase Authentication (Google Provider).
 - If bundle size becomes a concern, consider lazy-loading Firebase auth
 - Firebase token auto-refresh is handled by the client SDK — no backend changes needed
 - Can add more Firebase auth providers (Apple, Phone) without schema changes
+
+---
+
+## D-009: CSS Custom Properties Design System over Component Framework
+
+**Date:** 2025-07-25
+**Status:** Accepted
+
+**Context:**
+The frontend needed a complete visual redesign (glassmorphism, dark/light mode, animations) while preserving the existing Astro + vanilla JS architecture. Adding React/Framer Motion was considered for animations and interactive components.
+
+**Decision:**
+Build the design system using CSS custom properties for theming and Astro components for presentation. Use CSS animations instead of Framer Motion. Use `astro-icon` for Lucide icons.
+
+**Alternatives Considered:**
+- React + Framer Motion + Lucide React: Would require converting all pages to React islands, adding significant bundle size (~40KB React + ~30KB Framer Motion) and architectural complexity
+- Tailwind-only approach: More limited theming capabilities, no dark mode support without extensive class overrides
+- Web Component-based design system: Better encapsulation but adds complexity for SSR
+
+**Reasoning:**
+- CSS custom properties provide runtime theme switching without any JavaScript
+- Astro components are zero-runtime (HTML only) — no JS overhead for presentational UI
+- CSS animations cover all required interaction patterns (fade, slide, scale, stagger) without additional dependencies
+- `astro-icon` provides tree-shaken SVG icons with zero runtime cost
+- The existing vanilla JS architecture is preserved — no framework migration needed
+- Dark mode respects `prefers-color-scheme` and persists to localStorage with ~20 lines of JavaScript
+- Better performance: no React tree reconciliation, no animation library overhead
+
+**Consequences:**
+- Design tokens are centralized in CSS files, not in JavaScript
+- All UI components are Astro `.astro` files (HTML templates with scoped styles)
+- Animations are limited to CSS transitions and keyframes (no spring physics, no gesture-driven animations)
+- Icon usage requires `astro-icon` integration (not raw SVG or icon font)
+- Theme toggle requires a small inline script (no React component)
+
+**Future Considerations:**
+- If complex animations become necessary (drag-to-settle, gesture-based interactions), consider adding Framer Motion as a targeted React island
+- If the app grows significantly, a migration to a full SPA framework (SolidJS/Svelte) could be considered — the design tokens in CSS would be reusable
+- The design system can be extracted to an npm package for reuse
+
+---
+
+## D-010: Toast Notification System Over Alert()
+
+**Date:** 2025-07-25
+**Status:** Accepted
+
+**Context:**
+The app used `alert()` for all user-facing error messages and confirmations. This provided a poor UX — blocking, unstyled, and inconsistent.
+
+**Decision:**
+Replace `alert()` with a DOM-based toast notification system accessible via `(window as any).showToast()`.
+
+**Alternatives Considered:**
+- React-based toast: Overkill for a vanilla JS app, adds React dependency
+- Custom element: Better encapsulation but more complex to implement
+
+**Reasoning:**
+- DOM-based toasts work with the existing vanilla JS architecture
+- Same API surface as `alert()` but non-blocking and styled consistently with the design system
+- No additional dependencies
+- Supports success/error/info variants with color-coded borders
+- Auto-dismiss with fade-out animation
+- Accessible via `aria-live` region
+
+**Consequences:**
+- `alert()` calls replaced with `showToast()` in all page scripts
+- Toast container rendered in BaseLayout (always available)
+- Timing and animation are CSS-controlled
+- Limited to text-only notifications (no action buttons or rich content)
+
+**Future Considerations:**
+- Could be extended to support action buttons (undo, retry) for optimistic UI patterns
+- Could be migrated to a Web Component for better encapsulation

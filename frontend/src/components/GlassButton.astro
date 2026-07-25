@@ -1,0 +1,50 @@
+---
+interface Props {
+  class?: string;
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  size?: "sm" | "md" | "lg";
+  href?: string;
+  type?: "button" | "submit";
+  disabled?: boolean;
+  id?: string;
+  fullWidth?: boolean;
+}
+
+const {
+  variant = "primary",
+  size = "md",
+  href,
+  fullWidth = false,
+  id,
+  disabled,
+  type: btnType = "button",
+} = Astro.props;
+
+const cls = [
+  "inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg transition-all duration-200",
+  "focus-visible:outline-2 focus-visible:outline-offset-2",
+  variant === "primary" && "bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] active:bg-[var(--color-accent-active)] shadow-sm hover:shadow-md",
+  variant === "secondary" && "glass glass-hover text-[var(--color-text-primary)]",
+  variant === "ghost" && "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-glass-hover)]",
+  variant === "danger" && "bg-[var(--color-danger)] text-white hover:bg-[var(--color-danger-hover)]",
+  size === "sm" && "px-3 py-1.5 text-xs",
+  size === "md" && "px-4 py-2.5 text-sm",
+  size === "lg" && "px-6 py-3 text-base",
+  fullWidth && "w-full",
+  Astro.props.class,
+]
+  .filter(Boolean)
+  .join(" ");
+---
+
+{
+  href ? (
+    <a href={href} class={cls} id={id}>
+      <slot />
+    </a>
+  ) : (
+    <button class={cls} id={id} type={btnType} disabled={disabled}>
+      <slot />
+    </button>
+  )
+}

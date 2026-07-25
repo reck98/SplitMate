@@ -1,33 +1,63 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import GlassCard from "../components/GlassCard.astro";
+import GlassButton from "../components/GlassButton.astro";
+import Skeleton from "../components/Skeleton.astro";
 ---
 
-<BaseLayout>
-  <main class="mx-auto max-w-lg px-4 py-6">
-    <header class="mb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-gray-900">SplitMate</h1>
-        <p id="user-name" class="text-sm text-gray-600">Loading...</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <a href="/profile" class="btn-ghost p-2">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </a>
-      </div>
+<BaseLayout title="Dashboard - SplitMate">
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    <header class="mb-8 animate-fade-in-down">
+      <p id="user-name" class="text-sm font-medium text-[var(--color-accent)]">Loading...</p>
+      <h1 class="mt-1 text-3xl font-bold text-[var(--color-text-primary)]">Your Groups</h1>
+      <p class="mt-1 text-sm text-[var(--color-text-secondary)]">Manage and track shared expenses</p>
     </header>
 
-    <div class="mb-6 flex gap-3">
-      <a href="/create-group" class="btn-primary flex-1">Create Group</a>
-      <a href="/join-group" class="btn-secondary flex-1">Join Group</a>
+    <div class="mb-8 flex gap-3 animate-fade-in-up">
+      <GlassButton href="/create-group" variant="primary" size="md" fullWidth>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Create Group
+      </GlassButton>
+      <GlassButton href="/join-group" variant="secondary" size="md" fullWidth>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+        Join Group
+      </GlassButton>
     </div>
 
-    <section>
-      <h2 class="mb-3 text-lg font-semibold text-gray-900">Your Groups</h2>
+    <section class="animate-fade-in-up">
       <div id="groups-list" class="space-y-3">
-        <div class="card text-center text-gray-500 py-8">
-          Loading your groups...
+        <div id="skeleton-loading" class="space-y-3">
+          <GlassCard padding="md">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2 flex-1">
+                <Skeleton width="60%" height="20px" />
+                <Skeleton width="40%" height="14px" />
+              </div>
+              <Skeleton width="20px" height="20px" rounded="full" />
+            </div>
+          </GlassCard>
+          <GlassCard padding="md">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2 flex-1">
+                <Skeleton width="45%" height="20px" />
+                <Skeleton width="30%" height="14px" />
+              </div>
+              <Skeleton width="20px" height="20px" rounded="full" />
+            </div>
+          </GlassCard>
+          <GlassCard padding="md">
+            <div class="flex items-center justify-between">
+              <div class="space-y-2 flex-1">
+                <Skeleton width="55%" height="20px" />
+                <Skeleton width="35%" height="14px" />
+              </div>
+              <Skeleton width="20px" height="20px" rounded="full" />
+            </div>
+          </GlassCard>
         </div>
       </div>
     </section>
@@ -35,51 +65,77 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
   <script>
     import { api } from "../lib/api";
-    import { $user, setUser } from "../stores/auth";
-    import { $groups, setGroups } from "../stores/groups";
+    import { setUser } from "../stores/auth";
+    import { setGroups } from "../stores/groups";
 
     async function loadDashboard() {
       try {
-        const user = await api.auth.me();
+        const [user, groups] = await Promise.all([
+          api.auth.me(),
+          api.groups.list(),
+        ]);
         setUser(user);
+        setGroups(groups);
         document.getElementById("user-name")!.textContent = `Welcome, ${user.name}`;
 
-        const groups = await api.groups.list();
-        setGroups(groups);
-
         const container = document.getElementById("groups-list")!;
+        const skeleton = document.getElementById("skeleton-loading");
 
         if (groups.length === 0) {
+          if (skeleton) skeleton.remove();
           container.innerHTML = `
-            <div class="card text-center py-8">
-              <p class="text-gray-500">No groups yet</p>
-              <p class="mt-1 text-sm text-gray-400">Create a group or join one with an invite code</p>
+            <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
+              <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-bg-glass-hover)]">
+                <svg class="h-6 w-6 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">No groups yet</h3>
+              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Create a group or join one with an invite code</p>
             </div>
           `;
           return;
         }
 
-        container.innerHTML = groups
-          .map(
-            (g) => `
-            <a href="/groups/${g.id}" class="card flex items-center justify-between hover:border-primary-300 transition-colors">
-              <div>
-                <h3 class="font-medium text-gray-900">${g.name}</h3>
-                <p class="text-sm text-gray-500">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
+        container.innerHTML =
+          groups
+            .map(
+              (g, i) => `
+            <a href="/groups/${g.id}" class="glass rounded-glass-lg p-4 flex items-center justify-between transition-all duration-200 glass-hover animate-fade-in-up" style="animation-delay: ${i * 40}ms">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-sm">
+                  ${g.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 class="font-medium text-[var(--color-text-primary)]">${g.name}</h3>
+                  <p class="text-sm text-[var(--color-text-tertiary)]">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
+                </div>
               </div>
-              <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              <svg class="h-5 w-5 text-[var(--color-text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
               </svg>
             </a>
           `
-          )
-          .join("");
+            )
+            .join("");
+
+        if (skeleton) skeleton.remove();
       } catch (error) {
-        document.getElementById("user-name")!.textContent = "Failed to load";
-        document.getElementById("groups-list")!.innerHTML = `
-          <div class="card text-center py-8">
-            <p class="text-red-500">Failed to load groups</p>
-            <button onclick="location.reload()" class="btn-secondary mt-3">Retry</button>
+        const container = document.getElementById("groups-list")!;
+        const skeleton = document.getElementById("skeleton-loading");
+        if (skeleton) skeleton.remove();
+        container.innerHTML = `
+          <div class="glass rounded-glass-xl p-8 text-center animate-fade-in">
+            <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-danger-soft)]">
+              <svg class="h-6 w-6 text-[var(--color-danger)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Failed to load</h3>
+            <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Could not load your groups</p>
+            <button onclick="location.reload()" class="mt-4 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
+              Retry
+            </button>
           </div>
         `;
       }

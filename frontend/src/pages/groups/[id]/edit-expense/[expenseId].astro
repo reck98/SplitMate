@@ -2,56 +2,68 @@
 export const prerender = false;
 
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import GlassButton from "../../../../components/GlassButton.astro";
 ---
 
-<BaseLayout>
-  <main class="mx-auto max-w-lg px-4 py-6">
-    <header class="mb-6">
-      <a href="/groups/__ID__" class="btn-ghost -ml-2 mb-4" id="back-link">
-        <svg class="mr-1 h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+<BaseLayout title="Edit Expense - SplitMate">
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    <header class="mb-6 animate-fade-in-down">
+      <a href="/groups/__ID__" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors mb-4" id="back-link">
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
         </svg>
-        Back
+        Back to Group
       </a>
-      <h1 class="text-2xl font-bold text-gray-900">Edit Expense</h1>
+      <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">Edit Expense</h1>
+      <p class="mt-1 text-sm text-[var(--color-text-secondary)]">Update expense details</p>
     </header>
 
-    <form id="expense-form" class="space-y-4">
-      <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-        <input type="text" id="description" required class="mt-1 block w-full" />
-      </div>
-
-      <div>
-        <label for="amount" class="block text-sm font-medium text-gray-700">Amount (₹)</label>
-        <input type="number" id="amount" required min="1" step="0.01" class="mt-1 block w-full" />
-      </div>
-
-      <div>
-        <label for="paid_by" class="block text-sm font-medium text-gray-700">Paid By</label>
-        <select id="paid_by" required class="mt-1 block w-full"></select>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Split Type</label>
-        <div class="mt-1 flex gap-2">
-          <button type="button" id="equal-split-btn" class="btn-primary flex-1">Equal</button>
-          <button type="button" id="custom-split-btn" class="btn-secondary flex-1">Custom</button>
+    <div class="glass-strong rounded-glass-xl p-6 animate-fade-in-up">
+      <form id="expense-form" class="space-y-5">
+        <div>
+          <label for="description" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Description</label>
+          <input type="text" id="description" required />
         </div>
-      </div>
 
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Participants</label>
-        <div id="participants-list" class="mt-2 space-y-2"></div>
-      </div>
+        <div>
+          <label for="amount" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Amount (₹)</label>
+          <input type="number" id="amount" required min="1" step="0.01" />
+        </div>
 
-      <div id="custom-split-section" class="hidden space-y-2">
-        <label class="block text-sm font-medium text-gray-700">Custom Split Amounts</label>
-        <p id="split-total" class="text-xs text-gray-500">Total: ₹0.00</p>
-      </div>
+        <div>
+          <label for="paid_by" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Paid By</label>
+          <select id="paid_by" required></select>
+        </div>
 
-      <button type="submit" class="btn-primary w-full">Save Changes</button>
-    </form>
+        <div>
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Split Type</label>
+          <div class="flex gap-2">
+            <button type="button" id="equal-split-btn" class="flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white transition-all duration-200">Equal</button>
+            <button type="button" id="custom-split-btn" class="flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm glass glass-hover text-[var(--color-text-secondary)] transition-all duration-200">Custom</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">Participants</label>
+          <div id="participants-list" class="space-y-2">
+            <p class="text-sm text-[var(--color-text-tertiary)]">Loading members...</p>
+          </div>
+        </div>
+
+        <div id="custom-split-section" class="hidden space-y-3 glass rounded-glass-lg p-4">
+          <label class="block text-sm font-medium text-[var(--color-text-secondary)]">Custom Split Amounts</label>
+          <div id="custom-split-inputs" class="space-y-2"></div>
+          <p id="split-total" class="text-xs text-[var(--color-text-tertiary)]">Total: ₹0.00</p>
+        </div>
+
+        <GlassButton type="submit" variant="primary" size="lg" fullWidth>
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+          Save Changes
+        </GlassButton>
+      </form>
+    </div>
   </main>
 
   <script>
@@ -73,7 +85,7 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
 
         const expense = data.expenses.find((e: any) => e.id === expenseId);
         if (!expense) {
-          alert("Expense not found.");
+          (window as any).showToast?.({ message: "Expense not found.", type: "error" });
           window.location.href = `/groups/${groupId}`;
           return;
         }
@@ -92,22 +104,22 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
         participantsList.innerHTML = members
           .map(
             (m) => `
-            <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-3">
-              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-gray-300 text-primary-600" ${participantIds.includes(m.user_id) ? "checked" : ""} />
-              <span class="text-sm text-gray-700">${m.name}</span>
+            <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
+              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" ${participantIds.includes(m.user_id) ? "checked" : ""} />
+              <span class="text-sm text-[var(--color-text-primary)]">${m.name}</span>
             </label>
           `
           )
           .join("");
 
         const isCustom = expense.participants?.some(
-          (p: any, i: number, arr: any[]) => arr[0]?.share_amount !== p.share_amount
+          (p: any, _i: number, arr: any[]) => arr[0]?.share_amount !== p.share_amount
         );
 
         if (isCustom) {
           currentSplit = "custom";
-          document.getElementById("custom-split-btn")!.className = "btn-primary flex-1";
-          document.getElementById("equal-split-btn")!.className = "btn-secondary flex-1";
+          document.getElementById("custom-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white transition-all duration-200";
+          document.getElementById("equal-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm glass glass-hover text-[var(--color-text-secondary)] transition-all duration-200";
         }
 
         participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
@@ -126,21 +138,18 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
           updateSplitTotal();
         }
       } catch (error: any) {
-        alert(error.message);
+        (window as any).showToast?.({ message: error.message, type: "error" });
       }
     }
 
     function updateCustomSplitInputs() {
       const checkboxes = document.querySelectorAll(".participant-checkbox:checked");
       const section = document.getElementById("custom-split-section")!;
+      const inputsContainer = document.getElementById("custom-split-inputs")!;
 
       if (currentSplit === "custom") {
         section.classList.remove("hidden");
-        const existingCustom = section.querySelector(".custom-shares-container");
-        if (existingCustom) existingCustom.innerHTML = "";
-
-        const container = document.createElement("div");
-        container.className = "custom-shares-container space-y-2";
+        inputsContainer.innerHTML = "";
 
         checkboxes.forEach((cb) => {
           const userId = (cb as HTMLInputElement).value;
@@ -148,17 +157,13 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
           const div = document.createElement("div");
           div.className = "flex items-center gap-2";
           div.innerHTML = `
-            <span class="w-24 text-sm text-gray-700">${member?.name || "Unknown"}</span>
+            <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${member?.name || "Unknown"}</span>
             <input type="number" step="0.01" min="0" data-user-id="${userId}" class="custom-share flex-1" placeholder="0.00" />
           `;
-          container.appendChild(div);
+          inputsContainer.appendChild(div);
         });
 
-        const existing = section.querySelector(".custom-shares-container");
-        if (existing) existing.replaceWith(container);
-        else section.insertBefore(container, section.querySelector("#split-total"));
-
-        container.querySelectorAll(".custom-share").forEach((input) => {
+        inputsContainer.querySelectorAll(".custom-share").forEach((input) => {
           input.addEventListener("input", updateSplitTotal);
         });
       } else {
@@ -177,22 +182,23 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
 
     document.getElementById("equal-split-btn")?.addEventListener("click", () => {
       currentSplit = "equal";
-      document.getElementById("equal-split-btn")!.className = "btn-primary flex-1";
-      document.getElementById("custom-split-btn")!.className = "btn-secondary flex-1";
+      document.getElementById("equal-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white transition-all duration-200";
+      document.getElementById("custom-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm glass glass-hover text-[var(--color-text-secondary)] transition-all duration-200";
       document.getElementById("custom-split-section")!.classList.add("hidden");
     });
 
     document.getElementById("custom-split-btn")?.addEventListener("click", () => {
       currentSplit = "custom";
-      document.getElementById("custom-split-btn")!.className = "btn-primary flex-1";
-      document.getElementById("equal-split-btn")!.className = "btn-secondary flex-1";
+      document.getElementById("custom-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white transition-all duration-200";
+      document.getElementById("equal-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm glass glass-hover text-[var(--color-text-secondary)] transition-all duration-200";
       updateCustomSplitInputs();
     });
 
     document.getElementById("expense-form")?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const target = e.target as HTMLElement;
+      const submitBtn = target.querySelector('button[type="submit"]');
       if (submitBtn) {
         (submitBtn as HTMLButtonElement).disabled = true;
         submitBtn.textContent = "Saving...";
@@ -206,7 +212,7 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
         const checkedBoxes = document.querySelectorAll(".participant-checkbox:checked");
 
         if (checkedBoxes.length === 0) {
-          alert("Please select at least one participant.");
+          (window as any).showToast?.({ message: "Please select at least one participant.", type: "error" });
           if (submitBtn) {
             (submitBtn as HTMLButtonElement).disabled = false;
             submitBtn.textContent = "Save Changes";
@@ -231,7 +237,7 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
           });
 
           if (Math.abs(totalCustom - amount) > 0.01) {
-            alert(`Custom split total (₹${totalCustom.toFixed(2)}) must equal expense amount (₹${amount.toFixed(2)}).`);
+            (window as any).showToast?.({ message: `Custom split total (₹${totalCustom.toFixed(2)}) must equal expense amount (₹${amount.toFixed(2)}).`, type: "error" });
             if (submitBtn) {
               (submitBtn as HTMLButtonElement).disabled = false;
               submitBtn.textContent = "Save Changes";
@@ -248,9 +254,10 @@ import BaseLayout from "../../../../layouts/BaseLayout.astro";
           participants,
         });
 
-        window.location.href = `/groups/${groupId}`;
+        (window as any).showToast?.({ message: "Expense updated!", type: "success" });
+        setTimeout(() => { window.location.href = `/groups/${groupId}`; }, 300);
       } catch (error: any) {
-        alert(error.message);
+        (window as any).showToast?.({ message: error.message || "Failed to update expense.", type: "error" });
         if (submitBtn) {
           (submitBtn as HTMLButtonElement).disabled = false;
           submitBtn.textContent = "Save Changes";

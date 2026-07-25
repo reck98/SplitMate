@@ -6,8 +6,9 @@ This file serves as persistent memory for AI agents working on this project.
 
 - **Name:** SplitMate
 - **Description:** Lightweight expense-sharing app for Indian users
-- **Tech Stack:** Astro + TypeScript + Tailwind + Nano Stores (frontend), Express + TypeScript + Drizzle ORM (backend), Turso (database)
-- **Auth:** Google OAuth with JWT in httpOnly cookies
+- **Tech Stack:** Astro + TypeScript + Tailwind + Nano Stores + astro-icon (frontend), Express + TypeScript + Drizzle ORM (backend), Turso (database)
+- **Auth:** Firebase Authentication (Google Sign-In) via Authorization header
+- **Design System:** CSS custom properties + Astro components (glassmorphism, dark/light mode)
 - **Deploy:** Vercel (frontend), Railway (backend), Turso (database)
 
 ## Before Starting Any Task
@@ -25,10 +26,12 @@ This file serves as persistent memory for AI agents working on this project.
 
 - **Polling over WebSockets** (D-001): Simpler deployment, stateless backend
 - **No stored balances** (D-002): Always computed, prevents sync bugs
-- **JWT in httpOnly cookie** (D-003): More secure than localStorage
+- **JWT in httpOnly cookie** (D-003): More secure than localStorage (deprecated — now using Firebase tokens via Authorization header)
 - **Greedy debt simplification** (D-004): O(n log n), near-minimal transactions
-- **Adaptive polling** (D-005): 1s active / 5s idle
+- **Adaptive polling** (D-005): 10s active / 15s idle
 - **Monorepo** (D-006): Single repo with frontend/ and backend/
+- **CSS Custom Properties Design System** (D-009): Theme and components via CSS, no React/Framer Motion
+- **Toast over alert()** (D-010): Non-blocking notification system via DOM
 
 ## Code Conventions
 
@@ -39,12 +42,26 @@ This file serves as persistent memory for AI agents working on this project.
 - All IDs are UUIDs
 - Timestamps are ISO 8601 strings
 - Boolean in SQLite stored as integer (0/1)
+- Design system uses CSS custom properties on `:root` and `[data-theme="dark"]`
+- Components are Astro `.astro` files (not React/Vue/Svelte)
+- Icons use `astro-icon` with `@iconify-json/lucide` collection
+- Animations use CSS keyframes (not JavaScript animation libraries)
 
-## Database Rules
+## Design System Components
 
-- Never store derived balances — compute on every request
-- Never duplicate data
-- Always use migrations — never manual schema changes
+Located in `frontend/src/components/`:
+| Component | Purpose |
+|---|---|
+| GlassCard.astro | Glassmorphism card container (supports hover) |
+| GlassButton.astro | Button (primary/secondary/ghost/danger, sm/md/lg, link or button) |
+| GlassInput.astro | Form input with label, hint, error state |
+| GlassBadge.astro | Badge/tag (default/success/warning/danger/info) |
+| GlassAvatar.astro | Avatar with image or initial fallback |
+| GlassModal.astro | Modal dialog with backdrop blur |
+| Skeleton.astro | Loading skeleton with shimmer animation |
+| EmptyState.astro | Empty state with icon and action slot |
+| ThemeToggle.astro | Dark/light mode toggle |
+| Toast.astro | Toast notification container |
 
 ## Running the Project
 
@@ -75,71 +92,57 @@ See `.env.example` for all required variables.
 npm run build
 ```
 
-## Current State
-
-See docs/Development.md for current milestone and progress.
-
 ## Session Log
 
-### 2024-07-25 — Migration from Google OAuth to Firebase Authentication
+### 2025-07-25 — Frontend Design System Overhaul
 
-**Completed:** Replaced Google OAuth (google-auth-library + GSI client) with Firebase Authentication (firebase-admin + firebase SDK).
-
-**Files changed:**
-- Backend: `schema.ts`, `config.ts`, `middleware/auth.ts`, `routes/auth.ts`, `types/index.ts`, `app.ts`, `package.json`, `.env.example` — deleted `jwt.ts`
-- Frontend: `lib/api.ts`, `lib/firebase.ts` (new), `pages/index.astro`, `pages/profile.astro`, `stores/auth.ts`, `env.d.ts`, `package.json`, `.env.example` (new)
-- Tests: `upi.test.ts` (updated for no pn parameter)
-- Docs: All 9 files updated
+**Completed:** Complete frontend redesign with glassmorphism design system, dark/light mode, animations, toast notifications, and skeleton loading.
 
 **Key changes:**
-- `google_id` → `firebase_uid` column in database
-- Auth method changed from httpOnly cookie to `Authorization: Bearer` header
-- `POST /auth/google` → `POST /auth/firebase` (reads token from Authorization header, upserts user)
-- Frontend uses `signInWithPopup()` + `getIdToken()` from Firebase Auth SDK
-- Removed `google-auth-library`, `jsonwebtoken`, `cookie-parser` dependencies
-- Added `firebase-admin`, `firebase` dependencies
-- UPI link generation no longer includes `pn` (payee name) parameter
-
-**Removed files:**
-- `backend/src/utils/jwt.ts`
-
-**New files:**
-- `backend/src/utils/firebase.ts` — Firebase Admin initialization
-- `frontend/src/lib/firebase.ts` — Firebase client initialization + helpers
-
-### 2024-07-25 — Initial Scaffolding and Full Feature Implementation
-
-**Completed:** Full project scaffold including backend (Express + TypeScript + Drizzle + Turso) and frontend (Astro + TypeScript + Tailwind + Nano Stores). All PRD features implemented across all 6 phases.
+- Created CSS design tokens system (`design-tokens.css`) with 40+ CSS custom properties for colors, spacing, shadows, blur, typography, and transitions
+- Created animation system (`animations.css`) with 11 keyframe animations and utility classes
+- Built 10 reusable Astro components (GlassCard, GlassButton, GlassInput, GlassBadge, GlassAvatar, Skeleton, EmptyState, GlassModal, ThemeToggle, Toast)
+- Implemented dark/light theme with `data-theme` attribute, system preference detection, and localStorage persistence
+- Integrated `astro-icon` with Lucide icon set
+- Replaced all `alert()` calls with toast notification system
+- Added skeleton loading states to dashboard and profile pages
+- Added staggered list animations to dashboard, group detail
+- Updated all 10 pages with new design system
+- Changed primary palette from blue (`#2563eb`) to emerald (`#10b981`)
+- Added Inter font family via Google Fonts
+- Added `max-w-2xl` layout (from `max-w-lg`) for better desktop spacing
+- Added viewport-fit cover and safe-area support
+- Added apple-mobile-web-app meta tags
+- Updated favicon to emerald accent color
+- Updated Tailwind config with emerald primary palette
 
 **Files created:**
-- Root: `package.json`, `.gitignore`, `.env.example`, `README.md`
-- Docs: `PRD.md`, `Architecture.md`, `API.md`, `Database.md`, `Development.md`, `AgentMemory.md`, `Decisions.md`, `Changelog.md`
-- Backend: 17 files across `src/routes/`, `src/middleware/`, `src/db/`, `src/services/`, `src/utils/`, `src/types/`
-- Frontend: 15 files across `src/pages/`, `src/layouts/`, `src/stores/`, `src/lib/`, `src/styles/`
-- Tests: 3 test files with 18 total tests
+- `frontend/src/styles/design-tokens.css` — Design system CSS custom properties
+- `frontend/src/styles/animations.css` — Animation keyframes and utility classes
+- `frontend/src/components/GlassCard.astro`
+- `frontend/src/components/GlassButton.astro`
+- `frontend/src/components/GlassInput.astro`
+- `frontend/src/components/GlassBadge.astro`
+- `frontend/src/components/GlassAvatar.astro`
+- `frontend/src/components/Skeleton.astro`
+- `frontend/src/components/EmptyState.astro`
+- `frontend/src/components/GlassModal.astro`
+- `frontend/src/components/ThemeToggle.astro`
+- `frontend/src/components/Toast.astro`
 
-**Key design decisions:**
-- Extracted `simplifyDebts` into its own file (`settlement.ts`) to keep pure functions testable without database dependencies
-- Used `inArray` from Drizzle for all SQL IN clauses instead of raw string interpolation (security)
-- Greedy debt simplification with >0.01 threshold to avoid tiny floating-point debts
+**Files modified:**
+- `frontend/package.json` — added `astro-icon`, `@iconify-json/lucide`
+- `frontend/astro.config.mjs` — added `astro-icon` integration
+- `frontend/tailwind.config.js` — emerald primary palette, Inter font
+- `frontend/src/styles/global.css` — imports design tokens + animations, glass utility classes
+- `frontend/src/layouts/BaseLayout.astro` — navigation bar, theme support, toast container
+- `frontend/public/favicon.svg` — emerald accent color
+- All 10 page `.astro` files — refactored with design system
 
-**Things future agents should know:**
-- `simplifyDebts` is in `backend/src/services/settlement.ts` (not balance.ts)
-- The balance calculation service (`balance.ts`) depends on the database — tests for pure logic are in settlement.ts
-- Google Sign-In requires setting up credentials in Google Cloud Console and adding the authorized JavaScript origins and redirect URIs
-- Frontend uses Vercel serverless adapter — `getStaticPaths` warning on dynamic pages is expected
-- All IDs are UUIDs generated server-side
-- Backend runs on port 3000, frontend on port 4321
+**Docs updated:**
+- `docs/Architecture.md` — design system architecture section
+- `docs/AgentMemory.md` — full update with component table
+- `docs/Decisions.md` — added D-009 (CSS Design System) and D-010 (Toast over alert)
+- `docs/Changelog.md` — v0.3.0 with all changes
 
-## Future Agents Should Know
-
-- The PRD is the source of truth — never deviate from it without updating it
-- Documentation must stay synchronized with implementation
-- After completing any task, update AgentMemory.md, Development.md, and Changelog.md
-- Track all engineering decisions in Decisions.md
-- The balance calculation service is the most critical business logic — test thoroughly
-- The debt simplification algorithm is in `backend/src/services/settlement.ts`
-- UPI deep link generation is in `backend/src/services/upi.ts`
-- Invite code generation is in `backend/src/utils/invite.ts`
-- JWT handling is in `backend/src/utils/jwt.ts`
-- All tests are in `backend/src/__tests__/` — run with `npm test` from backend directory
+**Build verification:** ✅ Build passes (hybrid SSR), all pages compile

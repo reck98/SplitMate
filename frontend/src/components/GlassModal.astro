@@ -1,0 +1,63 @@
+---
+interface Props {
+  id: string;
+  title: string;
+}
+---
+
+<div
+  id={Astro.props.id}
+  class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 hidden"
+  role="dialog"
+  aria-modal="true"
+  aria-label={Astro.props.title}
+>
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-sm" data-modal-backdrop></div>
+  <div class="relative w-full max-w-sm animate-fade-in-scale glass-strong rounded-glass-xl p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-lg font-semibold text-[var(--color-text-primary)]">{Astro.props.title}</h2>
+      <button type="button" class="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors p-1" data-modal-close>
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <slot />
+  </div>
+</div>
+
+<script>
+  function openModal(id: string) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal(id: string) {
+    const modal = document.getElementById(id);
+    if (!modal) return;
+    modal.classList.add("hidden");
+    document.body.style.overflow = "";
+  }
+
+  document.addEventListener("click", (e) => {
+    const target = e.target as HTMLElement;
+    const modal = target.closest('[role="dialog"]') as HTMLElement;
+    if (!modal) return;
+    if (target.dataset.modalClose !== undefined || target.dataset.modalBackdrop !== undefined) {
+      closeModal(modal.id);
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      document.querySelectorAll('[role="dialog"]:not(.hidden)').forEach((el) => {
+        closeModal(el.id);
+      });
+    }
+  });
+
+  (window as any).openModal = openModal;
+  (window as any).closeModal = closeModal;
+</script>

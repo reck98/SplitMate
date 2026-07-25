@@ -201,7 +201,11 @@ router.get(
         created_at: s.created_at,
       }));
 
-      const { balances, simplified_debts } = await getBalances(id);
+      const { balances, simplified_debts } = await getBalances(id, {
+        groupExpenses,
+        allParticipants,
+        groupSettlements,
+      });
 
       res.json({
         success: true,

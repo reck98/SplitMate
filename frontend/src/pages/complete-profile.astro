@@ -1,40 +1,50 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import GlassButton from "../components/GlassButton.astro";
 ---
 
-<BaseLayout>
-  <main class="flex min-h-screen flex-col items-center justify-center px-4">
-    <div class="w-full max-w-sm">
-      <div class="mb-8 text-center">
-        <h1 class="text-2xl font-bold text-gray-900">Complete Your Profile</h1>
-        <p class="mt-1 text-sm text-gray-600">
-          Enter your UPI ID to start splitting expenses.
-        </p>
-      </div>
-
-      <form id="profile-form" class="space-y-4">
-        <div>
-          <label for="upi_id" class="block text-sm font-medium text-gray-700">
-            UPI ID
-          </label>
-          <input
-            type="text"
-            id="upi_id"
-            name="upi_id"
-            placeholder="e.g., name@okaxis"
-            required
-            class="mt-1 block w-full"
-            autocomplete="off"
-          />
-          <p class="mt-1 text-xs text-gray-500">
-            Your UPI ID is used to generate payment links. Only one UPI ID per account.
+<BaseLayout hideNav title="Complete Profile - SplitMate">
+  <main class="flex min-h-[100dvh] flex-col items-center justify-center px-4">
+    <div class="w-full max-w-sm animate-fade-in-up">
+      <div class="glass-strong rounded-glass-xl p-8">
+        <div class="mb-6 text-center">
+          <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-accent)]">
+            <svg class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+          </div>
+          <h1 class="text-2xl font-bold text-[var(--color-text-primary)]">Complete Your Profile</h1>
+          <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
+            Enter your UPI ID to start splitting expenses.
           </p>
         </div>
 
-        <button type="submit" class="btn-primary w-full">
-          Activate Profile
-        </button>
-      </form>
+        <form id="profile-form" class="space-y-4">
+          <div>
+            <label for="upi_id" class="block text-sm font-medium text-[var(--color-text-secondary)] mb-1.5">
+              UPI ID
+            </label>
+            <input
+              type="text"
+              id="upi_id"
+              name="upi_id"
+              placeholder="e.g., name@okaxis"
+              required
+              autocomplete="off"
+            />
+            <p class="mt-1.5 text-xs text-[var(--color-text-tertiary)]">
+              Your UPI ID is used to generate payment links. Only one UPI ID per account.
+            </p>
+          </div>
+
+          <GlassButton type="submit" variant="primary" size="lg" fullWidth>
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Activate Profile
+          </GlassButton>
+        </form>
+      </div>
     </div>
   </main>
 
@@ -47,10 +57,11 @@ import BaseLayout from "../layouts/BaseLayout.astro";
         e.preventDefault();
 
         const input = document.getElementById("upi_id") as HTMLInputElement;
-        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const target = e.target as HTMLElement;
+        const submitBtn = target.querySelector('button[type="submit"]');
 
         if (submitBtn) {
-          submitBtn.disabled = true;
+          (submitBtn as HTMLButtonElement).disabled = true;
           submitBtn.textContent = "Saving...";
         }
 
@@ -58,9 +69,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
           await api.auth.updateProfile(input.value);
           window.location.href = "/dashboard";
         } catch (error: any) {
-          alert(error.message || "Failed to save profile.");
+          (window as any).showToast?.({ message: error.message || "Failed to save profile.", type: "error" });
           if (submitBtn) {
-            submitBtn.disabled = false;
+            (submitBtn as HTMLButtonElement).disabled = false;
             submitBtn.textContent = "Activate Profile";
           }
         }

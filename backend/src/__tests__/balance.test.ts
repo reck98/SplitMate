@@ -114,4 +114,28 @@ describe("simplifyDebts", () => {
       expect(result[0].amount).toBe(0.01);
     }
   });
+
+  it("assigns from=debtor and to=creditor for A pays 900 split 3 ways", () => {
+    const balances: BalanceInfo[] = [
+      makeBalance("A", "Alice", 600),
+      makeBalance("B", "Bob", -300),
+      makeBalance("C", "Charlie", -300),
+    ];
+
+    const result = simplifyDebts(balances);
+    expect(result).toHaveLength(2);
+
+    const bToA = result.find((d) => d.from.user_id === "B" && d.to.user_id === "A");
+    expect(bToA).toBeDefined();
+    expect(bToA!.amount).toBe(300);
+
+    const cToA = result.find((d) => d.from.user_id === "C" && d.to.user_id === "A");
+    expect(cToA).toBeDefined();
+    expect(cToA!.amount).toBe(300);
+
+    result.forEach((debt) => {
+      expect(debt.from.user_id).not.toBe(debt.to.user_id);
+      expect(debt.amount).toBeGreaterThan(0);
+    });
+  });
 });
