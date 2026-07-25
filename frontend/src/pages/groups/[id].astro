@@ -298,18 +298,65 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         return;
       }
 
-      container.innerHTML = data.balances
-        .map(
-          (b: any, i: number) => `
-          <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
-            <span class="font-medium text-[var(--color-text-primary)]">${b.name}</span>
-            <span class="font-semibold ${b.net_balance >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}">
-              ${b.net_balance >= 0 ? "+" : ""}${formatCurrency(b.net_balance)}
-            </span>
+      const userBalance = data.balances.find((b: any) => b.user_id === currentUserId);
+
+      let summaryHtml = "";
+      if (userBalance) {
+        let text = "";
+        let colorClass = "";
+        if (userBalance.net_balance > 0.01) {
+          text = `You get back ${formatCurrency(userBalance.net_balance)} in total`;
+          colorClass = "border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-success-soft)]/20";
+        } else if (userBalance.net_balance < -0.01) {
+          text = `You owe ${formatCurrency(Math.abs(userBalance.net_balance))} in total`;
+          colorClass = "border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-soft)]/20";
+        } else {
+          text = "You are all settled up";
+          colorClass = "border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent-soft)]/20";
+        }
+
+        summaryHtml = `
+          <div class="glass rounded-glass-lg p-4 mb-4 border-l-4 ${colorClass} animate-fade-in">
+            <p class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">Your Balance Summary</p>
+            <h3 class="mt-1 text-lg font-bold">${text}</h3>
           </div>
-        `
-        )
+        `;
+      }
+
+      const balancesListHtml = data.balances
+        .map((b: any, i: number) => {
+          const isCurrentUser = b.user_id === currentUserId;
+          const nameLabel = isCurrentUser ? `${b.name} (You)` : b.name;
+
+          let statusText = "Settled up";
+          let statusClass = "text-[var(--color-text-tertiary)]";
+
+          if (b.net_balance > 0.01) {
+            statusText = `Gets back ${formatCurrency(b.net_balance)}`;
+            statusClass = "text-[var(--color-success)]";
+          } else if (b.net_balance < -0.01) {
+            statusText = `Owes ${formatCurrency(Math.abs(b.net_balance))}`;
+            statusClass = "text-[var(--color-danger)]";
+          }
+
+          return `
+            <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
+              <span class="font-medium text-[var(--color-text-primary)]">${nameLabel}</span>
+              <span class="font-semibold text-sm ${statusClass}">
+                ${statusText}
+              </span>
+            </div>
+          `;
+        })
         .join("");
+
+      container.innerHTML = `
+        ${summaryHtml}
+        <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Member Balances</h4>
+        <div class="space-y-2">
+          ${balancesListHtml}
+        </div>
+      `;
     }
 
     function renderMembers(data: any) {
@@ -368,6 +415,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               }
 
               const showPayBtn = isDebtor;
+              const showSettleCashBtn = isDebtor || isCreditor;
 
               return `
             <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
@@ -390,17 +438,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                     </button>`
                   : ""
                 }
-                <button
-                  data-payer="${d.from.user_id}"
-                  data-receiver="${d.to.user_id}"
-                  data-amount="${d.amount}"
-                  class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
-                >
-                  <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  Settle Cash
-                </button>
+                ${showSettleCashBtn
+                  ? `<button
+                      data-payer="${d.from.user_id}"
+                      data-receiver="${d.to.user_id}"
+                      data-amount="${d.amount}"
+                      class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
+                    >
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Settle Cash
+                    </button>`
+                  : ""
+                }
               </div>
             </div>
           `;

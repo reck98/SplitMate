@@ -141,10 +141,17 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     groupSettlements,
   });
 
+  const visibleExpenseData = expenseData.filter(
+    (e) =>
+      e.paid_by === currentUserId ||
+      e.created_by === currentUserId ||
+      e.participants.some((p) => p.user_id === currentUserId)
+  );
+
   return {
     group,
     members,
-    expenses: expenseData,
+    expenses: visibleExpenseData,
     balances,
     settlements: settlementData,
     simplified_debts,
