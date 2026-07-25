@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { simplifyDebts } from "../services/settlement.js";
+import { simplifyDebts, getDetailedDebts } from "../services/settlement.js";
 import { BalanceInfo } from "../types/index.js";
 
 const makeBalance = (
@@ -9,11 +9,62 @@ const makeBalance = (
 ): BalanceInfo => ({
   user_id,
   name,
+  lent: net_balance > 0 ? net_balance : 0,
+  owed: net_balance < 0 ? Math.abs(net_balance) : 0,
   net_balance,
   paid: 0,
   share: 0,
   received: 0,
   paid_out: 0,
+});
+
+describe("getDetailedDebts", () => {
+  it("keeps opposing transactions separate without auto-cancelling them", () => {
+    const members = [
+      { user_id: "A", name: "Alice" },
+      { user_id: "B", name: "Bob" },
+    ];
+
+    // Expense 1: A pays 200 for A and B (Dinner)
+    // Expense 2: B pays 200 for B and A (Cab)
+    const expenses = [
+      { id: "e1", description: "Dinner", amount: 200, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
+      { id: "e2", description: "Cab", amount: 200, paid_by: "B", created_at: "2026-07-26T02:00:00Z" },
+    ];
+
+    const participants = [
+      { expense_id: "e1", user_id: "A", share_amount: 100 },
+      { expense_id: "e1", user_id: "B", share_amount: 100 },
+      { expense_id: "e2", user_id: "B", share_amount: 100 },
+      { expense_id: "e2", user_id: "A", share_amount: 100 },
+    ];
+
+    const settlements: any[] = [];
+
+    const { balances, detailed_debts } = getDetailedDebts(members, expenses, participants, settlements);
+
+    expect(detailed_debts).toHaveLength(2);
+
+    const bOwesA = detailed_debts.find((d) => d.from.user_id === "B" && d.to.user_id === "A");
+    expect(bOwesA).toBeDefined();
+    expect(bOwesA!.amount).toBe(100);
+    expect(bOwesA!.description).toBe("Dinner");
+
+    const aOwesB = detailed_debts.find((d) => d.from.user_id === "A" && d.to.user_id === "B");
+    expect(aOwesB).toBeDefined();
+    expect(aOwesB!.amount).toBe(100);
+    expect(aOwesB!.description).toBe("Cab");
+
+    const aliceBal = balances.find((b) => b.user_id === "A");
+    expect(aliceBal!.lent).toBe(100);
+    expect(aliceBal!.owed).toBe(100);
+    expect(aliceBal!.net_balance).toBe(0);
+
+    const bobBal = balances.find((b) => b.user_id === "B");
+    expect(bobBal!.lent).toBe(100);
+    expect(bobBal!.owed).toBe(100);
+    expect(bobBal!.net_balance).toBe(0);
+  });
 });
 
 describe("simplifyDebts", () => {
@@ -140,9 +191,6 @@ describe("simplifyDebts", () => {
   });
 
   it("settlement reduces net balance towards zero for creditor and debtor", () => {
-    // Alice paid 100, share 50 (paid:100, share:50) -> net = +50
-    // Bob paid 0, share 50 (paid:0, share:50) -> net = -50
-    // Settlement: Bob pays Alice 50 (Bob paidOut: 50, Alice received: 50)
     const alicePaid = 100, aliceShare = 50, aliceReceived = 50, alicePaidOut = 0;
     const bobPaid = 0, bobShare = 50, bobReceived = 0, bobPaidOut = 50;
 

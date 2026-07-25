@@ -24,6 +24,8 @@ export interface ApiResponse<T = unknown> {
 export interface BalanceInfo {
   user_id: string;
   name: string;
+  lent: number;
+  owed: number;
   net_balance: number;
   paid: number;
   share: number;
@@ -32,6 +34,9 @@ export interface BalanceInfo {
 }
 
 export interface SimplifiedDebt {
+  id?: string;
+  expense_id?: string;
+  description?: string;
   from: {
     user_id: string;
     name: string;
@@ -41,6 +46,25 @@ export interface SimplifiedDebt {
     name: string;
   };
   amount: number;
+  original_amount?: number;
+  created_at?: string;
+}
+
+export interface DetailedDebt {
+  id: string;
+  expense_id: string;
+  description: string;
+  from: {
+    user_id: string;
+    name: string;
+  };
+  to: {
+    user_id: string;
+    name: string;
+  };
+  amount: number;
+  original_amount: number;
+  created_at: string;
 }
 
 export interface UserProfile {

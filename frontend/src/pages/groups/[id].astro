@@ -307,23 +307,25 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       let summaryHtml = "";
       if (userBalance) {
-        let text = "";
-        let colorClass = "";
-        if (userBalance.net_balance > 0.01) {
-          text = `You get back ${formatCurrency(userBalance.net_balance)} in total`;
-          colorClass = "border-[var(--color-success)] text-[var(--color-success)] bg-[var(--color-success-soft)]/20";
-        } else if (userBalance.net_balance < -0.01) {
-          text = `You owe ${formatCurrency(Math.abs(userBalance.net_balance))} in total`;
-          colorClass = "border-[var(--color-danger)] text-[var(--color-danger)] bg-[var(--color-danger-soft)]/20";
-        } else {
-          text = "You are all settled up";
-          colorClass = "border-[var(--color-accent)] text-[var(--color-accent)] bg-[var(--color-accent-soft)]/20";
-        }
-
         summaryHtml = `
-          <div class="glass rounded-glass-lg p-4 mb-4 border-l-4 ${colorClass} animate-fade-in">
+          <div class="glass rounded-glass-lg p-4 mb-4 border-l-4 border-[var(--color-accent)] animate-fade-in space-y-3">
             <p class="text-xs font-semibold uppercase tracking-wider text-[var(--color-text-secondary)]">Your Balance Summary</p>
-            <h3 class="mt-1 text-lg font-bold">${text}</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="glass rounded-glass p-3 text-center">
+                <p class="text-xs text-[var(--color-text-tertiary)] font-medium">You Lent</p>
+                <p class="text-base font-bold text-[var(--color-success)]">${formatCurrency(userBalance.lent || 0)}</p>
+              </div>
+              <div class="glass rounded-glass p-3 text-center">
+                <p class="text-xs text-[var(--color-text-tertiary)] font-medium">You Owe</p>
+                <p class="text-base font-bold text-[var(--color-danger)]">${formatCurrency(userBalance.owed || 0)}</p>
+              </div>
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-[var(--color-border)] text-sm font-semibold">
+              <span class="text-[var(--color-text-secondary)]">Overall Net Balance:</span>
+              <span class="${userBalance.net_balance > 0.01 ? 'text-[var(--color-success)]' : userBalance.net_balance < -0.01 ? 'text-[var(--color-danger)]' : 'text-[var(--color-text-primary)]'}">
+                ${userBalance.net_balance > 0.01 ? '+' : ''}${formatCurrency(userBalance.net_balance || 0)}
+              </span>
+            </div>
           </div>
         `;
       }
@@ -333,23 +335,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           const isCurrentUser = b.user_id === currentUserId;
           const nameLabel = isCurrentUser ? `${b.name} (You)` : b.name;
 
-          let statusText = "Settled up";
-          let statusClass = "text-[var(--color-text-tertiary)]";
-
-          if (b.net_balance > 0.01) {
-            statusText = `Gets back ${formatCurrency(b.net_balance)}`;
-            statusClass = "text-[var(--color-success)]";
-          } else if (b.net_balance < -0.01) {
-            statusText = `Owes ${formatCurrency(Math.abs(b.net_balance))}`;
-            statusClass = "text-[var(--color-danger)]";
-          }
-
           return `
             <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
               <span class="font-medium text-[var(--color-text-primary)]">${nameLabel}</span>
-              <span class="font-semibold text-sm ${statusClass}">
-                ${statusText}
-              </span>
+              <div class="text-right text-xs">
+                <p>
+                  <span class="text-[var(--color-success)] font-semibold">Lent: ${formatCurrency(b.lent || 0)}</span>
+                  <span class="text-[var(--color-text-tertiary)] mx-1">|</span>
+                  <span class="text-[var(--color-danger)] font-semibold">Owes: ${formatCurrency(b.owed || 0)}</span>
+                </p>
+              </div>
             </div>
           `;
         })
@@ -357,7 +352,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       container.innerHTML = `
         ${summaryHtml}
-        <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Member Balances</h4>
+        <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Group Member Balances</h4>
         <div class="space-y-2">
           ${balancesListHtml}
         </div>
@@ -409,14 +404,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             .map((d: any, i: number) => {
               const isDebtor = d.from.user_id === currentUserId;
               const isCreditor = d.to.user_id === currentUserId;
+              const descTag = d.description ? ` for <span class="font-medium italic text-[var(--color-accent)]">"${d.description}"</span>` : "";
 
               let label: string;
               if (isDebtor) {
-                label = `You owe <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>`;
+                label = `You owe <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
               } else if (isCreditor) {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes you`;
+                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes you${descTag}`;
               } else {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>`;
+                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
               }
 
               const showPayBtn = isDebtor;
