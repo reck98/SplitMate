@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
@@ -19,8 +19,15 @@ export async function signInWithGoogle(): Promise<string> {
   return token;
 }
 
-export async function getFirebaseToken(): Promise<string | null> {
-  const user = auth.currentUser;
-  if (!user) return null;
-  return user.getIdToken();
+export function getFirebaseToken(): Promise<string | null> {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      if (!user) {
+        resolve(null);
+      } else {
+        user.getIdToken().then(resolve).catch(() => resolve(null));
+      }
+    });
+  });
 }
