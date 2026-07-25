@@ -10,6 +10,7 @@ import { validate } from "../middleware/validate.js";
 import { AppError } from "../middleware/error.js";
 import { AuthenticatedRequest } from "../types/index.js";
 import { getGroupData } from "../services/group.js";
+import { getBalances } from "../services/balance.js";
 import { broadcast } from "../services/sse.js";
 
 const router = Router();
@@ -72,6 +73,27 @@ router.post(
 
       if (!memberIds.has(receiver_id)) {
         throw new AppError(400, "INVALID_RECEIVER", "Receiver is not a member of this group.");
+      }
+
+      const { simplified_debts } = await getBalances(groupId);
+      const activeDebt = simplified_debts.find(
+        (d) => d.from.user_id === payer_id && d.to.user_id === receiver_id
+      );
+
+      if (!activeDebt) {
+        throw new AppError(
+          400,
+          "NO_DEBT_FOUND",
+          "There is no outstanding debt between these members to settle."
+        );
+      }
+
+      if (amount > activeDebt.amount + 0.01) {
+        throw new AppError(
+          400,
+          "EXCEEDS_DEBT",
+          `Settlement amount (₹${amount.toFixed(2)}) cannot exceed the owed amount (₹${activeDebt.amount.toFixed(2)}).`
+        );
       }
 
       const now = new Date().toISOString();

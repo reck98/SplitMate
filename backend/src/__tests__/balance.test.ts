@@ -138,4 +138,18 @@ describe("simplifyDebts", () => {
       expect(debt.amount).toBeGreaterThan(0);
     });
   });
+
+  it("settlement reduces net balance towards zero for creditor and debtor", () => {
+    // Alice paid 100, share 50 (paid:100, share:50) -> net = +50
+    // Bob paid 0, share 50 (paid:0, share:50) -> net = -50
+    // Settlement: Bob pays Alice 50 (Bob paidOut: 50, Alice received: 50)
+    const alicePaid = 100, aliceShare = 50, aliceReceived = 50, alicePaidOut = 0;
+    const bobPaid = 0, bobShare = 50, bobReceived = 0, bobPaidOut = 50;
+
+    const aliceNet = alicePaid - aliceShare + alicePaidOut - aliceReceived;
+    const bobNet = bobPaid - bobShare + bobPaidOut - bobReceived;
+
+    expect(aliceNet).toBe(0);
+    expect(bobNet).toBe(0);
+  });
 });

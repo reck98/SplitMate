@@ -71,7 +71,7 @@ export async function getBalances(
       .filter((s) => s.payer_id === member.user_id)
       .reduce((sum, s) => sum + s.amount, 0);
 
-    const netBalance = paid - share + received - paidOut;
+    const netBalance = paid - share + paidOut - received;
 
     return {
       user_id: member.user_id,

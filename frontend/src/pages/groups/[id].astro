@@ -76,12 +76,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             </svg>
             <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Settlements</h3>
           </div>
-          <button id="open-settle-modal-btn" class="inline-flex items-center gap-1.5 text-xs font-medium rounded-glass-lg px-3 py-1.5 bg-[var(--color-accent-soft)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-all duration-200">
-            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            Record Settlement
-          </button>
         </div>
         <div id="settlements-suggestions" class="space-y-2 mb-4"></div>
         <div id="settlements-history" class="space-y-2"></div>
@@ -105,11 +99,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     </div>
   </main>
 
-  <!-- Settlement Modal -->
+  <!-- Debt Settlement Modal -->
   <div id="settlement-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden animate-fade-in">
     <div class="w-full max-w-md mx-4 glass-strong rounded-glass-xl p-6 shadow-2xl">
       <div class="flex items-center justify-between mb-4 border-b border-[var(--color-border)] pb-3">
-        <h3 class="text-lg font-bold text-[var(--color-text-primary)]">Record Manual Settlement</h3>
+        <h3 class="text-lg font-bold text-[var(--color-text-primary)]" id="settle-modal-title">Settle Payment</h3>
         <button id="close-settle-modal-btn" type="button" class="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
           <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -117,23 +111,34 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         </button>
       </div>
       <form id="settlement-modal-form" class="space-y-4">
-        <div>
-          <label for="settle-payer" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Paid By (Payer)</label>
-          <select id="settle-payer" required class="w-full rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]">
-          </select>
+        <input type="hidden" id="settle-payer-id" />
+        <input type="hidden" id="settle-receiver-id" />
+        <input type="hidden" id="settle-mode" value="cash" />
+
+        <div class="glass rounded-glass-lg p-3 space-y-1.5 text-xs">
+          <div class="flex justify-between">
+            <span class="text-[var(--color-text-secondary)]">Paid By (Payer):</span>
+            <span id="settle-payer-display" class="font-semibold text-[var(--color-text-primary)]"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-[var(--color-text-secondary)]">Paid To (Receiver):</span>
+            <span id="settle-receiver-display" class="font-semibold text-[var(--color-text-primary)]"></span>
+          </div>
+          <div class="flex justify-between pt-1 border-t border-[var(--color-border)]">
+            <span class="text-[var(--color-text-secondary)]">Total Owed Debt:</span>
+            <span id="settle-max-display" class="font-semibold text-[var(--color-accent)]"></span>
+          </div>
         </div>
+
         <div>
-          <label for="settle-receiver" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Paid To (Receiver)</label>
-          <select id="settle-receiver" required class="w-full rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]">
-          </select>
-        </div>
-        <div>
-          <label for="settle-amount" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Amount (₹)</label>
+          <label for="settle-amount" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Settlement Amount (₹)</label>
           <input type="number" id="settle-amount" required min="0.01" step="0.01" placeholder="0.00" class="w-full rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-2 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]" />
+          <p id="settle-error-msg" class="mt-1 text-xs text-[var(--color-danger)] hidden"></p>
         </div>
+
         <div class="flex gap-2 pt-2">
           <button type="button" id="cancel-settle-modal-btn" class="flex-1 rounded-glass-lg px-4 py-2 text-sm font-medium glass glass-hover text-[var(--color-text-secondary)]">Cancel</button>
-          <button type="submit" class="flex-1 rounded-glass-lg px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all">Save Settlement</button>
+          <button type="submit" id="submit-settle-btn" class="flex-1 rounded-glass-lg px-4 py-2 text-sm font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all">Confirm Settlement</button>
         </div>
       </form>
     </div>
@@ -460,85 +465,20 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         `;
 
         suggestionsContainer.querySelectorAll(".settle-upi-btn").forEach((btn) => {
-          btn.addEventListener("click", async () => {
+          btn.addEventListener("click", () => {
             const payerId = (btn as HTMLElement).dataset.payer!;
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
-
-            const receiver = currentData.members.find((m: any) => m.user_id === receiverId);
-
-            if (!receiver?.upi_id) {
-              if (
-                confirm(
-                  `${receiver?.name || "Receiver"} has not set a UPI ID. Record payment of ${formatCurrency(amount)} as settled (Cash / Offline) instead?`
-                )
-              ) {
-                try {
-                  await api.settlements.create(groupId, {
-                    payer_id: payerId,
-                    receiver_id: receiverId,
-                    amount,
-                  });
-                  (window as any).showToast?.({ message: "Settlement recorded successfully", type: "success" });
-                } catch (error: any) {
-                  (window as any).showToast?.({ message: error.message || "Failed to record settlement", type: "error" });
-                }
-              }
-              return;
-            }
-
-            const upiLink = generateUpiLink({
-              payeeAddress: receiver.upi_id,
-              amount,
-            });
-
-            openUpiApp(upiLink);
-
-            setTimeout(async () => {
-              if (
-                confirm(
-                  `Did you complete the payment of ${formatCurrency(amount)} to ${receiver.name}? Mark as settled?`
-                )
-              ) {
-                try {
-                  await api.settlements.create(groupId, {
-                    payer_id: payerId,
-                    receiver_id: receiverId,
-                    amount,
-                  });
-                  (window as any).showToast?.({ message: "Settlement recorded", type: "success" });
-                } catch (error: any) {
-                  (window as any).showToast?.({ message: error.message || "Failed to record settlement", type: "error" });
-                }
-              }
-            }, 1000);
+            openDebtSettlementModal(payerId, receiverId, amount, "upi");
           });
         });
 
         suggestionsContainer.querySelectorAll(".settle-cash-btn").forEach((btn) => {
-          btn.addEventListener("click", async () => {
+          btn.addEventListener("click", () => {
             const payerId = (btn as HTMLElement).dataset.payer!;
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
-
-            const payer = currentData.members.find((m: any) => m.user_id === payerId);
-            const receiver = currentData.members.find((m: any) => m.user_id === receiverId);
-
-            const payerName = payerId === currentUserId ? "You" : (payer?.name || "Payer");
-            const receiverName = receiverId === currentUserId ? "you" : (receiver?.name || "Receiver");
-
-            if (confirm(`Record payment of ${formatCurrency(amount)} from ${payerName} to ${receiverName} as settled (Cash / Offline)?`)) {
-              try {
-                await api.settlements.create(groupId, {
-                  payer_id: payerId,
-                  receiver_id: receiverId,
-                  amount,
-                });
-                (window as any).showToast?.({ message: "Settlement recorded successfully", type: "success" });
-              } catch (error: any) {
-                (window as any).showToast?.({ message: error.message || "Failed to record settlement", type: "error" });
-              }
-            }
+            openDebtSettlementModal(payerId, receiverId, amount, "cash");
           });
         });
       }
@@ -571,6 +511,46 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       } else {
         historyContainer.innerHTML = "";
       }
+    }
+
+    function openDebtSettlementModal(payerId: string, receiverId: string, maxAmount: number, mode: "cash" | "upi") {
+      const modal = document.getElementById("settlement-modal");
+      const payerIdInput = document.getElementById("settle-payer-id") as HTMLInputElement;
+      const receiverIdInput = document.getElementById("settle-receiver-id") as HTMLInputElement;
+      const modeInput = document.getElementById("settle-mode") as HTMLInputElement;
+      const payerDisplay = document.getElementById("settle-payer-display")!;
+      const receiverDisplay = document.getElementById("settle-receiver-display")!;
+      const maxDisplay = document.getElementById("settle-max-display")!;
+      const amountInput = document.getElementById("settle-amount") as HTMLInputElement;
+      const errorMsg = document.getElementById("settle-error-msg")!;
+      const modalTitle = document.getElementById("settle-modal-title")!;
+      const submitBtn = document.getElementById("submit-settle-btn") as HTMLButtonElement;
+
+      payerIdInput.value = payerId;
+      receiverIdInput.value = receiverId;
+      modeInput.value = mode;
+
+      const payer = currentData?.members?.find((m: any) => m.user_id === payerId);
+      const receiver = currentData?.members?.find((m: any) => m.user_id === receiverId);
+
+      payerDisplay.textContent = payerId === currentUserId ? "You" : (payer?.name || "Payer");
+      receiverDisplay.textContent = receiverId === currentUserId ? "You" : (receiver?.name || "Receiver");
+      maxDisplay.textContent = formatCurrency(maxAmount);
+
+      amountInput.value = maxAmount.toFixed(2);
+      amountInput.max = maxAmount.toString();
+      errorMsg.classList.add("hidden");
+      errorMsg.textContent = "";
+
+      if (mode === "upi") {
+        modalTitle.textContent = "Settle via UPI";
+        submitBtn.textContent = "Pay via UPI & Settle";
+      } else {
+        modalTitle.textContent = "Settle via Cash";
+        submitBtn.textContent = "Confirm Cash Settlement";
+      }
+
+      modal?.classList.remove("hidden");
     }
 
     async function loadGroupData() {
@@ -625,37 +605,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     });
 
     const modal = document.getElementById("settlement-modal");
-    const openModalBtn = document.getElementById("open-settle-modal-btn");
     const closeModalBtn = document.getElementById("close-settle-modal-btn");
     const cancelModalBtn = document.getElementById("cancel-settle-modal-btn");
     const modalForm = document.getElementById("settlement-modal-form");
-    const payerSelect = document.getElementById("settle-payer") as HTMLSelectElement;
-    const receiverSelect = document.getElementById("settle-receiver") as HTMLSelectElement;
 
     function closeModal() {
       modal?.classList.add("hidden");
     }
-
-    openModalBtn?.addEventListener("click", () => {
-      if (!currentData?.members || currentData.members.length < 2) {
-        (window as any).showToast?.({ message: "At least 2 members are required to record a settlement.", type: "error" });
-        return;
-      }
-
-      payerSelect.innerHTML = currentData.members
-        .map(
-          (m: any) => `<option value="${m.user_id}" ${m.user_id === currentUserId ? "selected" : ""}>${m.name} ${m.user_id === currentUserId ? "(You)" : ""}</option>`
-        )
-        .join("");
-
-      receiverSelect.innerHTML = currentData.members
-        .map(
-          (m: any) => `<option value="${m.user_id}" ${m.user_id !== currentUserId ? "selected" : ""}>${m.name} ${m.user_id === currentUserId ? "(You)" : ""}</option>`
-        )
-        .join("");
-
-      modal?.classList.remove("hidden");
-    });
 
     closeModalBtn?.addEventListener("click", closeModal);
     cancelModalBtn?.addEventListener("click", closeModal);
@@ -663,41 +619,63 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     modalForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const payerId = payerSelect.value;
-      const receiverId = receiverSelect.value;
-      const amount = parseFloat((document.getElementById("settle-amount") as HTMLInputElement).value);
+      const payerId = (document.getElementById("settle-payer-id") as HTMLInputElement).value;
+      const receiverId = (document.getElementById("settle-receiver-id") as HTMLInputElement).value;
+      const mode = (document.getElementById("settle-mode") as HTMLInputElement).value;
+      const amountInput = document.getElementById("settle-amount") as HTMLInputElement;
+      const errorMsg = document.getElementById("settle-error-msg")!;
+      const amount = parseFloat(amountInput.value);
+      const maxAmount = parseFloat(amountInput.max);
 
-      if (payerId === receiverId) {
-        (window as any).showToast?.({ message: "Payer and receiver must be different members.", type: "error" });
+      if (isNaN(amount) || amount <= 0) {
+        errorMsg.textContent = "Please enter a valid amount greater than 0.";
+        errorMsg.classList.remove("hidden");
         return;
       }
 
-      if (!amount || amount <= 0) {
-        (window as any).showToast?.({ message: "Please enter a valid amount.", type: "error" });
+      if (amount > maxAmount + 0.01) {
+        errorMsg.textContent = `Settlement amount cannot exceed the owed debt of ${formatCurrency(maxAmount)}.`;
+        errorMsg.classList.remove("hidden");
         return;
       }
 
-      const submitBtn = modalForm.querySelector('button[type="submit"]');
+      errorMsg.classList.add("hidden");
+
+      const submitBtn = document.getElementById("submit-settle-btn") as HTMLButtonElement;
       if (submitBtn) {
-        (submitBtn as HTMLButtonElement).disabled = true;
-        submitBtn.textContent = "Saving...";
+        submitBtn.disabled = true;
+        submitBtn.textContent = mode === "upi" ? "Opening UPI..." : "Saving...";
       }
 
       try {
+        if (mode === "upi") {
+          const receiver = currentData?.members?.find((m: any) => m.user_id === receiverId);
+          if (!receiver?.upi_id) {
+            (window as any).showToast?.({ message: `${receiver?.name || "Receiver"} has no UPI ID set. Recording cash settlement instead.`, type: "info" });
+          } else {
+            const upiLink = generateUpiLink({
+              payeeAddress: receiver.upi_id,
+              amount,
+            });
+            openUpiApp(upiLink);
+          }
+        }
+
         await api.settlements.create(groupId, {
           payer_id: payerId,
           receiver_id: receiverId,
           amount,
         });
-        (window as any).showToast?.({ message: "Settlement recorded successfully!", type: "success" });
+
+        (window as any).showToast?.({ message: "Settlement recorded successfully", type: "success" });
         closeModal();
-        (document.getElementById("settle-amount") as HTMLInputElement).value = "";
       } catch (error: any) {
-        (window as any).showToast?.({ message: error.message || "Failed to record settlement.", type: "error" });
+        errorMsg.textContent = error.message || "Failed to record settlement";
+        errorMsg.classList.remove("hidden");
       } finally {
         if (submitBtn) {
-          (submitBtn as HTMLButtonElement).disabled = false;
-          submitBtn.textContent = "Save Settlement";
+          submitBtn.disabled = false;
+          submitBtn.textContent = mode === "upi" ? "Pay via UPI & Settle" : "Confirm Settlement";
         }
       }
     });
