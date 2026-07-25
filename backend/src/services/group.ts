@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { groups, groupMembers, users, expenses, expenseParticipants, settlements } from "../db/schema.js";
 import { getBalances } from "./balance.js";
@@ -85,12 +85,12 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
       .select()
       .from(expenses)
       .where(eq(expenses.group_id, groupId))
-      .orderBy(expenses.created_at),
+      .orderBy(desc(expenses.created_at)),
     db
       .select()
       .from(settlements)
       .where(eq(settlements.group_id, groupId))
-      .orderBy(settlements.created_at),
+      .orderBy(desc(settlements.created_at)),
   ]);
 
   const expenseIds = groupExpenses.map((e) => e.id);
