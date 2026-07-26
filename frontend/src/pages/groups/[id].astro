@@ -383,7 +383,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const suggestionsContainer = document.getElementById("settlements-suggestions")!;
       const historyContainer = document.getElementById("settlements-history")!;
 
-      if (!data.simplified_debts || data.simplified_debts.length === 0) {
+      const userDebts = (data.simplified_debts || []).filter(
+        (d: any) => d.from.user_id === currentUserId || d.to.user_id === currentUserId
+      );
+
+      if (!userDebts || userDebts.length === 0) {
         suggestionsContainer.innerHTML = `
           <div class="glass rounded-glass-lg p-5 text-center animate-fade-in">
             <div class="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-success-soft)]">
@@ -398,7 +402,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       } else {
         suggestionsContainer.innerHTML = `
           <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Suggested Payments</h4>
-          ${data.simplified_debts
+          ${userDebts
             .map((d: any, i: number) => {
               const isDebtor = d.from.user_id === currentUserId;
               const isCreditor = d.to.user_id === currentUserId;
@@ -406,11 +410,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
               let label: string;
               if (isDebtor) {
-                label = `You owe <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
-              } else if (isCreditor) {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes you${descTag}`;
+                label = `You should pay <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
               } else {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> owes <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
+                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> should pay you${descTag}`;
               }
 
               const showPayBtn = isDebtor;

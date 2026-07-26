@@ -1,5 +1,31 @@
 # Engineering Decision Records
 
+## D-018: User-Scoped Suggested Payments Visibility & Editable Display Name Architecture
+
+**Date:** 2026-07-26
+**Status:** Accepted
+
+**Context:**
+1. **Suggested Payments Privacy**:
+   - Previously, the group details page displayed settlement suggestions for every member in the group. If User A owed User B ₹200 and User C owed User D ₹150, all group members saw all payment suggestions.
+   - Requirement: Each authenticated user should ONLY see payment suggestions that directly involve themselves.
+2. **Display Name Editing**:
+   - Users could only edit their UPI ID on the profile page, while display name was fixed from initial sign-in.
+   - Requirement: Allow users to change their display name with whitespace trimming, Zod validation, DB persistence, immediate UI state updates, and preservation across Google Firebase Auth sign-ins.
+
+**Decision:**
+1. **User-Scoped Debt Filtering**:
+   - Keep global balance calculation (`getBalances()`) complete across all group members to ensure mathematical debt simplification correctness.
+   - Filter `simplified_debts` in `getGroupData()` and `renderSettlements()` using `d.from.user_id === currentUserId || d.to.user_id === currentUserId`.
+   - Update labels to "You should pay X" / "X should pay you".
+2. **Editable Display Name Architecture**:
+   - Update `updateProfileSchema` in `backend/src/routes/auth.ts` to validate optional `name` and `upi_id`.
+   - In `PATCH /api/me`, update `users` table with trimmed `name` and/or `upi_id`.
+   - In `POST /auth/firebase`, preserve existing custom `name` in DB (`existing.name || decoded.name`) so Firebase token sync does not overwrite custom display names on subsequent logins.
+   - In `profile.astro`, create an "Edit Profile" section and update `$user` store on save for instant UI reactivity.
+
+---
+
 ## D-017: Manual Settlements & Stale-While-Revalidate (SWR) Performance Architecture
 
 **Date:** 2026-07-26

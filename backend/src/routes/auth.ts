@@ -14,9 +14,14 @@ import { AuthenticatedRequest } from "../types/index.js";
 
 const router = Router();
 
-const updateProfileSchema = z.object({
-  upi_id: z.string().min(1, "UPI ID is required"),
-});
+const updateProfileSchema = z
+  .object({
+    name: z.string().trim().min(1, "Display name cannot be empty").max(100, "Display name too long").optional(),
+    upi_id: z.string().trim().min(1, "UPI ID is required").optional(),
+  })
+  .refine((data) => data.name !== undefined || data.upi_id !== undefined, {
+    message: "At least one field (name or upi_id) must be provided.",
+  });
 
 function generateAvatar(name: string): string {
   const encoded = encodeURIComponent(name);
@@ -50,7 +55,7 @@ router.post(
 
       let user;
       if (existing) {
-        const name = decoded.name || existing.name;
+        const name = existing.name || decoded.name || "User";
         const avatar = decoded.picture || existing.avatar;
 
         if (name !== existing.name || (avatar !== existing.avatar && avatar)) {
@@ -126,21 +131,30 @@ router.patch(
   validate(updateProfileSchema),
   async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const { upi_id } = req.body;
+      const { name, upi_id } = req.body;
+      const updates: Record<string, any> = {};
 
-      if (!validateUpiId(upi_id)) {
-        throw new AppError(400, "INVALID_UPI_ID", "Please enter a valid UPI ID (e.g., name@provider).");
+      if (name !== undefined) {
+        const trimmedName = name.trim();
+        if (!trimmedName) {
+          throw new AppError(400, "INVALID_NAME", "Display name cannot be empty.");
+        }
+        updates.name = trimmedName;
       }
 
-      const now = new Date().toISOString();
+      if (upi_id !== undefined) {
+        if (!validateUpiId(upi_id)) {
+          throw new AppError(400, "INVALID_UPI_ID", "Please enter a valid UPI ID (e.g., name@provider).");
+        }
+        updates.upi_id = upi_id;
+        updates.is_profile_complete = true;
+      }
+
+      updates.updated_at = new Date().toISOString();
 
       await db
         .update(users)
-        .set({
-          upi_id,
-          is_profile_complete: true,
-          updated_at: now,
-        })
+        .set(updates)
         .where(eq(users.id, req.user!.id));
 
       const [updated] = await db

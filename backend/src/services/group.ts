@@ -148,12 +148,16 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
       e.participants.some((p) => p.user_id === currentUserId)
   );
 
+  const visibleSimplifiedDebts = simplified_debts.filter(
+    (d) => d.from.user_id === currentUserId || d.to.user_id === currentUserId
+  );
+
   return {
     group,
     members,
     expenses: visibleExpenseData,
     balances,
     settlements: settlementData,
-    simplified_debts,
+    simplified_debts: visibleSimplifiedDebts,
   };
 }

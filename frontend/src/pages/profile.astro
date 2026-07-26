@@ -52,23 +52,41 @@ import Skeleton from "../components/Skeleton.astro";
           <div class="glass rounded-glass-xl p-6 animate-fade-in-up">
             <div class="flex items-center gap-4">
               ${user.avatar
-                ? `<img src="${user.avatar}" alt="${user.name}" class="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--color-accent-soft)]" loading="lazy">`
-                : `<div class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-2xl font-bold text-[var(--color-accent)] ring-2 ring-[var(--color-accent-soft)]">${user.name.charAt(0).toUpperCase()}</div>`
+                ? `<img id="profile-avatar-img" src="${user.avatar}" alt="${user.name}" class="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--color-accent-soft)]" loading="lazy">`
+                : `<div id="profile-avatar-fallback" class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-2xl font-bold text-[var(--color-accent)] ring-2 ring-[var(--color-accent-soft)]">${user.name.charAt(0).toUpperCase()}</div>`
               }
               <div>
-                <h2 class="text-xl font-bold text-[var(--color-text-primary)]">${user.name}</h2>
+                <h2 id="profile-header-name" class="text-xl font-bold text-[var(--color-text-primary)]">${user.name}</h2>
                 <p class="text-sm text-[var(--color-text-tertiary)]">${user.email}</p>
+                <p class="text-xs text-[var(--color-text-tertiary)] mt-0.5">Avatar managed by Google/Firebase</p>
               </div>
             </div>
           </div>
 
-          <div class="glass rounded-glass-xl p-6 animate-fade-in-up" style="animation-delay: 40ms">
-            <label class="block text-sm font-medium text-[var(--color-text-secondary)] mb-2">UPI ID</label>
-            <div class="flex items-center gap-2">
-              <input type="text" id="upi_id" value="${user.upi_id || ""}" placeholder="Set your UPI ID" class="flex-1" />
-              <button id="save-upi-btn" class="inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200 shrink-0">Save</button>
+          <form id="edit-profile-form" class="glass rounded-glass-xl p-6 space-y-4 animate-fade-in-up" style="animation-delay: 40ms">
+            <h3 class="text-base font-bold text-[var(--color-text-primary)] border-b border-[var(--color-border)] pb-2">Edit Profile</h3>
+            
+            <div>
+              <label for="display_name" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Display Name</label>
+              <input type="text" id="display_name" value="${user.name}" placeholder="Your display name" required class="w-full" />
             </div>
-          </div>
+
+            <div>
+              <label for="profile_email" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Email (Read-only)</label>
+              <input type="email" id="profile_email" value="${user.email}" readonly disabled class="w-full opacity-70 cursor-not-allowed bg-[var(--color-bg-glass-hover)]" />
+            </div>
+
+            <div>
+              <label for="upi_id" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">UPI ID</label>
+              <input type="text" id="upi_id" value="${user.upi_id || ""}" placeholder="Set your UPI ID (e.g., name@upi)" class="w-full" />
+            </div>
+
+            <div class="pt-2 flex justify-end">
+              <button type="submit" id="save-profile-btn" class="inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-5 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
+                Save Changes
+              </button>
+            </div>
+          </form>
 
           <div class="glass rounded-glass-xl p-6 animate-fade-in-up" style="animation-delay: 80ms">
             <div class="flex items-center gap-3">
@@ -92,13 +110,47 @@ import Skeleton from "../components/Skeleton.astro";
           </button>
         `;
 
-        document.getElementById("save-upi-btn")?.addEventListener("click", async () => {
-          const upiId = (document.getElementById("upi_id") as HTMLInputElement).value;
+        const form = document.getElementById("edit-profile-form") as HTMLFormElement;
+        form?.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const nameInput = document.getElementById("display_name") as HTMLInputElement;
+          const upiInput = document.getElementById("upi_id") as HTMLInputElement;
+          const saveBtn = document.getElementById("save-profile-btn") as HTMLButtonElement;
+
+          const nameVal = nameInput.value.trim();
+          const upiVal = upiInput.value.trim();
+
+          if (!nameVal) {
+            (window as any).showToast?.({ message: "Display name cannot be empty.", type: "error" });
+            return;
+          }
+
+          if (saveBtn) {
+            saveBtn.disabled = true;
+            saveBtn.textContent = "Saving...";
+          }
+
           try {
-            await api.auth.updateProfile(upiId);
-            (window as any).showToast?.({ message: "UPI ID updated successfully", type: "success" });
+            const updatedUser = await api.auth.updateProfile({
+              name: nameVal,
+              upi_id: upiVal || undefined,
+            });
+            setUser(updatedUser);
+
+            const headerName = document.getElementById("profile-header-name");
+            if (headerName) headerName.textContent = updatedUser.name;
+
+            const fallbackAvatar = document.getElementById("profile-avatar-fallback");
+            if (fallbackAvatar) fallbackAvatar.textContent = updatedUser.name.charAt(0).toUpperCase();
+
+            (window as any).showToast?.({ message: "Profile updated successfully", type: "success" });
           } catch (error: any) {
-            (window as any).showToast?.({ message: error.message || "Failed to update UPI ID", type: "error" });
+            (window as any).showToast?.({ message: error.message || "Failed to update profile", type: "error" });
+          } finally {
+            if (saveBtn) {
+              saveBtn.disabled = false;
+              saveBtn.textContent = "Save Changes";
+            }
           }
         });
 

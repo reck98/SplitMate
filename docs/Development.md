@@ -20,6 +20,7 @@
 - [x] Phase 4: Balance calculation — dynamic computation, greedy debt simplification, UPI deep links, settlement recording
 - [x] Phase 5: Server-Sent Events — real-time updates via SSE, in-memory event bus, auto-reconnect with token refresh
 - [x] Phase 6: Security — Zod validation, rate limiting, parameterized queries, consistent error format
+- [x] Product Improvements — User-scoped suggested payments filtering, editable display name in profile, open-source GitHub navbar button, and global glassmorphic footer
 - [x] Tests for critical business logic (18 tests across 3 test files)
 
 ### Known Bugs

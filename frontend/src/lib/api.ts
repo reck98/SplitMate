@@ -60,8 +60,18 @@ export const api = {
         upi_id: string | null;
         is_profile_complete: boolean;
       }>("/me"),
-    updateProfile: (upi_id: string) =>
-      request("/me", { method: "PATCH", body: { upi_id } }),
+    updateProfile: (data: { name?: string; upi_id?: string } | string) => {
+      const body = typeof data === "string" ? { upi_id: data } : data;
+      return request<{
+        id: string;
+        firebase_uid: string;
+        email: string;
+        name: string;
+        avatar: string | null;
+        upi_id: string | null;
+        is_profile_complete: boolean;
+      }>("/me", { method: "PATCH", body });
+    },
   },
 
   groups: {

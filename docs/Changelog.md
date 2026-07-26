@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.9.0
+
+### Added
+- **User-Scoped Suggested Payments Filtering**:
+  - Filtered suggested payment cards so each authenticated user ONLY sees settlements in which they are involved as either debtor ("You should pay X") or creditor ("X should pay you").
+  - Updated both backend service (`getGroupData()`) and frontend rendering logic (`renderSettlements()`) for strict user-scoped privacy.
+- **Editable Display Name**:
+  - Added display name editing to the profile page with server-side Zod validation, whitespace trimming, database persistence, and instant UI state updates via Nano Stores (`setUser()`).
+  - Preserved custom display names on subsequent Firebase Authentication sign-ins.
+- **GitHub Repository Button**:
+  - Added an "Open Source" GitHub button beside the theme toggle in the navigation header with Lucide GitHub icon, scale transition animations, and responsive layout scaling.
+- **Global Glassmorphic Footer**:
+  - Added a clean, minimal footer (`Made with ❤️ by reck98`) anchored across all pages matching the application's glassmorphism design system.
+
 ## v0.8.0
 
 ### Added
