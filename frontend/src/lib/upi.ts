@@ -1,18 +1,11 @@
 export function generateUpiLink(params: {
   payeeAddress: string;
-  amount: number;
+  amount: number | string;
   transactionNote?: string;
 }): string {
-  const { payeeAddress, amount, transactionNote = "SplitMate Settlement" } = params;
+  const { payeeAddress, amount } = params;
 
-  const queryParams = new URLSearchParams({
-    pa: payeeAddress,
-    am: amount.toFixed(2),
-    tn: transactionNote,
-    cu: "INR",
-  });
-
-  return `upi://pay?${queryParams.toString()}`;
+  return `upi://pay?pa=${payeeAddress}&am=${amount}&cu=INR`;
 }
 
 export function openUpiApp(upiLink: string): void {

@@ -4,34 +4,23 @@ import { generateUpiLink, validateUpiId } from "../services/upi.js";
 describe("generateUpiLink", () => {
   it("generates a valid UPI deep link", () => {
     const link = generateUpiLink({
-      payeeAddress: "rahul@okaxis",
-      amount: 250,
+      payeeAddress: "aanidadas@okicici",
+      amount: 10,
     });
 
-    expect(link).toContain("upi://pay");
-    expect(link).toContain("pa=rahul%40okaxis");
-    expect(link).toContain("am=250.00");
-    expect(link).toContain("tn=SplitMate+Settlement");
-    expect(link).toContain("cu=INR");
+    expect(link).toBe("upi://pay?pa=aanidadas@okicici&am=10&cu=INR");
   });
 
-  it("does not include payee name", () => {
+  it("does not include payee name or transaction note", () => {
     const link = generateUpiLink({
       payeeAddress: "rahul@okaxis",
       amount: 250,
-    });
-
-    expect(link).not.toContain("pn=");
-  });
-
-  it("includes custom transaction note", () => {
-    const link = generateUpiLink({
-      payeeAddress: "test@paytm",
-      amount: 100,
       transactionNote: "Dinner payment",
     });
 
-    expect(link).toContain("tn=Dinner+payment");
+    expect(link).not.toContain("pn=");
+    expect(link).not.toContain("tn=");
+    expect(link).toBe("upi://pay?pa=rahul@okaxis&am=250&cu=INR");
   });
 
   it("formats amount correctly", () => {
@@ -40,7 +29,7 @@ describe("generateUpiLink", () => {
       amount: 99.5,
     });
 
-    expect(link).toContain("am=99.50");
+    expect(link).toBe("upi://pay?pa=test@upi&am=99.5&cu=INR");
   });
 
   it("handles zero amount", () => {
@@ -49,7 +38,7 @@ describe("generateUpiLink", () => {
       amount: 0,
     });
 
-    expect(link).toContain("am=0.00");
+    expect(link).toBe("upi://pay?pa=test@upi&am=0&cu=INR");
   });
 });
 

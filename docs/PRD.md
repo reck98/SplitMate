@@ -414,11 +414,7 @@ URI
 Example
 
 ```
-upi://pay?
-pa=rahul@okaxis
-pn=Rahul
-am=250
-tn=SplitMate Settlement
+upi://pay?pa=aanidadas@okicici&am=10&cu=INR
 ```
 
 Browser launches installed UPI applications.
