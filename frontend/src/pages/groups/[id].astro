@@ -712,7 +712,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
       switchTab("expenses");
 
-      connectGroupSSE(groupId, { onUpdate: renderGroup });
+      connectGroupSSE(groupId, {
+        onUpdate: () => {
+          loadGroupData().catch(() => {});
+        },
+      });
     });
 
     document.addEventListener("visibilitychange", () => {

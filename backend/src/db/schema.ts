@@ -43,6 +43,7 @@ export const expenses = sqliteTable("expenses", {
     .references(() => groups.id),
   description: text("description").notNull(),
   amount: real("amount").notNull(),
+  split_type: text("split_type").notNull().default("equal"),
   paid_by: text("paid_by")
     .notNull()
     .references(() => users.id),

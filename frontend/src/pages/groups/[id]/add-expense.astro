@@ -153,16 +153,32 @@ import GlassButton from "../../../components/GlassButton.astro";
 
       if (currentSplit === "custom") {
         section.classList.remove("hidden");
+
+        const existingValues = new Map<string, string>();
+        document.querySelectorAll(".custom-share").forEach((input) => {
+          const uid = (input as HTMLElement).dataset.userId;
+          if (uid) {
+            existingValues.set(uid, (input as HTMLInputElement).value);
+          }
+        });
+
+        const totalAmount = parseFloat((document.getElementById("amount") as HTMLInputElement).value) || 0;
+        const count = checkboxes.length;
+        const defaultShare = count > 0 ? (totalAmount / count).toFixed(2) : "0.00";
+
         inputsContainer.innerHTML = "";
 
         checkboxes.forEach((cb) => {
           const userId = (cb as HTMLInputElement).value;
           const member = members.find((m) => m.user_id === userId);
+          const existingVal = existingValues.get(userId);
+          const shareVal = existingVal !== undefined && existingVal !== "" ? existingVal : defaultShare;
+
           const div = document.createElement("div");
           div.className = "flex items-center gap-2";
           div.innerHTML = `
             <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${member?.name || "Unknown"}</span>
-            <input type="number" step="0.01" min="0" data-user-id="${userId}" class="custom-share flex-1" placeholder="0.00" />
+            <input type="number" step="0.01" min="0" data-user-id="${userId}" value="${shareVal}" class="custom-share flex-1 rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]" placeholder="0.00" />
           `;
           inputsContainer.appendChild(div);
         });
@@ -170,6 +186,8 @@ import GlassButton from "../../../components/GlassButton.astro";
         inputsContainer.querySelectorAll(".custom-share").forEach((input) => {
           input.addEventListener("input", updateSplitTotal);
         });
+
+        updateSplitTotal();
       } else {
         section.classList.add("hidden");
       }
@@ -183,6 +201,12 @@ import GlassButton from "../../../components/GlassButton.astro";
       });
       document.getElementById("split-total")!.textContent = `Total: ₹${total.toFixed(2)}`;
     }
+
+    document.getElementById("amount")?.addEventListener("input", () => {
+      if (currentSplit === "custom") {
+        updateCustomSplitInputs();
+      }
+    });
 
     document.getElementById("equal-split-btn")?.addEventListener("click", () => {
       currentSplit = "equal";

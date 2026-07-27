@@ -18,6 +18,7 @@ export interface GroupData {
     id: string;
     description: string;
     amount: number;
+    split_type: string;
     paid_by: string;
     paid_by_name: string;
     created_by: string;
@@ -112,6 +113,7 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     id: e.id,
     description: e.description,
     amount: e.amount,
+    split_type: e.split_type || "equal",
     paid_by: e.paid_by,
     paid_by_name: members.find((m) => m.user_id === e.paid_by)?.name || "Unknown",
     created_by: e.created_by,
@@ -148,6 +150,10 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
       e.participants.some((p) => p.user_id === currentUserId)
   );
 
+  const visibleSettlements = settlementData.filter(
+    (s) => s.payer_id === currentUserId || s.receiver_id === currentUserId
+  );
+
   const visibleSimplifiedDebts = simplified_debts.filter(
     (d) => d.from.user_id === currentUserId || d.to.user_id === currentUserId
   );
@@ -157,7 +163,7 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     members,
     expenses: visibleExpenseData,
     balances,
-    settlements: settlementData,
+    settlements: visibleSettlements,
     simplified_debts: visibleSimplifiedDebts,
   };
 }

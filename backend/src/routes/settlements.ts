@@ -120,8 +120,7 @@ router.post(
       });
 
       try {
-        const groupData = await getGroupData(groupId, req.user!.id);
-        broadcast(groupId, "group_updated", groupData);
+        broadcast(groupId, "group_updated", { groupId });
       } catch {}
     } catch (error) {
       next(error);

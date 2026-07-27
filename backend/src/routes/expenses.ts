@@ -31,7 +31,7 @@ const createExpenseSchema = z.discriminatedUnion("split_type", [
       .array(
         z.object({
           user_id: z.string(),
-          share_amount: z.number().positive("Share amount must be positive"),
+          share_amount: z.number().min(0, "Share amount cannot be negative"),
         })
       )
       .min(1, "At least one participant is required"),
@@ -55,7 +55,7 @@ const updateExpenseSchema = z.discriminatedUnion("split_type", [
       .array(
         z.object({
           user_id: z.string(),
-          share_amount: z.number().positive("Share amount must be positive"),
+          share_amount: z.number().min(0, "Share amount cannot be negative"),
         })
       )
       .min(1, "At least one participant is required"),
@@ -150,6 +150,7 @@ router.post(
         group_id: groupId,
         description,
         amount,
+        split_type,
         paid_by,
         created_by: req.user!.id,
         created_at: now,
@@ -197,8 +198,7 @@ router.post(
       });
 
       try {
-        const groupData = await getGroupData(groupId, req.user!.id);
-        broadcast(groupId, "group_updated", groupData);
+        broadcast(groupId, "group_updated", { groupId });
       } catch {}
     } catch (error) {
       next(error);
@@ -269,6 +269,7 @@ router.patch(
         .set({
           description,
           amount,
+          split_type,
           updated_at: now,
         })
         .where(eq(expenses.id, expenseId));
@@ -318,8 +319,7 @@ router.patch(
       });
 
       try {
-        const groupData = await getGroupData(expense.group_id, req.user!.id);
-        broadcast(expense.group_id, "group_updated", groupData);
+        broadcast(expense.group_id, "group_updated", { groupId: expense.group_id });
       } catch {}
     } catch (error) {
       next(error);
@@ -362,8 +362,7 @@ router.delete(
       });
 
       try {
-        const groupData = await getGroupData(expense.group_id, req.user!.id);
-        broadcast(expense.group_id, "group_updated", groupData);
+        broadcast(expense.group_id, "group_updated", { groupId: expense.group_id });
       } catch {}
     } catch (error) {
       next(error);
