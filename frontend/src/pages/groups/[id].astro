@@ -381,6 +381,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         .join("");
     }
 
+    let activeSettlementFilter: "all" | "give" | "take" = "all";
+
     function renderSettlements(data: any) {
       const suggestionsContainer = document.getElementById("settlements-suggestions")!;
       const historyContainer = document.getElementById("settlements-history")!;
@@ -391,6 +393,21 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           (d.debtorId || d.debtor_id || d.from?.user_id) === currentUserId ||
           (d.payerId || d.payer_id || d.to?.user_id) === currentUserId
       );
+
+      const giveDebts = userDebts.filter(
+        (d: any) => (d.debtorId || d.debtor_id || d.from?.user_id) === currentUserId
+      );
+
+      const takeDebts = userDebts.filter(
+        (d: any) => (d.payerId || d.payer_id || d.to?.user_id) === currentUserId
+      );
+
+      let displayedDebts = userDebts;
+      if (activeSettlementFilter === "give") {
+        displayedDebts = giveDebts;
+      } else if (activeSettlementFilter === "take") {
+        displayedDebts = takeDebts;
+      }
 
       if (!userDebts || userDebts.length === 0) {
         suggestionsContainer.innerHTML = `
@@ -405,9 +422,45 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           </div>
         `;
       } else {
-        suggestionsContainer.innerHTML = `
-          <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Suggested Payments</h4>
-          ${userDebts
+        const filterHeader = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+            <h4 class="text-sm font-semibold text-[var(--color-text-secondary)]">Suggested Payments</h4>
+            <div class="inline-flex p-1 rounded-glass-lg glass bg-[var(--color-bg)]/40 border border-[var(--color-border)] self-start sm:self-auto text-xs font-medium gap-1">
+              <button data-filter="all" class="settlement-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-glass-sm transition-all duration-200 ${activeSettlementFilter === 'all' ? 'bg-[var(--color-accent)] text-white shadow-sm font-semibold' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}">
+                <span>All</span>
+                <span class="rounded-full px-1.5 py-0.2 text-[10px] ${activeSettlementFilter === 'all' ? 'bg-white/25 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-tertiary)]'}">${userDebts.length}</span>
+              </button>
+              <button data-filter="give" class="settlement-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-glass-sm transition-all duration-200 ${activeSettlementFilter === 'give' ? 'bg-[var(--color-accent)] text-white shadow-sm font-semibold' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}">
+                <span>You Owe</span>
+                <span class="rounded-full px-1.5 py-0.2 text-[10px] ${activeSettlementFilter === 'give' ? 'bg-white/25 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-tertiary)]'}">${giveDebts.length}</span>
+              </button>
+              <button data-filter="take" class="settlement-filter-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-glass-sm transition-all duration-200 ${activeSettlementFilter === 'take' ? 'bg-[var(--color-accent)] text-white shadow-sm font-semibold' : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'}">
+                <span>Owed to You</span>
+                <span class="rounded-full px-1.5 py-0.2 text-[10px] ${activeSettlementFilter === 'take' ? 'bg-white/25 text-white' : 'bg-[var(--color-bg-secondary)] text-[var(--color-text-tertiary)]'}">${takeDebts.length}</span>
+              </button>
+            </div>
+          </div>
+        `;
+
+        let listContent = "";
+        if (displayedDebts.length === 0) {
+          listContent = `
+            <div class="glass rounded-glass-lg p-5 text-center animate-fade-in">
+              <div class="mx-auto mb-2 flex h-9 w-9 items-center justify-center rounded-full bg-[var(--color-accent-soft)]">
+                <svg class="h-4 w-4 text-[var(--color-accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0l-3.75-3.75M12 20.25l3.75-3.75" />
+                </svg>
+              </div>
+              <p class="text-sm font-medium text-[var(--color-text-primary)]">
+                ${activeSettlementFilter === 'give' ? "You don't owe anyone!" : "No payments owed to you!"}
+              </p>
+              <p class="text-xs text-[var(--color-text-tertiary)] mt-0.5">
+                ${activeSettlementFilter === 'give' ? "All your payments in this group are settled." : "No one currently owes you money in this group."}
+              </p>
+            </div>
+          `;
+        } else {
+          listContent = displayedDebts
             .map((d: any, i: number) => {
               const debtorId = d.debtorId || d.debtor_id || d.from?.user_id;
               const payerId = d.payerId || d.payer_id || d.to?.user_id;
@@ -480,8 +533,17 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             </div>
           `;
             })
-            .join("")}
-        `;
+            .join("");
+        }
+
+        suggestionsContainer.innerHTML = filterHeader + listContent;
+
+        suggestionsContainer.querySelectorAll(".settlement-filter-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            activeSettlementFilter = (btn as HTMLElement).dataset.filter as any;
+            renderSettlements(currentData);
+          });
+        });
 
         suggestionsContainer.querySelectorAll(".settle-upi-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
