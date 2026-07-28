@@ -37,15 +37,29 @@ export function getDetailedDebts(
     for (const p of expParticipants) {
       if (p && p.user_id !== payerId && p.share_amount > 0.01) {
         const debtorName = memberMap.get(p.user_id) || "Unknown";
+        const amt = Math.round(p.share_amount * 100) / 100;
+        const timeStr = exp.created_at || new Date().toISOString();
         rawDebts.push({
           id: `${exp.id}_${p.user_id}`,
+          expenseId: exp.id,
           expense_id: exp.id,
+          expenseTitle: exp.description || "",
           description: exp.description || "",
+          payerId,
+          payer_id: payerId,
+          payerName,
+          payer_name: payerName,
+          debtorId: p.user_id,
+          debtor_id: p.user_id,
+          debtorName,
+          debtor_name: debtorName,
           from: { user_id: p.user_id, name: debtorName },
           to: { user_id: payerId, name: payerName },
-          amount: Math.round(p.share_amount * 100) / 100,
-          original_amount: Math.round(p.share_amount * 100) / 100,
-          created_at: exp.created_at || new Date().toISOString(),
+          amount: amt,
+          originalAmount: amt,
+          original_amount: amt,
+          createdAt: timeStr,
+          created_at: timeStr,
         });
       }
     }
@@ -59,24 +73,42 @@ export function getDetailedDebts(
   for (const s of sortedSettlements) {
     if (!s || !s.amount) continue;
     let remaining = s.amount;
-    for (const debt of rawDebts) {
-      if (
-        debt &&
-        debt.from &&
-        debt.to &&
-        debt.from.user_id === s.payer_id &&
-        debt.to.user_id === s.receiver_id &&
-        debt.amount > 0.01
-      ) {
-        const applied = Math.min(remaining, debt.amount);
-        debt.amount = Math.round((debt.amount - applied) * 100) / 100;
+
+    // First try targeted settlement by expense_id if provided
+    if (s.expense_id) {
+      const targetDebt = rawDebts.find(
+        (debt) =>
+          debt.expense_id === s.expense_id &&
+          debt.debtor_id === s.payer_id &&
+          debt.payer_id === s.receiver_id &&
+          debt.amount > 0.01,
+      );
+      if (targetDebt) {
+        const applied = Math.min(remaining, targetDebt.amount);
+        targetDebt.amount = Math.round((targetDebt.amount - applied) * 100) / 100;
         remaining = Math.round((remaining - applied) * 100) / 100;
-        if (remaining < 0.01) break;
+      }
+    }
+
+    // Apply any remaining settlement amount to un-settled debts between debtor and creditor
+    if (remaining > 0.01) {
+      for (const debt of rawDebts) {
+        if (
+          debt &&
+          debt.from.user_id === s.payer_id &&
+          debt.to.user_id === s.receiver_id &&
+          debt.amount > 0.01
+        ) {
+          const applied = Math.min(remaining, debt.amount);
+          debt.amount = Math.round((debt.amount - applied) * 100) / 100;
+          remaining = Math.round((remaining - applied) * 100) / 100;
+          if (remaining < 0.01) break;
+        }
       }
     }
   }
 
-  // Active un-settled debts (descending by created_at so newest expenses show first in suggestions)
+  // Active un-settled debts (descending by created_at so newest expenses show first)
   const detailed_debts = rawDebts
     .filter((d) => d && d.amount > 0.01)
     .sort((a, b) => parseTime(b?.created_at) - parseTime(a?.created_at));
@@ -122,7 +154,8 @@ export function getDetailedDebts(
     };
   });
 
-  const simplified_debts = simplifyDebts(balances);
+  // Debt simplification is disabled: return raw obligations directly
+  const simplified_debts = detailed_debts;
 
   return {
     balances,
@@ -131,68 +164,8 @@ export function getDetailedDebts(
   };
 }
 
+// Deprecated: simplification disabled. Returns empty or unchanged.
 export function simplifyDebts(balances: BalanceInfo[]): SimplifiedDebt[] {
-  if (!balances || balances.length === 0) return [];
-
-  const creditors = balances
-    .filter((b) => b && b.net_balance > 0.009)
-    .sort((a, b) => b.net_balance - a.net_balance)
-    .map((b) => ({
-      user_id: b.user_id,
-      name: b.name,
-      net_balance: Math.round(b.net_balance * 100) / 100,
-    }));
-
-  const debtors = balances
-    .filter((b) => b && b.net_balance < -0.009)
-    .sort((a, b) => a.net_balance - b.net_balance)
-    .map((b) => ({
-      user_id: b.user_id,
-      name: b.name,
-      net_balance: Math.round(Math.abs(b.net_balance) * 100) / 100,
-    }));
-
-  const debts: SimplifiedDebt[] = [];
-  let i = 0;
-  let j = 0;
-
-  while (i < creditors.length && j < debtors.length) {
-    const creditor = creditors[i];
-    const debtor = debtors[j];
-
-    if (!creditor || creditor.net_balance <= 0.009) {
-      i++;
-      continue;
-    }
-    if (!debtor || debtor.net_balance <= 0.009) {
-      j++;
-      continue;
-    }
-
-    const amount = Math.min(creditor.net_balance, debtor.net_balance);
-    const roundedAmount = Math.round(amount * 100) / 100;
-
-    if (roundedAmount >= 0.01) {
-      debts.push({
-        from: {
-          user_id: debtor.user_id,
-          name: debtor.name || "Unknown",
-        },
-        to: {
-          user_id: creditor.user_id,
-          name: creditor.name || "Unknown",
-        },
-        amount: roundedAmount,
-      });
-    }
-
-    creditor.net_balance =
-      Math.round((creditor.net_balance - amount) * 100) / 100;
-    debtor.net_balance = Math.round((debtor.net_balance - amount) * 100) / 100;
-
-    if (creditor.net_balance <= 0.009) i++;
-    if (debtor.net_balance <= 0.009) j++;
-  }
-
-  return debts;
+  return [];
 }
+

@@ -7,6 +7,7 @@ import { db } from "../db/index.js";
 import {
   expenses,
   expenseParticipants,
+  expenseSettlements,
   groupMembers,
   groups,
 } from "../db/schema.js";
@@ -182,6 +183,12 @@ router.post(
           updated_at: now,
         });
 
+        let shares: Array<{
+          expense_id: string;
+          user_id: string;
+          share_amount: number;
+        }> = [];
+
         if (split_type === "equal") {
           const uniqueParticipants = Array.from(
             new Set(participants as string[]),
@@ -195,7 +202,7 @@ router.post(
           }
           const shareAmount =
             Math.round((amount / uniqueParticipants.length) * 100) / 100;
-          const shares = uniqueParticipants.map((userId: string) => ({
+          shares = uniqueParticipants.map((userId: string) => ({
             expense_id: expenseId,
             user_id: userId,
             share_amount: shareAmount,
@@ -212,13 +219,11 @@ router.post(
               pMap.set(p.user_id, (pMap.get(p.user_id) || 0) + p.share_amount);
             }
           }
-          const shares = Array.from(pMap.entries()).map(
-            ([userId, shareAmount]) => ({
-              expense_id: expenseId,
-              user_id: userId,
-              share_amount: Math.round(shareAmount * 100) / 100,
-            }),
-          );
+          shares = Array.from(pMap.entries()).map(([userId, shareAmount]) => ({
+            expense_id: expenseId,
+            user_id: userId,
+            share_amount: Math.round(shareAmount * 100) / 100,
+          }));
 
           if (shares.length === 0) {
             throw new AppError(
@@ -229,6 +234,24 @@ router.post(
           }
 
           await tx.insert(expenseParticipants).values(shares);
+        }
+
+        const settlementObligations = shares
+          .filter((s) => s.user_id !== paid_by && s.share_amount > 0.01)
+          .map((s) => ({
+            id: uuid(),
+            expense_id: expenseId,
+            group_id: groupId,
+            payer_id: paid_by,
+            debtor_id: s.user_id,
+            amount: s.share_amount,
+            settled_amount: 0,
+            is_settled: false,
+            created_at: now,
+          }));
+
+        if (settlementObligations.length > 0) {
+          await tx.insert(expenseSettlements).values(settlementObligations);
         }
       });
 
@@ -346,6 +369,16 @@ router.patch(
           .delete(expenseParticipants)
           .where(eq(expenseParticipants.expense_id, expenseId));
 
+        await tx
+          .delete(expenseSettlements)
+          .where(eq(expenseSettlements.expense_id, expenseId));
+
+        let shares: Array<{
+          expense_id: string;
+          user_id: string;
+          share_amount: number;
+        }> = [];
+
         if (split_type === "equal") {
           const uniqueParticipants = Array.from(
             new Set(participants as string[]),
@@ -359,7 +392,7 @@ router.patch(
           }
           const shareAmount =
             Math.round((amount / uniqueParticipants.length) * 100) / 100;
-          const shares = uniqueParticipants.map((userId: string) => ({
+          shares = uniqueParticipants.map((userId: string) => ({
             expense_id: expenseId,
             user_id: userId,
             share_amount: shareAmount,
@@ -376,13 +409,11 @@ router.patch(
               pMap.set(p.user_id, (pMap.get(p.user_id) || 0) + p.share_amount);
             }
           }
-          const shares = Array.from(pMap.entries()).map(
-            ([userId, shareAmount]) => ({
-              expense_id: expenseId,
-              user_id: userId,
-              share_amount: Math.round(shareAmount * 100) / 100,
-            }),
-          );
+          shares = Array.from(pMap.entries()).map(([userId, shareAmount]) => ({
+            expense_id: expenseId,
+            user_id: userId,
+            share_amount: Math.round(shareAmount * 100) / 100,
+          }));
 
           if (shares.length === 0) {
             throw new AppError(
@@ -393,6 +424,24 @@ router.patch(
           }
 
           await tx.insert(expenseParticipants).values(shares);
+        }
+
+        const settlementObligations = shares
+          .filter((s) => s.user_id !== expense.paid_by && s.share_amount > 0.01)
+          .map((s) => ({
+            id: uuid(),
+            expense_id: expenseId,
+            group_id: expense.group_id,
+            payer_id: expense.paid_by,
+            debtor_id: s.user_id,
+            amount: s.share_amount,
+            settled_amount: 0,
+            is_settled: false,
+            created_at: now,
+          }));
+
+        if (settlementObligations.length > 0) {
+          await tx.insert(expenseSettlements).values(settlementObligations);
         }
       });
 
@@ -464,6 +513,10 @@ router.delete(
         await tx
           .delete(expenseParticipants)
           .where(eq(expenseParticipants.expense_id, expenseId));
+
+        await tx
+          .delete(expenseSettlements)
+          .where(eq(expenseSettlements.expense_id, expenseId));
 
         await tx.delete(expenses).where(eq(expenses.id, expenseId));
       });

@@ -117,6 +117,7 @@ export const api = {
         expenses: any[];
         balances: any[];
         settlements: any[];
+        obligations: any[];
         simplified_debts: any[];
       }>(`/groups/${id}`),
     create: (name: string) =>
@@ -182,7 +183,7 @@ export const api = {
   settlements: {
     create: (
       groupId: string,
-      data: { payer_id: string; receiver_id: string; amount: number },
+      data: { payer_id: string; receiver_id: string; amount: number; expense_id?: string },
     ) =>
       request(`/groups/${groupId}/settlements`, {
         method: "POST",

@@ -10,6 +10,7 @@ import {
   users,
   expenses,
   expenseParticipants,
+  expenseSettlements,
   settlements,
 } from "../db/schema.js";
 import { requireAuth } from "../middleware/auth.js";
@@ -182,6 +183,10 @@ router.delete(
           await tx
             .delete(expenseParticipants)
             .where(inArray(expenseParticipants.expense_id, expenseIds));
+
+          await tx
+            .delete(expenseSettlements)
+            .where(inArray(expenseSettlements.expense_id, expenseIds));
 
           await tx.delete(expenses).where(inArray(expenses.id, expenseIds));
         }

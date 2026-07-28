@@ -54,11 +54,8 @@ export interface GroupData {
     amount: number;
     created_at: string;
   }>;
-  simplified_debts: Array<{
-    from: { user_id: string; name: string };
-    to: { user_id: string; name: string };
-    amount: number;
-  }>;
+  obligations: Array<any>;
+  simplified_debts: Array<any>;
 }
 
 export async function getGroupData(
@@ -201,6 +198,7 @@ export async function getGroupData(
     expenses: visibleExpenseData,
     balances,
     settlements: visibleSettlements,
+    obligations: visibleSimplifiedDebts,
     simplified_debts: visibleSimplifiedDebts,
   };
 }

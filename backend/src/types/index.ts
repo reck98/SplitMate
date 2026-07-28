@@ -33,10 +33,25 @@ export interface BalanceInfo {
   paid_out: number;
 }
 
-export interface SimplifiedDebt {
-  id?: string;
-  expense_id?: string;
-  description?: string;
+export interface Obligation {
+  id: string;
+  expenseId: string;
+  expense_id: string;
+  expenseTitle: string;
+  description: string;
+  payerId: string;
+  payer_id: string;
+  payerName: string;
+  payer_name: string;
+  debtorId: string;
+  debtor_id: string;
+  debtorName: string;
+  debtor_name: string;
+  amount: number;
+  originalAmount: number;
+  original_amount: number;
+  createdAt: string;
+  created_at: string;
   from: {
     user_id: string;
     name: string;
@@ -45,27 +60,10 @@ export interface SimplifiedDebt {
     user_id: string;
     name: string;
   };
-  amount: number;
-  original_amount?: number;
-  created_at?: string;
 }
 
-export interface DetailedDebt {
-  id: string;
-  expense_id: string;
-  description: string;
-  from: {
-    user_id: string;
-    name: string;
-  };
-  to: {
-    user_id: string;
-    name: string;
-  };
-  amount: number;
-  original_amount: number;
-  created_at: string;
-}
+export type SimplifiedDebt = Obligation;
+export type DetailedDebt = Obligation;
 
 export interface UserProfile {
   id: string;

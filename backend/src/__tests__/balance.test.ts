@@ -1,37 +1,82 @@
 import { describe, it, expect } from "vitest";
-import { simplifyDebts, getDetailedDebts } from "../services/settlement.js";
-import { BalanceInfo } from "../types/index.js";
+import { getDetailedDebts } from "../services/settlement.js";
 
-const makeBalance = (
-  user_id: string,
-  name: string,
-  net_balance: number,
-): BalanceInfo => ({
-  user_id,
-  name,
-  lent: net_balance > 0 ? net_balance : 0,
-  owed: net_balance < 0 ? Math.abs(net_balance) : 0,
-  net_balance,
-  paid: 0,
-  share: 0,
-  received: 0,
-  paid_out: 0,
-});
+describe("getDetailedDebts without Debt Simplification", () => {
+  const members = [
+    { user_id: "A", name: "Alice" },
+    { user_id: "B", name: "Bob" },
+    { user_id: "C", name: "Charlie" },
+  ];
 
-describe("getDetailedDebts", () => {
-  it("keeps opposing transactions separate without auto-cancelling them", () => {
-    const members = [
-      { user_id: "A", name: "Alice" },
-      { user_id: "B", name: "Bob" },
-    ];
-
-    // Expense 1: A pays 200 for A and B (Dinner)
-    // Expense 2: B pays 200 for B and A (Cab)
+  it("preserves individual obligations for multiple expenses with the same payer without merging", () => {
     const expenses = [
       {
         id: "e1",
         description: "Dinner",
-        amount: 200,
+        amount: 300,
+        paid_by: "A",
+        created_at: "2026-07-26T01:00:00Z",
+      },
+      {
+        id: "e2",
+        description: "Snacks",
+        amount: 120,
+        paid_by: "A",
+        created_at: "2026-07-26T02:00:00Z",
+      },
+    ];
+
+    const participants = [
+      { expense_id: "e1", user_id: "A", share_amount: 100 },
+      { expense_id: "e1", user_id: "B", share_amount: 100 },
+      { expense_id: "e1", user_id: "C", share_amount: 100 },
+      { expense_id: "e2", user_id: "A", share_amount: 60 },
+      { expense_id: "e2", user_id: "B", share_amount: 60 },
+    ];
+
+    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
+
+    expect(detailed_debts).toHaveLength(3);
+
+    // Verify metadata fields on each record
+    detailed_debts.forEach((debt) => {
+      expect(debt).toHaveProperty("expenseId");
+      expect(debt).toHaveProperty("expenseTitle");
+      expect(debt).toHaveProperty("payerId");
+      expect(debt).toHaveProperty("payerName");
+      expect(debt).toHaveProperty("debtorId");
+      expect(debt).toHaveProperty("debtorName");
+      expect(debt).toHaveProperty("amount");
+      expect(debt).toHaveProperty("createdAt");
+    });
+
+    const bDinner = detailed_debts.find(
+      (d) => d.expense_id === "e1" && d.debtor_id === "B" && d.payer_id === "A",
+    );
+    expect(bDinner).toBeDefined();
+    expect(bDinner!.amount).toBe(100);
+    expect(bDinner!.expenseTitle).toBe("Dinner");
+
+    const cDinner = detailed_debts.find(
+      (d) => d.expense_id === "e1" && d.debtor_id === "C" && d.payer_id === "A",
+    );
+    expect(cDinner).toBeDefined();
+    expect(cDinner!.amount).toBe(100);
+
+    const bSnacks = detailed_debts.find(
+      (d) => d.expense_id === "e2" && d.debtor_id === "B" && d.payer_id === "A",
+    );
+    expect(bSnacks).toBeDefined();
+    expect(bSnacks!.amount).toBe(60);
+    expect(bSnacks!.expenseTitle).toBe("Snacks");
+  });
+
+  it("preserves separate obligations for multiple expenses with different payers without graph rerouting", () => {
+    const expenses = [
+      {
+        id: "e1",
+        description: "Dinner",
+        amount: 300,
         paid_by: "A",
         created_at: "2026-07-26T01:00:00Z",
       },
@@ -47,188 +92,111 @@ describe("getDetailedDebts", () => {
     const participants = [
       { expense_id: "e1", user_id: "A", share_amount: 100 },
       { expense_id: "e1", user_id: "B", share_amount: 100 },
+      { expense_id: "e1", user_id: "C", share_amount: 100 },
       { expense_id: "e2", user_id: "B", share_amount: 100 },
-      { expense_id: "e2", user_id: "A", share_amount: 100 },
+      { expense_id: "e2", user_id: "C", share_amount: 100 },
     ];
 
-    const settlements: any[] = [];
-
-    const { balances, detailed_debts } = getDetailedDebts(
+    const { detailed_debts, simplified_debts } = getDetailedDebts(
       members,
       expenses,
       participants,
-      settlements,
+      [],
     );
+
+    // Should return exactly 3 independent debts: B->A ₹100, C->A ₹100, C->B ₹100
+    expect(detailed_debts).toHaveLength(3);
+    expect(simplified_debts).toHaveLength(3);
+
+    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
+    const cOwesA = detailed_debts.find((d) => d.expense_id === "e1" && d.debtor_id === "C" && d.payer_id === "A");
+    const cOwesB = detailed_debts.find((d) => d.expense_id === "e2" && d.debtor_id === "C" && d.payer_id === "B");
+
+    expect(bOwesA!.amount).toBe(100);
+    expect(cOwesA!.amount).toBe(100);
+    expect(cOwesB!.amount).toBe(100);
+  });
+
+  it("preserves circular debts without cancelling them out", () => {
+    const expenses = [
+      { id: "e1", description: "A for B", amount: 100, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
+      { id: "e2", description: "B for C", amount: 100, paid_by: "B", created_at: "2026-07-26T02:00:00Z" },
+      { id: "e3", description: "C for A", amount: 100, paid_by: "C", created_at: "2026-07-26T03:00:00Z" },
+    ];
+
+    const participants = [
+      { expense_id: "e1", user_id: "B", share_amount: 100 },
+      { expense_id: "e2", user_id: "C", share_amount: 100 },
+      { expense_id: "e3", user_id: "A", share_amount: 100 },
+    ];
+
+    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
+
+    // Circular debt (A->B 100, B->C 100, C->A 100) must remain as 3 separate obligations!
+    expect(detailed_debts).toHaveLength(3);
+    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
+    const cOwesB = detailed_debts.find((d) => d.debtor_id === "C" && d.payer_id === "B");
+    const aOwesC = detailed_debts.find((d) => d.debtor_id === "A" && d.payer_id === "C");
+
+    expect(bOwesA!.amount).toBe(100);
+    expect(cOwesB!.amount).toBe(100);
+    expect(aOwesC!.amount).toBe(100);
+  });
+
+  it("handles custom split accurately", () => {
+    const expenses = [
+      { id: "e1", description: "Custom Feast", amount: 600, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
+    ];
+
+    const participants = [
+      { expense_id: "e1", user_id: "A", share_amount: 100 },
+      { expense_id: "e1", user_id: "B", share_amount: 200 },
+      { expense_id: "e1", user_id: "C", share_amount: 300 },
+    ];
+
+    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
 
     expect(detailed_debts).toHaveLength(2);
+    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
+    const cOwesA = detailed_debts.find((d) => d.debtor_id === "C" && d.payer_id === "A");
 
-    const bOwesA = detailed_debts.find(
-      (d) => d.from.user_id === "B" && d.to.user_id === "A",
-    );
-    expect(bOwesA).toBeDefined();
-    expect(bOwesA!.amount).toBe(100);
-    expect(bOwesA!.description).toBe("Dinner");
+    expect(bOwesA!.amount).toBe(200);
+    expect(cOwesA!.amount).toBe(300);
+  });
 
-    const aOwesB = detailed_debts.find(
-      (d) => d.from.user_id === "A" && d.to.user_id === "B",
-    );
-    expect(aOwesB).toBeDefined();
-    expect(aOwesB!.amount).toBe(100);
-    expect(aOwesB!.description).toBe("Cab");
+  it("only marks the target obligation as settled when debtor settles", () => {
+    const expenses = [
+      { id: "e1", description: "Dinner", amount: 200, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
+      { id: "e2", description: "Cab", amount: 100, paid_by: "A", created_at: "2026-07-26T02:00:00Z" },
+      { id: "e3", description: "Hotel", amount: 150, paid_by: "A", created_at: "2026-07-26T03:00:00Z" },
+    ];
 
-    const aliceBal = balances.find((b) => b.user_id === "A");
-    expect(aliceBal!.lent).toBe(100);
-    expect(aliceBal!.owed).toBe(100);
-    expect(aliceBal!.net_balance).toBe(0);
+    const participants = [
+      { expense_id: "e1", user_id: "B", share_amount: 200 },
+      { expense_id: "e2", user_id: "B", share_amount: 100 },
+      { expense_id: "e3", user_id: "C", share_amount: 150 },
+    ];
 
-    const bobBal = balances.find((b) => b.user_id === "B");
-    expect(bobBal!.lent).toBe(100);
-    expect(bobBal!.owed).toBe(100);
-    expect(bobBal!.net_balance).toBe(0);
+    // B settles ₹100 specifically for Cab (e2)
+    const settlements = [
+      { id: "s1", payer_id: "B", receiver_id: "A", amount: 100, expense_id: "e2", created_at: "2026-07-26T04:00:00Z" },
+    ];
+
+    const { detailed_debts } = getDetailedDebts(members, expenses, participants, settlements);
+
+    // Cab (e2) is settled and excluded; Dinner (e1 ₹200) and Hotel (e3 ₹150) remain active
+    expect(detailed_debts).toHaveLength(2);
+
+    const bDinner = detailed_debts.find((d) => d.expense_id === "e1");
+    expect(bDinner).toBeDefined();
+    expect(bDinner!.amount).toBe(200);
+
+    const cHotel = detailed_debts.find((d) => d.expense_id === "e3");
+    expect(cHotel).toBeDefined();
+    expect(cHotel!.amount).toBe(150);
+
+    const bCab = detailed_debts.find((d) => d.expense_id === "e2");
+    expect(bCab).toBeUndefined();
   });
 });
 
-describe("simplifyDebts", () => {
-  it("returns empty array when all balances are zero", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 0),
-      makeBalance("2", "Bob", 0),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result).toEqual([]);
-  });
-
-  it("simplifies a single debt between two people", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 100),
-      makeBalance("2", "Bob", -100),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({
-      from: { user_id: "2", name: "Bob" },
-      to: { user_id: "1", name: "Alice" },
-      amount: 100,
-    });
-  });
-
-  it("handles multiple creditors and debtors", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 150),
-      makeBalance("2", "Bob", 300),
-      makeBalance("3", "Charlie", -200),
-      makeBalance("4", "Diana", -250),
-    ];
-
-    const result = simplifyDebts(balances);
-
-    const totalOwed = result.reduce((sum, d) => sum + d.amount, 0);
-    expect(totalOwed).toBeCloseTo(450, 1);
-
-    result.forEach((debt) => {
-      expect(debt.from.user_id).not.toBe(debt.to.user_id);
-      expect(debt.amount).toBeGreaterThan(0);
-    });
-  });
-
-  it("produces the minimum number of transactions for a simple case", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 200),
-      makeBalance("2", "Bob", -100),
-      makeBalance("3", "Charlie", -100),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result.length).toBeLessThanOrEqual(2);
-  });
-
-  it("handles equal total credits and debts", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 150),
-      makeBalance("2", "Bob", 50),
-      makeBalance("3", "Charlie", -100),
-      makeBalance("4", "Diana", -100),
-    ];
-
-    const result = simplifyDebts(balances);
-
-    const totalCreditor = result.reduce((sum, d) => sum + d.amount, 0);
-    expect(totalCreditor).toBeCloseTo(200, 1);
-  });
-
-  it("handles single person (no debts)", () => {
-    const balances: BalanceInfo[] = [makeBalance("1", "Alice", 0)];
-    const result = simplifyDebts(balances);
-    expect(result).toEqual([]);
-  });
-
-  it("handles everyone being creditors (unlikely but valid)", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 100),
-      makeBalance("2", "Bob", 200),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result).toEqual([]);
-  });
-
-  it("respects rounding to avoid tiny floating point debts", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("1", "Alice", 0.005),
-      makeBalance("2", "Bob", -0.005),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result.length).toBeLessThanOrEqual(1);
-    if (result.length === 1) {
-      expect(result[0].amount).toBe(0.01);
-    }
-  });
-
-  it("assigns from=debtor and to=creditor for A pays 900 split 3 ways", () => {
-    const balances: BalanceInfo[] = [
-      makeBalance("A", "Alice", 600),
-      makeBalance("B", "Bob", -300),
-      makeBalance("C", "Charlie", -300),
-    ];
-
-    const result = simplifyDebts(balances);
-    expect(result).toHaveLength(2);
-
-    const bToA = result.find(
-      (d) => d.from.user_id === "B" && d.to.user_id === "A",
-    );
-    expect(bToA).toBeDefined();
-    expect(bToA!.amount).toBe(300);
-
-    const cToA = result.find(
-      (d) => d.from.user_id === "C" && d.to.user_id === "A",
-    );
-    expect(cToA).toBeDefined();
-    expect(cToA!.amount).toBe(300);
-
-    result.forEach((debt) => {
-      expect(debt.from.user_id).not.toBe(debt.to.user_id);
-      expect(debt.amount).toBeGreaterThan(0);
-    });
-  });
-
-  it("settlement reduces net balance towards zero for creditor and debtor", () => {
-    const alicePaid = 100,
-      aliceShare = 50,
-      aliceReceived = 50,
-      alicePaidOut = 0;
-    const bobPaid = 0,
-      bobShare = 50,
-      bobReceived = 0,
-      bobPaidOut = 50;
-
-    const aliceNet = alicePaid - aliceShare + alicePaidOut - aliceReceived;
-    const bobNet = bobPaid - bobShare + bobPaidOut - bobReceived;
-
-    expect(aliceNet).toBe(0);
-    expect(bobNet).toBe(0);
-  });
-});

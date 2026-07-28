@@ -111,6 +111,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       <form id="settlement-modal-form" class="space-y-4">
         <input type="hidden" id="settle-payer-id" />
         <input type="hidden" id="settle-receiver-id" />
+        <input type="hidden" id="settle-expense-id" />
         <input type="hidden" id="settle-mode" value="cash" />
 
         <div class="glass rounded-glass-lg p-3 space-y-1.5 text-xs">
@@ -384,8 +385,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const suggestionsContainer = document.getElementById("settlements-suggestions")!;
       const historyContainer = document.getElementById("settlements-history")!;
 
-      const userDebts = (data.simplified_debts || []).filter(
-        (d: any) => d.from.user_id === currentUserId || d.to.user_id === currentUserId
+      const rawDebts = data.obligations || data.simplified_debts || [];
+      const userDebts = rawDebts.filter(
+        (d: any) =>
+          (d.debtorId || d.debtor_id || d.from?.user_id) === currentUserId ||
+          (d.payerId || d.payer_id || d.to?.user_id) === currentUserId
       );
 
       if (!userDebts || userDebts.length === 0) {
@@ -405,15 +409,24 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           <h4 class="mb-3 text-sm font-medium text-[var(--color-text-secondary)]">Suggested Payments</h4>
           ${userDebts
             .map((d: any, i: number) => {
-              const isDebtor = d.from.user_id === currentUserId;
-              const isCreditor = d.to.user_id === currentUserId;
-              const descTag = d.description ? ` for <span class="font-medium italic text-[var(--color-accent)]">"${escapeHtml(d.description)}"</span>` : "";
+              const debtorId = d.debtorId || d.debtor_id || d.from?.user_id;
+              const payerId = d.payerId || d.payer_id || d.to?.user_id;
+              const debtorName = d.debtorName || d.debtor_name || d.from?.name || "Unknown";
+              const payerName = d.payerName || d.payer_name || d.to?.name || "Unknown";
+              const expenseTitle = d.expenseTitle || d.description || "Expense";
+              const expenseId = d.expenseId || d.expense_id || "";
+              const groupName = data.group?.name || "";
+              const dateStr = d.createdAt || d.created_at;
+              const dateDisplay = dateStr ? new Date(dateStr).toLocaleDateString() : "";
+
+              const isDebtor = debtorId === currentUserId;
+              const isCreditor = payerId === currentUserId;
 
               let label: string;
               if (isDebtor) {
-                label = `You should pay <span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(d.to.name)}</span>${descTag}`;
+                label = `You owe <span class="font-semibold text-[var(--color-text-primary)]">${escapeHtml(payerName)}</span>`;
               } else {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(d.from.name)}</span> should pay you${descTag}`;
+                label = `<span class="font-semibold text-[var(--color-text-primary)]">${escapeHtml(debtorName)}</span> owes you`;
               }
 
               const showPayBtn = isDebtor;
@@ -422,16 +435,22 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               return `
             <div class="glass rounded-glass-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 animate-fade-in-up" style="animation-delay: ${i * 40}ms">
               <div class="text-sm text-[var(--color-text-secondary)] flex-1 min-w-0">
-                ${label}
+                <div class="font-medium text-[var(--color-text-primary)]">${label}</div>
+                <div class="text-xs text-[var(--color-text-tertiary)] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                  <span class="font-medium text-[var(--color-accent)]">(from ${escapeHtml(expenseTitle)})</span>
+                  ${groupName ? `<span>•</span><span>${escapeHtml(groupName)}</span>` : ""}
+                  ${dateDisplay ? `<span>•</span><span>${escapeHtml(dateDisplay)}</span>` : ""}
+                </div>
               </div>
               <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
                 <span class="font-semibold text-[var(--color-text-primary)] mr-1 text-base sm:text-sm">${formatCurrency(d.amount)}</span>
                 <div class="flex items-center gap-2">
                   ${showPayBtn
                     ? `<button
-                        data-payer="${d.from.user_id}"
-                        data-receiver="${d.to.user_id}"
+                        data-payer="${debtorId}"
+                        data-receiver="${payerId}"
                         data-amount="${d.amount}"
+                        data-expense-id="${expenseId}"
                         class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200"
                       >
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -443,9 +462,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   }
                   ${showSettleCashBtn
                     ? `<button
-                        data-payer="${d.from.user_id}"
-                        data-receiver="${d.to.user_id}"
+                        data-payer="${debtorId}"
+                        data-receiver="${payerId}"
                         data-amount="${d.amount}"
+                        data-expense-id="${expenseId}"
                         class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
                       >
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -468,7 +488,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             const payerId = (btn as HTMLElement).dataset.payer!;
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
-            openDebtSettlementModal(payerId, receiverId, amount, "upi");
+            const expenseId = (btn as HTMLElement).dataset.expenseId || "";
+            openDebtSettlementModal(payerId, receiverId, amount, "upi", expenseId);
           });
         });
 
@@ -477,7 +498,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             const payerId = (btn as HTMLElement).dataset.payer!;
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
-            openDebtSettlementModal(payerId, receiverId, amount, "cash");
+            const expenseId = (btn as HTMLElement).dataset.expenseId || "";
+            openDebtSettlementModal(payerId, receiverId, amount, "cash", expenseId);
           });
         });
       }
@@ -512,10 +534,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     }
 
-    function openDebtSettlementModal(payerId: string, receiverId: string, maxAmount: number, mode: "cash" | "upi") {
+    function openDebtSettlementModal(payerId: string, receiverId: string, maxAmount: number, mode: "cash" | "upi", expenseId: string = "") {
       const modal = document.getElementById("settlement-modal");
       const payerIdInput = document.getElementById("settle-payer-id") as HTMLInputElement;
       const receiverIdInput = document.getElementById("settle-receiver-id") as HTMLInputElement;
+      const expenseIdInput = document.getElementById("settle-expense-id") as HTMLInputElement;
       const modeInput = document.getElementById("settle-mode") as HTMLInputElement;
       const payerDisplay = document.getElementById("settle-payer-display")!;
       const receiverDisplay = document.getElementById("settle-receiver-display")!;
@@ -527,6 +550,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       payerIdInput.value = payerId;
       receiverIdInput.value = receiverId;
+      if (expenseIdInput) expenseIdInput.value = expenseId;
       modeInput.value = mode;
 
       const payer = currentData?.members?.find((m: any) => m.user_id === payerId);
@@ -620,6 +644,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       const payerId = (document.getElementById("settle-payer-id") as HTMLInputElement).value;
       const receiverId = (document.getElementById("settle-receiver-id") as HTMLInputElement).value;
+      const expenseId = (document.getElementById("settle-expense-id") as HTMLInputElement)?.value;
       const mode = (document.getElementById("settle-mode") as HTMLInputElement).value;
       const amountInput = document.getElementById("settle-amount") as HTMLInputElement;
       const errorMsg = document.getElementById("settle-error-msg")!;
@@ -664,6 +689,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           payer_id: payerId,
           receiver_id: receiverId,
           amount,
+          expense_id: expenseId || undefined,
         });
 
         (window as any).showToast?.({ message: "Settlement recorded successfully", type: "success" });

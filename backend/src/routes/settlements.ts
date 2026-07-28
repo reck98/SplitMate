@@ -19,6 +19,8 @@ const createSettlementSchema = z.object({
   payer_id: z.string().min(1, "Payer is required"),
   receiver_id: z.string().min(1, "Receiver is required"),
   amount: z.number().positive("Amount must be greater than 0"),
+  expense_id: z.string().optional(),
+  expenseId: z.string().optional(),
 });
 
 router.post(
@@ -66,7 +68,10 @@ router.post(
         );
       }
 
-      const { payer_id, receiver_id, amount } = req.body;
+      const payer_id = req.body.payer_id || req.body.payerId;
+      const receiver_id = req.body.receiver_id || req.body.receiverId;
+      const amount = req.body.amount;
+      const expense_id = req.body.expense_id || req.body.expenseId;
 
       if (payer_id === receiver_id) {
         throw new AppError(
@@ -99,12 +104,27 @@ router.post(
         );
       }
 
-      const { simplified_debts } = await getBalances(groupId);
-      const activeDebt = simplified_debts.find(
-        (d) => d.from.user_id === payer_id && d.to.user_id === receiver_id,
-      );
+      const { simplified_debts: activeDebts } = await getBalances(groupId);
 
-      if (!activeDebt) {
+      let maxAllowedAmount = 0;
+      if (expense_id) {
+        const targetDebt = activeDebts.find(
+          (d) =>
+            d.expense_id === expense_id &&
+            d.from.user_id === payer_id &&
+            d.to.user_id === receiver_id,
+        );
+        if (targetDebt) {
+          maxAllowedAmount = targetDebt.amount;
+        }
+      } else {
+        const matchingDebts = activeDebts.filter(
+          (d) => d.from.user_id === payer_id && d.to.user_id === receiver_id,
+        );
+        maxAllowedAmount = matchingDebts.reduce((sum, d) => sum + d.amount, 0);
+      }
+
+      if (maxAllowedAmount < 0.01) {
         throw new AppError(
           400,
           "NO_DEBT_FOUND",
@@ -112,11 +132,11 @@ router.post(
         );
       }
 
-      if (amount > activeDebt.amount + 0.01) {
+      if (amount > maxAllowedAmount + 0.01) {
         throw new AppError(
           400,
           "EXCEEDS_DEBT",
-          `Settlement amount (₹${amount.toFixed(2)}) cannot exceed the owed amount (₹${activeDebt.amount.toFixed(2)}).`,
+          `Settlement amount (₹${amount.toFixed(2)}) cannot exceed the owed amount (₹${maxAllowedAmount.toFixed(2)}).`,
         );
       }
 
@@ -129,6 +149,7 @@ router.post(
         payer_id,
         receiver_id,
         amount,
+        expense_id: expense_id || null,
         created_at: now,
       });
 

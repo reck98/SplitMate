@@ -115,11 +115,47 @@ export const settlements = sqliteTable(
       .notNull()
       .references(() => users.id),
     amount: real("amount").notNull(),
+    expense_id: text("expense_id").references(() => expenses.id),
     created_at: text("created_at").notNull(),
   },
   (table) => ({
     groupIdx: index("idx_settlements_group_id").on(table.group_id),
     payerIdx: index("idx_settlements_payer_id").on(table.payer_id),
     receiverIdx: index("idx_settlements_receiver_id").on(table.receiver_id),
+    expenseIdx: index("idx_settlements_expense_id").on(table.expense_id),
   }),
 );
+
+export const expenseSettlements = sqliteTable(
+  "expense_settlements",
+  {
+    id: text("id").primaryKey(),
+    expense_id: text("expense_id")
+      .notNull()
+      .references(() => expenses.id),
+    group_id: text("group_id")
+      .notNull()
+      .references(() => groups.id),
+    payer_id: text("payer_id")
+      .notNull()
+      .references(() => users.id),
+    debtor_id: text("debtor_id")
+      .notNull()
+      .references(() => users.id),
+    amount: real("amount").notNull(),
+    settled_amount: real("settled_amount").notNull().default(0),
+    is_settled: integer("is_settled", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    created_at: text("created_at").notNull(),
+  },
+  (table) => ({
+    groupIdx: index("idx_expense_settlements_group_id").on(table.group_id),
+    expenseIdx: index("idx_expense_settlements_expense_id").on(
+      table.expense_id,
+    ),
+    payerIdx: index("idx_expense_settlements_payer_id").on(table.payer_id),
+    debtorIdx: index("idx_expense_settlements_debtor_id").on(table.debtor_id),
+  }),
+);
+

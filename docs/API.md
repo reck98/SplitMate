@@ -241,7 +241,21 @@ Get group details including members, expenses, balances, and settlements.
         "payer_id": "uuid",
         "receiver_id": "uuid",
         "amount": 250,
+        "expense_id": "uuid",
         "created_at": "2024-01-01T00:00:00Z"
+      }
+    ],
+    "obligations": [
+      {
+        "id": "uuid_participantId",
+        "expenseId": "uuid",
+        "expenseTitle": "Dinner",
+        "payerId": "uuid",
+        "payerName": "Payer Name",
+        "debtorId": "uuid",
+        "debtorName": "Debtor Name",
+        "amount": 250,
+        "createdAt": "2024-01-01T00:00:00Z"
       }
     ],
     "simplified_debts": [
