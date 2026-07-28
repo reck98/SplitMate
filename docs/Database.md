@@ -100,14 +100,37 @@ Primary Key: `(expense_id, user_id)`
 
 Recorded settlements between users.
 
-| Column      | Type | Constraints              |
-| ----------- | ---- | ------------------------ |
-| id          | text | PRIMARY KEY (UUID)       |
-| group_id    | text | NOT NULL, FK → groups.id |
-| payer_id    | text | NOT NULL, FK → users.id  |
-| receiver_id | text | NOT NULL, FK → users.id  |
-| amount      | real | NOT NULL                 |
-| created_at  | text | NOT NULL (ISO 8601)      |
+### settlements
+
+Recorded settlements between users.
+
+| Column      | Type | Constraints                |
+| ----------- | ---- | -------------------------- |
+| id          | text | PRIMARY KEY (UUID)         |
+| group_id    | text | NOT NULL, FK → groups.id   |
+| payer_id    | text | NOT NULL, FK → users.id    |
+| receiver_id | text | NOT NULL, FK → users.id    |
+| amount      | real | NOT NULL                   |
+| expense_id  | text | FK → expenses.id (optional)|
+| created_at  | text | NOT NULL (ISO 8601)        |
+
+---
+
+### expense_settlements
+
+Individual obligation records generated per expense for each debtor participant.
+
+| Column         | Type    | Constraints                   |
+| -------------- | ------- | ----------------------------- |
+| id             | text    | PRIMARY KEY (UUID)            |
+| expense_id     | text    | NOT NULL, FK → expenses.id    |
+| group_id       | text    | NOT NULL, FK → groups.id      |
+| payer_id       | text    | NOT NULL, FK → users.id       |
+| debtor_id      | text    | NOT NULL, FK → users.id       |
+| amount         | real    | NOT NULL                      |
+| settled_amount | real    | NOT NULL, DEFAULT 0           |
+| is_settled     | integer | NOT NULL, DEFAULT 0 (boolean) |
+| created_at     | text    | NOT NULL (ISO 8601)           |
 
 ---
 
@@ -117,11 +140,13 @@ Recorded settlements between users.
 users 1───* group_members *───1 groups
 users 1───* expenses (paid_by)
 users 1───* expense_participants
-users 1───* settlements (payer)
-users 1───* settlements (receiver)
+users 1───* expense_settlements (payer / debtor)
+users 1───* settlements (payer / receiver)
 groups 1───* expenses
 groups 1───* settlements
+groups 1───* expense_settlements
 expenses 1───* expense_participants
+expenses 1───* expense_settlements
 ```
 
 ## Migration Notes

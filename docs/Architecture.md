@@ -138,26 +138,25 @@ src/
 
 ## Settlement Flow
 
-1. Frontend displays simplified debts (computed by backend)
+1. Frontend displays individual raw obligations generated per expense (filtered via "All", "You Owe", or "Owed to You" tabs)
 2. User clicks "Pay via UPI" → frontend opens `upi://pay` deep link
 3. User pays manually in their UPI app
-4. User returns to SplitMate, clicks "Mark as Settled"
-5. `POST /groups/:id/settlements` records the settlement
-6. Balances recalculate on next poll
+4. User returns to SplitMate, confirms settlement for the targeted obligation
+5. `POST /groups/:id/settlements` records the settlement and marks only the target obligation as settled
+6. Real-time SSE updates broadcast changes immediately to all connected members
 
 ---
 
 ## Balance Calculation Strategy
 
-Balances are NEVER stored. They are computed on every group fetch.
+Balances are NEVER stored. They are computed on every group fetch directly from active un-settled expense obligations.
 
 Algorithm:
 
-1. For each member, calculate total amount they paid across all expenses
-2. For each member, calculate total share they owe across all expense participations
-3. For each member, calculate total received via settlements (as receiver)
-4. For each member, calculate total paid via settlements (as payer)
-5. Net = paid - share + received - paid_out
+1. For each expense participant (where `user_id != paid_by`), calculate their share owed to the payer
+2. Maintain each obligation independently without graph reduction, third-party rerouting, or merging across expenses
+3. Apply recorded settlements to matching obligations chronologically or by `expense_id`
+4. Net balance = total lent - total owed
 
 ---
 
@@ -180,11 +179,13 @@ Algorithm:
 users ──< group_members >── groups
 users ──< expenses (paid_by)
 users ──< expense_participants
-users ──< settlements (payer)
-users ──< settlements (receiver)
+users ──< expense_settlements (payer / debtor)
+users ──< settlements (payer / receiver)
 groups ──< expenses
 groups ──< settlements
+groups ──< expense_settlements
 expenses ──< expense_participants
+expenses ──< expense_settlements
 ```
 
 ---
@@ -202,9 +203,10 @@ expenses ──< expense_participants
 ## Important Architectural Decisions
 
 - Server-Sent Events for real-time updates — immediate push without polling overhead
-- No stored balances — computed on every request to prevent sync bugs
+- No stored balances — computed dynamically from raw obligations on every request
+- Preserved raw expense obligations — zero debt simplification or rerouting, ensuring complete debtor-creditor transparency
+- Interactive UI filters — "All", "You Owe", and "Owed to You" tabs for Suggested Payments
 - Firebase ID Tokens via Authorization header — verified by Firebase Admin SDK, auto-refresh via Firebase client SDK
-- Greedy debt simplification — O(n log n), near-minimal transactions
 - In-memory SSE event bus — lightweight, no external dependency
 - CSS custom properties design system — no component framework needed for theming
 - Toast notifications over alert() — non-blocking, styled, accessible

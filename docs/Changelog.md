@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.1.0 (Raw Expense Obligations & Suggested Payment Filters)
+
+### Removed & Replaced
+- **Disabled Debt Simplification Algorithm**:
+  - Removed graph reduction, net-balance optimization, and third-party debt rerouting algorithms from `backend/src/services/settlement.ts`.
+  - SplitMate now preserves exact per-expense debtor-creditor obligations without merging across expenses or transferring debt to unrelated members.
+
+### Added & Enhanced
+- **Database Table for Expense Obligations**:
+  - Added `expense_settlements` table (`id`, `expense_id`, `group_id`, `payer_id`, `debtor_id`, `amount`, `settled_amount`, `is_settled`, `created_at`) to track individual obligation records per participant per expense.
+  - Added `expense_id` foreign key reference to `settlements` table for targeted single-obligation settlement tracking.
+  - Applied database migration `0003_lucky_marvel_apes.sql`.
+- **Suggested Payments UI Filters**:
+  - Added interactive segmented pill filters (**All**, **You Owe**, **Owed to You**) with count badges under Suggested Payments in group details view.
+  - Designed for mobile and desktop screens with custom empty states per filter ("You don't owe anyone!", "No payments owed to you!").
+- **Targeted Obligations API**:
+  - Updated API to return raw `obligations` array containing `expenseId`, `expenseTitle`, `payerId`, `payerName`, `debtorId`, `debtorName`, `amount`, `createdAt`.
+  - Updated `POST /groups/:id/settlements` to accept optional `expense_id` and validate settlement amounts against target obligation debt.
+
 ## v1.0.0 (Production Release & Application Stabilization)
 
 ### Fixed & Stabilized

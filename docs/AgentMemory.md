@@ -53,7 +53,7 @@ node scripts/generate-pwa-icons.mjs
 - **SSE over Polling** (D-007 / D-013): Real-time updates via Server-Sent Events with automatic fallback
 - **No stored balances** (D-002): Always computed dynamically, prevents sync bugs
 - **Firebase Authentication** (D-008 / D-016): Google provider auth with persistent IndexedDB sessions
-- **Greedy debt simplification** (D-004): O(n log n), near-minimal transactions
+- **Preserved Raw Expense Obligations** (D-012): Disabled greedy debt simplification in favor of exact per-expense obligations and interactive Suggested Payment filters ("All", "You Owe", "Owed to You").
 - **Monorepo** (D-006): Single repo with frontend/ and backend/
 - **CSS Custom Properties Design System** (D-009): Theme and components via CSS, no React/Framer Motion
 - **PWA Support** (D-011): Installable app with service worker, offline fallback, auto-updates via `@vite-pwa/astro`
@@ -221,3 +221,19 @@ npm run build
 - `docs/Changelog.md` — Added v0.4.0 section
 
 **Build verification:** ✅ Build passes (hybrid SSR)
+
+### 2026-07-28 — Raw Obligations & Suggested Payments UI Filters
+
+**Completed:** Disabled debt simplification algorithm, added `expense_settlements` DB table, and introduced interactive Suggested Payment UI filters ("All", "You Owe", "Owed to You").
+
+**Key changes:**
+
+- Replaced greedy graph reduction algorithm in `backend/src/services/settlement.ts` with unsimplified per-expense obligation preservation.
+- Created `expense_settlements` table in Drizzle schema and added `expense_id` to `settlements` table (`0003_lucky_marvel_apes.sql`).
+- Updated API routes (`/groups/:id`, `/settlements`, `/expenses`) to handle and persist targeted expense obligations.
+- Added segmented pill filters (**All**, **You Owe**, **Owed to You**) with count badges in group details UI (`groups/[id].astro`).
+- Updated documentation across `Database.md`, `Architecture.md`, `API.md`, `Decisions.md`, `Changelog.md`, and `AgentMemory.md`.
+- Migrated production database (`npm run db:migrate`) and pushed all changes to `origin/main` on GitHub.
+
+**Build verification:** ✅ Tests pass (`npm test`, 19 passed), backend TypeScript clean (`tsc --noEmit`), frontend build clean (`astro build`).
+

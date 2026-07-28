@@ -752,3 +752,25 @@ Production deployments encountered issues where:
 - Eliminates race conditions in Astro ES module execution.
 - Guarantees database schema is always in sync with Drizzle ORM on server startup.
 - Enables rapid root-cause diagnosis via transparent logs and request metrics.
+
+---
+
+## D-012: Preserving Raw Expense Obligations & Disabling Debt Simplification
+
+**Date:** 2026-07-28  
+**Status:** Accepted
+
+**Context:**
+The previous implementation applied greedy graph optimization (`simplifyDebts`) to minimize group cash flow transactions. However, this behavior rerouted debts through intermediate members and merged debts across multiple unrelated expenses. Users reported that this obscured who owed whom for specific expenses (e.g. Dinner vs Cab vs Snacks).
+
+**Decision:**
+1. Disable debt simplification graph reduction across SplitMate.
+2. Calculate and preserve individual raw obligations directly from every expense.
+3. Introduce an `expense_settlements` table in the database to store individual obligation records per participant per expense.
+4. Add an `expense_id` field to the `settlements` table to track settlements against specific obligations.
+5. Provide segmented filter tabs (**All**, **You Owe**, **Owed to You**) with count badges in the Suggested Payments UI for enhanced mobile and laptop UX.
+
+**Reasoning:**
+- Ensures complete transparency: users see exactly which expense generated a debt and to whom.
+- Prevents unintended debt transfers between unrelated group members.
+- Settling a payment marks only that specific obligation as settled without altering unrelated debts.
