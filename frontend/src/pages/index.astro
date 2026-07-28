@@ -1,59 +1,839 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import GlassButton from "../components/GlassButton.astro";
 ---
 
-<BaseLayout hideNav>
+<BaseLayout hideNav title="SplitMate — Smart, Instant & Free Expense Sharing for India" description="Split group expenses, track balances, and settle debts instantly via UPI with zero payment gateway fees. Crafted for trips, flatmates, and group events.">
   <!-- Loading splash (visible while auth initializes) -->
-  <div id="loading-splash" class="fixed inset-0 z-50 flex items-center justify-center" style="background: var(--color-bg);">
+  <div id="loading-splash" class="fixed inset-0 z-50 flex items-center justify-center bg-[var(--color-bg)]">
     <div class="flex flex-col items-center gap-3">
-      <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
-      <p class="text-sm text-[var(--color-text-secondary)]">Loading...</p>
+      <div class="h-10 w-10 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
+      <p class="text-sm font-medium text-[var(--color-text-secondary)]">Loading SplitMate...</p>
     </div>
   </div>
 
-  <!-- Login content (hidden until auth state is known) -->
-  <div id="login-content" class="hidden">
-    <main class="flex min-h-[100dvh] flex-col items-center justify-center px-4">
-      <div class="w-full max-w-sm animate-fade-in-up">
-        <div class="glass-strong rounded-glass-xl p-8 text-center">
-          <div class="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-accent)]">
-            <svg class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+  <!-- Main SaaS Landing Page Content (Hidden until guest state confirmed) -->
+  <div id="landing-content" class="hidden min-h-screen relative overflow-hidden bg-grid-pattern">
+    <div class="hero-glow"></div>
+
+    <!-- Top Announcement Bar -->
+    <div class="relative z-40 border-b border-[var(--color-border)] bg-[var(--color-accent-soft)] py-2 px-3 sm:px-4 text-center text-[11px] sm:text-xs font-medium text-[var(--color-text-primary)]">
+      <div class="mx-auto flex max-w-7xl items-center justify-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap">
+        <span class="inline-flex items-center rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-white uppercase tracking-wider shrink-0">New</span>
+        <span>SplitMate 2.0 is Live! 1-Click UPI Deep Links & Real-Time Sync.</span>
+        <a href="#calculator" class="ml-1 text-[var(--color-accent)] underline hover:opacity-80 transition-opacity font-semibold shrink-0">Try Simulator &rarr;</a>
+      </div>
+    </div>
+
+    <!-- Header Navbar -->
+    <header class="sticky top-0 z-40 backdrop-blur-xl bg-[var(--color-bg-elevated)] border-b border-[var(--color-border)] transition-all">
+      <div class="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 py-3">
+        <!-- Logo -->
+        <a href="/" class="flex items-center gap-2.5 group">
+          <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] text-white shadow-md shadow-[var(--color-accent-soft)] transition-transform duration-200 group-hover:scale-105">
+            <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 class="text-3xl font-bold">
+          <span class="text-xl font-extrabold tracking-tight">
             <span class="text-gradient">SplitMate</span>
-          </h1>
-          <p class="mt-2 text-sm text-[var(--color-text-secondary)]">
-            Split expenses with friends. Track, calculate, and settle easily.
+          </span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-[var(--color-text-secondary)]">
+          <a href="#features" class="hover:text-[var(--color-text-primary)] transition-colors">Features</a>
+          <a href="#how-it-works" class="hover:text-[var(--color-text-primary)] transition-colors">How It Works</a>
+          <a href="#calculator" class="hover:text-[var(--color-text-primary)] transition-colors">Split Simulator</a>
+          <a href="#comparison" class="hover:text-[var(--color-text-primary)] transition-colors">Why SplitMate</a>
+          <a href="#faq" class="hover:text-[var(--color-text-primary)] transition-colors">FAQ</a>
+        </nav>
+
+        <!-- Header Actions -->
+        <div class="flex items-center gap-2.5 sm:gap-3">
+          <a
+            href="https://github.com/reck98/SplitMate"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="hidden sm:inline-flex items-center gap-1.5 glass rounded-full px-3.5 py-1.5 text-xs font-semibold text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:scale-105 active:scale-95 transition-all duration-200"
+            title="Open Source Repository"
+          >
+            <svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+              <path d="M9 18c-4.51 2-5-2-7-2"></path>
+            </svg>
+            <span>GitHub</span>
+          </a>
+
+          <!-- Sign In Button -->
+          <button
+            data-action="signin"
+            class="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-[var(--color-accent-hover)] active:scale-95 transition-all duration-200"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span>Sign In</span>
+          </button>
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <button
+            id="mobile-menu-toggle"
+            class="md:hidden glass rounded-xl p-2 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all"
+            aria-label="Toggle navigation menu"
+          >
+            <svg id="hamburger-icon" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg id="close-icon" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="mobile-drawer" class="hidden md:hidden backdrop-blur-2xl bg-[var(--color-bg-elevated)] border-b border-[var(--color-border)] p-4 shadow-2xl space-y-2 animate-fade-in-down">
+        <a href="#features" class="mobile-nav-link block py-2.5 px-4 rounded-xl text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+          Features
+        </a>
+        <a href="#how-it-works" class="mobile-nav-link block py-2.5 px-4 rounded-xl text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+          How It Works
+        </a>
+        <a href="#calculator" class="mobile-nav-link block py-2.5 px-4 rounded-xl text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+          Split Simulator
+        </a>
+        <a href="#comparison" class="mobile-nav-link block py-2.5 px-4 rounded-xl text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+          Why SplitMate
+        </a>
+        <a href="#faq" class="mobile-nav-link block py-2.5 px-4 rounded-xl text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+          FAQ
+        </a>
+      </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="relative z-10 pt-10 pb-16 sm:pt-20 sm:pb-28 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-5xl text-center">
+        <!-- Hero Pill Badge -->
+        <div class="inline-flex items-center gap-2 rounded-full glass px-3.5 py-1.5 mb-6 sm:mb-8 text-[11px] sm:text-xs font-semibold text-[var(--color-accent)] border border-[var(--color-accent-soft)] shadow-sm animate-fade-in-down">
+          <span class="flex h-2 w-2 rounded-full bg-[var(--color-accent)] badge-pulse"></span>
+          <span>Built for India • Zero Payment Gateway Fees • 1-Click UPI</span>
+        </div>
+
+        <!-- Hero Headline -->
+        <h1 class="text-3xl xs:text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.18] sm:leading-[1.12]">
+          Expense Sharing for India.<br />
+          <span class="text-gradient">Settle via UPI Instantly.</span>
+        </h1>
+
+        <!-- Hero Subheadline -->
+        <p class="mt-4 sm:mt-6 text-sm sm:text-xl text-[var(--color-text-secondary)] max-w-3xl mx-auto font-normal leading-relaxed">
+          Track group bills, minimize complex debts in milliseconds, and settle up directly using 
+          <strong class="text-[var(--color-text-primary)] font-semibold">PhonePe, Google Pay, or Paytm</strong> — with zero commissions or payment gateway middleman.
+        </p>
+
+        <!-- Hero CTA Action Group -->
+        <div class="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-md mx-auto sm:max-w-none">
+          <button
+            data-action="signin"
+            class="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-3 rounded-2xl bg-[var(--color-accent)] px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-lg shadow-[var(--color-accent-soft)] hover:bg-[var(--color-accent-hover)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+          >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24">
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            <span>Get Started Free with Google</span>
+          </button>
+
+          <a
+            href="#calculator"
+            class="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-2 glass glass-hover rounded-2xl px-6 sm:px-7 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-[var(--color-text-primary)] transition-all duration-200"
+          >
+            <svg class="h-5 w-5 text-[var(--color-accent)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Try Interactive Splitter</span>
+          </a>
+        </div>
+
+        <!-- Trust Badges Bar -->
+        <div class="mt-10 sm:mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs font-semibold text-[var(--color-text-secondary)]">
+          <div class="flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-[var(--color-accent)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span>100% Free Forever</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-[var(--color-accent)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span>Instant UPI Deep Links</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-[var(--color-accent)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span>No Passwords Needed</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <svg class="h-4 w-4 text-[var(--color-accent)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span>Sub-10ms Live Sync</span>
+          </div>
+        </div>
+
+        <!-- HERO APP SHOWCASE MOCKUP -->
+        <div class="mt-10 sm:mt-14 relative max-w-4xl mx-auto">
+          <!-- Ambient Card Glow -->
+          <div class="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[var(--color-accent)] to-teal-400 opacity-20 blur-xl"></div>
+          
+          <div class="relative glass-strong rounded-3xl border border-[var(--color-border)] p-3.5 sm:p-6 shadow-2xl text-left overflow-hidden">
+            <!-- Mock Header -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-3.5 border-b border-[var(--color-border)]">
+              <div class="flex items-center gap-2.5">
+                <div class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white font-bold text-base sm:text-lg shrink-0">
+                  🌴
+                </div>
+                <div>
+                  <h3 class="font-bold text-sm sm:text-lg text-[var(--color-text-primary)]">Goa Trip 2026</h3>
+                  <p class="text-[11px] sm:text-xs text-[var(--color-text-tertiary)]">4 Members • Live Sync</p>
+                </div>
+              </div>
+
+              <!-- Share Badge -->
+              <div class="flex items-center gap-2 ml-auto">
+                <span class="hidden sm:inline-flex items-center gap-1 rounded-full bg-[var(--color-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--color-accent)]">
+                  <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] animate-ping"></span>
+                  SSE Active
+                </span>
+                <span class="glass rounded-xl px-2.5 sm:px-3 py-1 text-[11px] sm:text-xs font-mono font-medium text-[var(--color-text-secondary)]">
+                  Code: <strong class="text-[var(--color-accent)] font-bold">GOA98X</strong>
+                </span>
+              </div>
+            </div>
+
+            <!-- Tab Switcher -->
+            <div class="flex gap-1.5 my-3 p-1 glass rounded-xl text-xs font-semibold text-[var(--color-text-secondary)]" id="mock-tabs">
+              <button class="flex-1 py-2 px-1 rounded-lg bg-[var(--color-accent)] text-white shadow-sm transition-all text-center" data-tab="balances">
+                <span class="hidden sm:inline">Balances Summary</span>
+                <span class="sm:hidden">Balances</span>
+              </button>
+              <button class="flex-1 py-2 px-1 rounded-lg hover:bg-[var(--color-bg-glass-hover)] transition-all text-center" data-tab="expenses">
+                <span class="hidden sm:inline">Recent Bills</span>
+                <span class="sm:hidden">Bills</span>
+              </button>
+              <button class="flex-1 py-2 px-1 rounded-lg hover:bg-[var(--color-bg-glass-hover)] transition-all text-center" data-tab="upi">
+                <span class="hidden sm:inline">1-Tap UPI Pay</span>
+                <span class="sm:hidden">UPI Pay</span>
+              </button>
+            </div>
+
+            <!-- Mock Tab Content: Balances -->
+            <div id="tab-content-balances" class="space-y-3 py-1">
+              <div class="glass p-3.5 sm:p-4 rounded-2xl flex flex-col xs:flex-row xs:items-center justify-between gap-2 bg-gradient-to-r from-[var(--color-accent-soft)] to-transparent">
+                <div>
+                  <p class="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] uppercase font-semibold tracking-wider">Your Net Balance</p>
+                  <p class="text-xl sm:text-2xl font-black text-[var(--color-accent)] mt-0.5">+₹3,400.00</p>
+                </div>
+                <span class="inline-flex items-center gap-1 rounded-full bg-[var(--color-accent)] px-2.5 py-1 text-[11px] sm:text-xs font-bold text-white shadow-sm w-fit">
+                  You are owed money
+                </span>
+              </div>
+
+              <!-- Member list -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+                <div class="glass p-3 rounded-xl flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-full bg-emerald-500/20 text-[var(--color-accent)] font-bold flex items-center justify-center text-xs shrink-0">R</div>
+                  <div>
+                    <p class="text-xs font-bold text-[var(--color-text-primary)]">Rahul Sharma</p>
+                    <p class="text-[11px] text-rose-500 font-semibold">Owes ₹1,200</p>
+                  </div>
+                </div>
+
+                <div class="glass p-3 rounded-xl flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-full bg-teal-500/20 text-teal-500 font-bold flex items-center justify-center text-xs shrink-0">A</div>
+                  <div>
+                    <p class="text-xs font-bold text-[var(--color-text-primary)]">Ananya Roy</p>
+                    <p class="text-[11px] text-rose-500 font-semibold">Owes ₹2,200</p>
+                  </div>
+                </div>
+
+                <div class="glass p-3 rounded-xl flex items-center gap-3">
+                  <div class="h-8 w-8 rounded-full bg-indigo-500/20 text-indigo-500 font-bold flex items-center justify-center text-xs shrink-0">V</div>
+                  <div>
+                    <p class="text-xs font-bold text-[var(--color-text-primary)]">Vikram Singh</p>
+                    <p class="text-[11px] text-[var(--color-accent)] font-semibold">Settled (₹0)</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mock Tab Content: Recent Bills (Hidden initially) -->
+            <div id="tab-content-expenses" class="hidden space-y-2 py-1">
+              <div class="glass p-3 rounded-xl flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-base">🏡</span>
+                  <div>
+                    <p class="font-bold text-[var(--color-text-primary)]">Beach Villa Booking</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)]">Paid by You • Equal split</p>
+                  </div>
+                </div>
+                <span class="font-bold text-[var(--color-text-primary)]">₹16,000</span>
+              </div>
+
+              <div class="glass p-3 rounded-xl flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2.5">
+                  <span class="text-base">🦀</span>
+                  <div>
+                    <p class="font-bold text-[var(--color-text-primary)]">Seafood Shack Dinner</p>
+                    <p class="text-[11px] text-[var(--color-text-tertiary)]">Paid by Rahul • Equal split</p>
+                  </div>
+                </div>
+                <span class="font-bold text-[var(--color-text-primary)]">₹5,200</span>
+              </div>
+            </div>
+
+            <!-- Mock Tab Content: UPI Pay (Hidden initially) -->
+            <div id="tab-content-upi" class="hidden space-y-3 py-1">
+              <div class="glass p-3.5 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 border border-[var(--color-accent-soft)]">
+                <div>
+                  <p class="text-[11px] text-[var(--color-text-tertiary)]">Settlement Transfer</p>
+                  <p class="text-xs sm:text-sm font-bold text-[var(--color-text-primary)]">Rahul Sharma &rarr; You</p>
+                  <p class="text-xs text-[var(--color-accent)] font-semibold mt-0.5">Amount: ₹1,200.00</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button class="mock-upi-btn flex-1 sm:flex-initial glass hover:border-emerald-500 rounded-xl px-3 py-2 text-xs font-bold text-[var(--color-accent)] flex items-center justify-center gap-1 transition-all">
+                    <span>⚡ PhonePe</span>
+                  </button>
+                  <button class="mock-upi-btn flex-1 sm:flex-initial glass hover:border-blue-500 rounded-xl px-3 py-2 text-xs font-bold text-blue-500 flex items-center justify-center gap-1 transition-all">
+                    <span>⚡ GPay</span>
+                  </button>
+                  <button class="mock-upi-btn flex-1 sm:flex-initial glass hover:border-sky-500 rounded-xl px-3 py-2 text-xs font-bold text-sky-500 flex items-center justify-center gap-1 transition-all">
+                    <span>⚡ Paytm</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS STRIP -->
+    <section class="relative z-10 border-y border-[var(--color-border)] bg-[var(--color-bg-elevated)] py-6 sm:py-8">
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center">
+          <div class="p-2">
+            <p class="text-2xl sm:text-4xl font-extrabold text-[var(--color-accent)]">0%</p>
+            <p class="mt-0.5 text-[11px] sm:text-sm font-medium text-[var(--color-text-secondary)]">Payment Gateway Fees</p>
+          </div>
+          <div class="p-2">
+            <p class="text-2xl sm:text-4xl font-extrabold text-[var(--color-text-primary)]">&lt; 10ms</p>
+            <p class="mt-0.5 text-[11px] sm:text-sm font-medium text-[var(--color-text-secondary)]">Client SWR Sync Speed</p>
+          </div>
+          <div class="p-2">
+            <p class="text-2xl sm:text-4xl font-extrabold text-[var(--color-accent)]">1-Click</p>
+            <p class="mt-0.5 text-[11px] sm:text-sm font-medium text-[var(--color-text-secondary)]">UPI Deep Linking</p>
+          </div>
+          <div class="p-2">
+            <p class="text-2xl sm:text-4xl font-extrabold text-[var(--color-text-primary)]">100%</p>
+            <p class="mt-0.5 text-[11px] sm:text-sm font-medium text-[var(--color-text-secondary)]">Open Source & Private</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE SPLIT SIMULATOR WIDGET -->
+    <section id="calculator" class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-4xl">
+        <div class="text-center mb-8 sm:mb-12">
+          <div class="inline-flex items-center gap-1.5 rounded-full glass px-3 py-1 text-xs font-semibold text-[var(--color-accent)] mb-3">
+            <span>⚡ Try It Live</span>
+          </div>
+          <h2 class="text-2xl sm:text-4xl font-bold tracking-tight">
+            See Debt Minimization in Action
+          </h2>
+          <p class="mt-2.5 text-xs sm:text-base text-[var(--color-text-secondary)]">
+            Adjust the bill amount and friends count to see how SplitMate simplifies multi-person payments into minimal UPI links!
+          </p>
+        </div>
+
+        <div class="glass-strong rounded-3xl p-5 sm:p-8 border border-[var(--color-border)] shadow-xl glow-card">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
+            <!-- Left Controls -->
+            <div class="space-y-5">
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-2">
+                  Total Bill Amount (₹)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-[var(--color-accent)]">₹</span>
+                  <input
+                    type="number"
+                    id="calc-amount"
+                    value="4800"
+                    min="100"
+                    max="500000"
+                    class="pl-9 text-base sm:text-lg font-bold"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <label class="text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)]">
+                    Number of Friends
+                  </label>
+                  <span id="calc-friends-val" class="text-xs sm:text-sm font-bold text-[var(--color-accent)]">4 Friends</span>
+                </div>
+                <input
+                  type="range"
+                  id="calc-friends"
+                  min="2"
+                  max="10"
+                  value="4"
+                  class="w-full accent-[var(--color-accent)] cursor-pointer py-1"
+                />
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-[var(--color-text-secondary)] mb-2">
+                  Expense Category
+                </label>
+                <div class="grid grid-cols-2 xs:grid-cols-4 gap-2 text-xs font-semibold" id="calc-category">
+                  <button type="button" class="py-2.5 rounded-xl border border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)] active-cat text-center" data-icon="🍽️">🍽️ Dinner</button>
+                  <button type="button" class="py-2.5 rounded-xl glass hover:bg-[var(--color-bg-glass-hover)] text-center" data-icon="🚗">🚗 Trip</button>
+                  <button type="button" class="py-2.5 rounded-xl glass hover:bg-[var(--color-bg-glass-hover)] text-center" data-icon="🏠">🏠 Rent</button>
+                  <button type="button" class="py-2.5 rounded-xl glass hover:bg-[var(--color-bg-glass-hover)] text-center" data-icon="🎉">🎉 Party</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Computed Card -->
+            <div class="glass p-5 rounded-2xl space-y-4 bg-gradient-to-b from-[var(--color-bg-glass)] to-[var(--color-accent-soft)] border border-[var(--color-accent-soft)]">
+              <div>
+                <p class="text-[10px] sm:text-xs text-[var(--color-text-tertiary)] uppercase font-semibold tracking-wider">Per Person Equal Split</p>
+                <p class="text-2xl sm:text-3xl font-black text-[var(--color-text-primary)] mt-1" id="calc-per-person">₹1,200.00</p>
+              </div>
+
+              <div class="space-y-2 pt-2 border-t border-[var(--color-border)]">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-[var(--color-text-secondary)]">Standard unoptimized:</span>
+                  <span class="font-bold text-rose-500 line-through" id="calc-old-transfers">6 transfers</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-[var(--color-text-secondary)]">SplitMate optimized:</span>
+                  <span class="font-bold text-[var(--color-accent)]" id="calc-new-transfers">⚡ 2 direct UPI transfers</span>
+                </div>
+              </div>
+
+              <!-- Interactive Test Button -->
+              <div class="pt-1">
+                <button
+                  id="calc-test-btn"
+                  class="w-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl bg-[var(--color-accent)] py-2.5 px-4 text-xs font-bold text-white shadow-md hover:bg-[var(--color-accent-hover)] transition-all"
+                >
+                  <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                  </svg>
+                  <span>Generate Test UPI Deep Link</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CORE FEATURES GRID -->
+    <section id="features" class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[var(--color-bg-elevated)] border-y border-[var(--color-border)]">
+      <div class="mx-auto max-w-7xl">
+        <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <span class="text-xs font-bold text-[var(--color-accent)] uppercase tracking-widest">Built for Modern India</span>
+          <h2 class="text-2xl sm:text-5xl font-extrabold tracking-tight mt-2">
+            Everything You Need to Split Bills Seamlessly
+          </h2>
+          <p class="mt-3 text-xs sm:text-base text-[var(--color-text-secondary)]">
+            Designed from the ground up to solve payment awkwardness with native UPI deep links, sub-10ms performance, and privacy.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-8">
+          <!-- Feature 1 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Direct UPI Deep Links</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                One-tap deep linking straight into PhonePe, Google Pay, Paytm, or CRED with pre-filled VPA and exact settlement amount. Zero gateway commission.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-[var(--color-accent)]">
+              <span>Supports all Indian UPI Apps</span> &rarr;
+            </div>
+          </div>
+
+          <!-- Feature 2 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-500 mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Smart Debt Minimization</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                Our dynamic graph algorithm simplifies group balances. Instead of 12 messy back-and-forth payments, SplitMate boils it down to 2 or 3 total transfers.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-teal-500">
+              <span>Minimal transactions guarantee</span> &rarr;
+            </div>
+          </div>
+
+          <!-- Feature 3 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-500 mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Real-Time Live SSE Sync</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                Powered by Server-Sent Events (SSE). When a friend adds a dinner tab, your screen updates instantly without refreshing or pulling down.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-sky-500">
+              <span>Instant live updates</span> &rarr;
+            </div>
+          </div>
+
+          <!-- Feature 4 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Frictionless Invites</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                Invite friends via 6-digit join codes or instant shareable WhatsApp links. No forced contacts permission or mandatory mobile app download.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-indigo-500">
+              <span>Shareable group links</span> &rarr;
+            </div>
+          </div>
+
+          <!-- Feature 5 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Flexible Expense Splits</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                Split equally among everyone, log exact custom amounts, or record offline cash settlements with one tap.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-amber-500">
+              <span>Equal or Custom Splits</span> &rarr;
+            </div>
+          </div>
+
+          <!-- Feature 6 -->
+          <div class="glass-strong rounded-3xl p-5 sm:p-6 border border-[var(--color-border)] hover:border-[var(--color-accent-soft)] transition-all duration-300 glow-card flex flex-col justify-between">
+            <div>
+              <div class="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-500 mb-5">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Privacy & Passwordless Auth</h3>
+              <p class="mt-2 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                Secure Google authentication only. No weak passwords to remember, no bank credential access needed, and zero financial tracking.
+              </p>
+            </div>
+            <div class="mt-5 pt-4 border-t border-[var(--color-border)] flex items-center gap-2 text-xs font-semibold text-rose-500">
+              <span>Google Firebase Secured</span> &rarr;
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS SECTION -->
+    <section id="how-it-works" class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-7xl">
+        <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <span class="text-xs font-bold text-[var(--color-accent)] uppercase tracking-widest">Simple 3-Step Flow</span>
+          <h2 class="text-2xl sm:text-5xl font-extrabold tracking-tight mt-2">
+            How SplitMate Works
+          </h2>
+          <p class="mt-3 text-xs sm:text-base text-[var(--color-text-secondary)]">
+            Start tracking expenses with your roommates or travel buddies in less than 30 seconds.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
+          <!-- Step 1 -->
+          <div class="glass-strong rounded-3xl p-6 sm:p-8 border border-[var(--color-border)] relative">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-accent)] text-white font-black text-lg mb-5 shadow-md">
+              1
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Create & Share Group</h3>
+            <p class="mt-2.5 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Name your group (e.g. "Manali Trip 🏔️" or "Flat 304 🏡") and send the 6-digit invite code or link to your friends via WhatsApp.
+            </p>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="glass-strong rounded-3xl p-6 sm:p-8 border border-[var(--color-border)] relative">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500 text-white font-black text-lg mb-5 shadow-md">
+              2
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">Add Expenses on the Fly</h3>
+            <p class="mt-2.5 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Log bills whenever anyone pays. Split equal or custom shares. SplitMate calculates member balances in real-time across all devices.
+            </p>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="glass-strong rounded-3xl p-6 sm:p-8 border border-[var(--color-border)] relative">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500 text-white font-black text-lg mb-5 shadow-md">
+              3
+            </div>
+            <h3 class="text-lg sm:text-xl font-bold text-[var(--color-text-primary)]">1-Tap UPI Settlement</h3>
+            <p class="mt-2.5 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Click PhonePe, Google Pay, or Paytm next to any debt. SplitMate opens the UPI app directly with pre-filled VPA and exact amount.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHY SPLITMATE COMPARISON TABLE -->
+    <section id="comparison" class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8 bg-[var(--color-bg-elevated)] border-y border-[var(--color-border)]">
+      <div class="mx-auto max-w-5xl">
+        <div class="text-center mb-10 sm:mb-14">
+          <span class="text-xs font-bold text-[var(--color-accent)] uppercase tracking-widest">Side-by-Side</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mt-2">
+            Why Indian Groups Choose SplitMate
+          </h2>
+        </div>
+
+        <!-- Mobile Scroll Hint -->
+        <div class="md:hidden flex items-center justify-between text-xs text-[var(--color-text-tertiary)] mb-2 px-1 font-medium">
+          <span>Feature Matrix</span>
+          <span class="flex items-center gap-1 text-[var(--color-accent)]">Swipe table &rarr;</span>
+        </div>
+
+        <div class="glass-strong rounded-3xl overflow-hidden border border-[var(--color-border)] shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm min-w-[540px]">
+              <thead>
+                <tr class="border-b border-[var(--color-border)] bg-[var(--color-bg-glass)]">
+                  <th class="py-3.5 px-4 sm:px-6 font-bold text-[var(--color-text-primary)]">Feature</th>
+                  <th class="py-3.5 px-4 sm:px-6 font-bold text-[var(--color-accent)]">SplitMate 🚀</th>
+                  <th class="py-3.5 px-4 sm:px-6 font-bold text-[var(--color-text-tertiary)]">Splitwise</th>
+                  <th class="py-3.5 px-4 sm:px-6 font-bold text-[var(--color-text-tertiary)]">Excel / WhatsApp</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-[var(--color-border)]">
+                <tr>
+                  <td class="py-3.5 px-4 sm:px-6 font-semibold text-[var(--color-text-primary)]">Direct UPI Deep Links</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-accent)] font-bold">✅ Yes (PhonePe, GPay, Paytm)</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-rose-500 font-medium">❌ Limited / Paywall</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-rose-500 font-medium">❌ Manual copy-paste</td>
+                </tr>
+                <tr>
+                  <td class="py-3.5 px-4 sm:px-6 font-semibold text-[var(--color-text-primary)]">100% Free Without Ads</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-accent)] font-bold">✅ Completely Free & Ad-Free</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-rose-500 font-medium">❌ Ads & Pro Subscriptions</td>
+                  <td class="py-3.5 px-4 sm:px-6 font-medium text-[var(--color-text-secondary)]">✅ Free</td>
+                </tr>
+                <tr>
+                  <td class="py-3.5 px-4 sm:px-6 font-semibold text-[var(--color-text-primary)]">Real-Time Live SSE Sync</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-accent)] font-bold">✅ Sub-10ms Live SSE</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-amber-500 font-medium">⚠️ Slow polling</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-rose-500 font-medium">❌ Manual re-send</td>
+                </tr>
+                <tr>
+                  <td class="py-3.5 px-4 sm:px-6 font-semibold text-[var(--color-text-primary)]">Smart Debt Minimization</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-accent)] font-bold">✅ Automatic Algorithm</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-text-secondary)]">✅ Included</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-rose-500 font-medium">❌ Manual math required</td>
+                </tr>
+                <tr>
+                  <td class="py-3.5 px-4 sm:px-6 font-semibold text-[var(--color-text-primary)]">Frictionless Joining</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-[var(--color-accent)] font-bold">✅ 6-Digit Code / Web Link</td>
+                  <td class="py-3.5 px-4 sm:px-6 text-amber-500 font-medium">⚠️ Mandatory app download</td>
+                  <td class="py-3.5 px-4 sm:px-6 font-medium text-[var(--color-text-secondary)]">✅ Easy</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ SECTION -->
+    <section id="faq" class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-4xl">
+        <div class="text-center mb-10 sm:mb-14">
+          <span class="text-xs font-bold text-[var(--color-accent)] uppercase tracking-widest">Questions & Answers</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight mt-2">
+            Frequently Asked Questions
+          </h2>
+        </div>
+
+        <div class="space-y-3.5 sm:space-y-4" id="faq-accordion">
+          <!-- FAQ Item 1 -->
+          <div class="glass-strong rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <button class="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base flex justify-between items-center text-[var(--color-text-primary)] faq-toggle min-h-[48px]">
+              <span>Is SplitMate completely free to use?</span>
+              <svg class="h-5 w-5 text-[var(--color-accent)] shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div class="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed hidden">
+              Yes, SplitMate is 100% free and open-source under the MIT license. There are no hidden fees, no daily transaction limits, and no premium paywalls.
+            </div>
+          </div>
+
+          <!-- FAQ Item 2 -->
+          <div class="glass-strong rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <button class="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base flex justify-between items-center text-[var(--color-text-primary)] faq-toggle min-h-[48px]">
+              <span>How do UPI deep links work in SplitMate?</span>
+              <svg class="h-5 w-5 text-[var(--color-accent)] shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div class="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed hidden">
+              When a member settles a debt, clicking PhonePe, Google Pay, or Paytm constructs a standard UPI deep link (<code class="text-xs font-mono bg-[var(--color-accent-soft)] px-1.5 py-0.5 rounded text-[var(--color-accent)]">upi://pay?pa=...</code>). This launches your installed UPI payment app on mobile directly with the exact recipient VPA and balance amount filled out.
+            </div>
+          </div>
+
+          <!-- FAQ Item 3 -->
+          <div class="glass-strong rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <button class="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base flex justify-between items-center text-[var(--color-text-primary)] faq-toggle min-h-[48px]">
+              <span>Do my friends need to download an app to join?</span>
+              <svg class="h-5 w-5 text-[var(--color-accent)] shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div class="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed hidden">
+              No! SplitMate is built as a Progressive Web App (PWA). Friends can open your group invite link in any browser on Android or iOS and start logging expenses instantly with 1-click Google Sign-In.
+            </div>
+          </div>
+
+          <!-- FAQ Item 4 -->
+          <div class="glass-strong rounded-2xl border border-[var(--color-border)] overflow-hidden">
+            <button class="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base flex justify-between items-center text-[var(--color-text-primary)] faq-toggle min-h-[48px]">
+              <span>Does SplitMate store my bank account or credit card info?</span>
+              <svg class="h-5 w-5 text-[var(--color-accent)] shrink-0 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <div class="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed hidden">
+              Never. SplitMate only saves your public UPI ID (VPA) so friends can pay you directly. Money transfers happen entirely inside your standard PhonePe, Google Pay, or Paytm app.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CALL TO ACTION BANNER -->
+    <section class="relative z-10 py-14 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-5xl">
+        <div class="relative glass-strong rounded-3xl p-6 sm:p-14 border border-[var(--color-accent-soft)] shadow-2xl text-center overflow-hidden glow-card">
+          <div class="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-[var(--color-accent-soft)] blur-3xl"></div>
+          <div class="absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl"></div>
+
+          <h2 class="text-2xl sm:text-5xl font-black tracking-tight text-[var(--color-text-primary)]">
+            Ready to Eliminate Awkward Expense Tracking?
+          </h2>
+          <p class="mt-3 sm:mt-4 text-xs sm:text-lg text-[var(--color-text-secondary)] max-w-2xl mx-auto">
+            Join thousands of Indian roommates, road-trippers, and friends splitting bills effortless and settling with 1-click UPI.
           </p>
 
-          <div class="mt-8">
-            <GlassButton id="google-signin" variant="primary" size="lg" fullWidth>
-              <svg class="h-5 w-5" viewBox="0 0 24 24">
+          <div class="mt-6 sm:mt-8 flex justify-center">
+            <button
+              data-action="signin"
+              class="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-3 rounded-2xl bg-[var(--color-accent)] px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white shadow-xl shadow-[var(--color-accent-soft)] hover:bg-[var(--color-accent-hover)] hover:scale-105 active:scale-95 transition-all duration-200"
+            >
+              <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                 <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                 <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
-              Sign in with Google
-            </GlassButton>
+              <span>Get Started Free with Google</span>
+            </button>
           </div>
-
-          <p class="mt-4 text-xs text-[var(--color-text-tertiary)]">
-            No passwords. Secure Google authentication only.
-          </p>
         </div>
       </div>
-    </main>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="relative z-10 border-t border-[var(--color-border)] bg-[var(--color-bg-elevated)] py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div class="mx-auto max-w-7xl flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6 text-center md:text-left">
+        <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-2.5">
+          <div class="flex items-center gap-2">
+            <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--color-accent)] text-white text-xs font-bold">
+              S
+            </div>
+            <span class="text-base sm:text-lg font-bold text-gradient">SplitMate</span>
+          </div>
+          <span class="text-[11px] sm:text-xs text-[var(--color-text-tertiary)]">© 2026 SplitMate. Open Source under MIT.</span>
+        </div>
+
+        <div class="flex flex-wrap justify-center items-center gap-4 sm:gap-6 text-xs text-[var(--color-text-secondary)]">
+          <a href="#features" class="hover:text-[var(--color-accent)] transition-colors">Features</a>
+          <a href="#how-it-works" class="hover:text-[var(--color-accent)] transition-colors">How It Works</a>
+          <a href="#calculator" class="hover:text-[var(--color-accent)] transition-colors">Simulator</a>
+          <a href="https://github.com/reck98/SplitMate" target="_blank" rel="noopener noreferrer" class="hover:text-[var(--color-accent)] transition-colors">GitHub</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- TEST UPI MODAL PREVIEW (Interactive Modal) -->
+    <div id="test-upi-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm hidden animate-fade-in">
+      <div class="glass-strong rounded-3xl p-5 sm:p-6 max-w-md w-full border border-[var(--color-accent-soft)] space-y-4 animate-scale-in">
+        <div class="flex justify-between items-center pb-2 border-b border-[var(--color-border)]">
+          <h3 class="font-bold text-sm sm:text-base text-[var(--color-text-primary)] flex items-center gap-2">
+            <span>⚡ Simulated UPI Payload</span>
+          </h3>
+          <button id="close-upi-modal" class="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] text-xl p-1">&times;</button>
+        </div>
+
+        <p class="text-xs text-[var(--color-text-secondary)]">
+          In SplitMate, clicking settle invokes a native deep link protocol like this:
+        </p>
+
+        <div class="glass p-3 rounded-xl font-mono text-[11px] sm:text-xs break-all text-[var(--color-accent)] bg-[var(--color-accent-soft)]" id="upi-payload-text">
+          upi://pay?pa=rahul@upi&pn=Rahul%20Sharma&am=1200.00&cu=INR
+        </div>
+
+        <div class="flex flex-col xs:flex-row justify-end gap-2 pt-2">
+          <button id="copy-upi-btn" class="glass rounded-xl px-4 py-2.5 text-xs font-bold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] transition-all">
+            Copy Link
+          </button>
+          <button data-action="signin" class="rounded-xl bg-[var(--color-accent)] px-4 py-2.5 text-xs font-bold text-white hover:bg-[var(--color-accent-hover)] transition-all">
+            Try Full App Free
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <!-- AUTHENTICATION & INTERACTIVE LANDING SCRIPT -->
   <script>
     import { authInit, auth, signInWithGoogle } from "../lib/firebase";
     import { api } from "../lib/api";
 
     document.addEventListener("DOMContentLoaded", async () => {
+      // 1. Auth Check & Auto Redirect
       const firebaseUser = await authInit;
 
       if (firebaseUser) {
@@ -76,35 +856,184 @@ import GlassButton from "../components/GlassButton.astro";
         }
       }
 
+      // Hide loading splash and reveal SaaS Landing Page
       document.getElementById("loading-splash")?.classList.add("hidden");
-      document.getElementById("login-content")?.classList.remove("hidden");
+      document.getElementById("landing-content")?.classList.remove("hidden");
 
-      document
-        .getElementById("google-signin")
-        ?.addEventListener("click", async () => {
-          const btn = document.getElementById("google-signin");
-          if (btn) {
-            (btn as HTMLButtonElement).disabled = true;
-            btn.textContent = "Signing in...";
+      // 2. Mobile Menu Toggle Handler
+      const menuToggle = document.getElementById("mobile-menu-toggle");
+      const mobileDrawer = document.getElementById("mobile-drawer");
+      const hamburgerIcon = document.getElementById("hamburger-icon");
+      const closeIcon = document.getElementById("close-icon");
+
+      menuToggle?.addEventListener("click", () => {
+        const isOpened = !mobileDrawer?.classList.contains("hidden");
+        if (isOpened) {
+          mobileDrawer?.classList.add("hidden");
+          hamburgerIcon?.classList.remove("hidden");
+          closeIcon?.classList.add("hidden");
+        } else {
+          mobileDrawer?.classList.remove("hidden");
+          hamburgerIcon?.classList.add("hidden");
+          closeIcon?.classList.remove("hidden");
+        }
+      });
+
+      // Close mobile drawer when clicking any link inside drawer
+      document.querySelectorAll(".mobile-nav-link").forEach((link) => {
+        link.addEventListener("click", () => {
+          mobileDrawer?.classList.add("hidden");
+          hamburgerIcon?.classList.remove("hidden");
+          closeIcon?.classList.add("hidden");
+        });
+      });
+
+      // 3. Google Sign-In Trigger Handler
+      const handleSignIn = async () => {
+        const buttons = document.querySelectorAll('[data-action="signin"]');
+        buttons.forEach((btn) => {
+          (btn as HTMLButtonElement).disabled = true;
+          btn.textContent = "Signing in...";
+        });
+
+        try {
+          await signInWithGoogle();
+          const user = await api.auth.firebase();
+
+          if (user.is_profile_complete) {
+            window.location.href = "/dashboard";
+          } else {
+            window.location.href = "/complete-profile";
           }
+        } catch (error: any) {
+          (window as any).showToast?.({
+            message: error.message || "Sign in failed. Please try again.",
+            type: "error",
+          });
+          buttons.forEach((btn) => {
+            (btn as HTMLButtonElement).disabled = false;
+            btn.innerHTML = `<svg class="h-4 w-4 shrink-0" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg><span>Sign In</span>`;
+          });
+        }
+      };
 
-          try {
-            await signInWithGoogle();
-            const user = await api.auth.firebase();
+      document.querySelectorAll('[data-action="signin"]').forEach((btn) => {
+        btn.addEventListener("click", handleSignIn);
+      });
 
-            if (user.is_profile_complete) {
-              window.location.href = "/dashboard";
-            } else {
-              window.location.href = "/complete-profile";
-            }
-          } catch (error: any) {
-            (window as any).showToast?.({ message: error.message || "Sign in failed. Please try again.", type: "error" });
-            if (btn) {
-              (btn as HTMLButtonElement).disabled = false;
-              btn.innerHTML = `<svg class="h-5 w-5" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Sign in with Google`;
+      // 4. Mockup Tab Switcher logic
+      const tabBtns = document.querySelectorAll("#mock-tabs button");
+      tabBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const tab = btn.getAttribute("data-tab");
+          tabBtns.forEach((b) => {
+            b.classList.remove("bg-[var(--color-accent)]", "text-white", "shadow-sm");
+            b.classList.add("hover:bg-[var(--color-bg-glass-hover)]");
+          });
+          btn.classList.add("bg-[var(--color-accent)]", "text-white", "shadow-sm");
+          btn.classList.remove("hover:bg-[var(--color-bg-glass-hover)]");
+
+          document.getElementById("tab-content-balances")?.classList.add("hidden");
+          document.getElementById("tab-content-expenses")?.classList.add("hidden");
+          document.getElementById("tab-content-upi")?.classList.add("hidden");
+
+          if (tab === "balances") document.getElementById("tab-content-balances")?.classList.remove("hidden");
+          if (tab === "expenses") document.getElementById("tab-content-expenses")?.classList.remove("hidden");
+          if (tab === "upi") document.getElementById("tab-content-upi")?.classList.remove("hidden");
+        });
+      });
+
+      // Mock UPI buttons inside hero showcase trigger test modal
+      document.querySelectorAll(".mock-upi-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const modal = document.getElementById("test-upi-modal");
+          modal?.classList.remove("hidden");
+        });
+      });
+
+      // 5. Live Calculator Widget Interactive Logic
+      const calcAmountInput = document.getElementById("calc-amount") as HTMLInputElement;
+      const calcFriendsRange = document.getElementById("calc-friends") as HTMLInputElement;
+      const calcFriendsVal = document.getElementById("calc-friends-val");
+      const calcPerPerson = document.getElementById("calc-per-person");
+      const calcOldTransfers = document.getElementById("calc-old-transfers");
+      const calcNewTransfers = document.getElementById("calc-new-transfers");
+      const upiPayloadText = document.getElementById("upi-payload-text");
+
+      function updateCalculator() {
+        if (!calcAmountInput || !calcFriendsRange) return;
+        const amount = parseFloat(calcAmountInput.value) || 0;
+        const friends = parseInt(calcFriendsRange.value) || 2;
+
+        if (calcFriendsVal) calcFriendsVal.textContent = `${friends} Friends`;
+
+        const perPerson = amount > 0 ? (amount / friends).toFixed(2) : "0.00";
+        if (calcPerPerson) calcPerPerson.textContent = `₹${parseFloat(perPerson).toLocaleString("en-IN", { minimumFractionDigits: 2 })}`;
+
+        const n = friends;
+        const oldT = n * (n - 1) / 2;
+        const newT = Math.max(1, n - 1);
+
+        if (calcOldTransfers) calcOldTransfers.textContent = `${oldT} transfers`;
+        if (calcNewTransfers) calcNewTransfers.textContent = `⚡ ${newT} direct UPI transfers`;
+
+        if (upiPayloadText) {
+          upiPayloadText.textContent = `upi://pay?pa=friend@upi&pn=Friend&am=${perPerson}&cu=INR`;
+        }
+      }
+
+      calcAmountInput?.addEventListener("input", updateCalculator);
+      calcFriendsRange?.addEventListener("input", updateCalculator);
+
+      // Category buttons in simulator
+      document.querySelectorAll("#calc-category button").forEach((catBtn) => {
+        catBtn.addEventListener("click", () => {
+          document.querySelectorAll("#calc-category button").forEach((b) => {
+            b.className = "py-2.5 rounded-xl glass hover:bg-[var(--color-bg-glass-hover)] text-center";
+          });
+          catBtn.className = "py-2.5 rounded-xl border border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-bold text-center";
+        });
+      });
+
+      // 6. Test UPI Modal logic
+      const testUpiBtn = document.getElementById("calc-test-btn");
+      const modal = document.getElementById("test-upi-modal");
+      const closeUpiModal = document.getElementById("close-upi-modal");
+      const copyUpiBtn = document.getElementById("copy-upi-btn");
+
+      testUpiBtn?.addEventListener("click", () => {
+        modal?.classList.remove("hidden");
+      });
+
+      closeUpiModal?.addEventListener("click", () => {
+        modal?.classList.add("hidden");
+      });
+
+      modal?.addEventListener("click", (e) => {
+        if (e.target === modal) modal.classList.add("hidden");
+      });
+
+      copyUpiBtn?.addEventListener("click", () => {
+        const text = upiPayloadText?.textContent || "";
+        navigator.clipboard.writeText(text);
+        (window as any).showToast?.({ message: "UPI Link copied to clipboard!", type: "success" });
+      });
+
+      // 7. FAQ Accordion Toggle
+      const faqToggles = document.querySelectorAll(".faq-toggle");
+      faqToggles.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const content = btn.nextElementSibling;
+          const icon = btn.querySelector("svg");
+          if (content) {
+            const isHidden = content.classList.contains("hidden");
+            content.classList.toggle("hidden");
+            if (icon) {
+              icon.style.transform = isHidden ? "rotate(180deg)" : "rotate(0deg)";
             }
           }
         });
+      });
     });
   </script>
 </BaseLayout>
