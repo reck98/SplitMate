@@ -63,16 +63,22 @@ Primary Key: `(group_id, user_id)`
 
 Expenses created within groups.
 
-| Column      | Type | Constraints              |
-| ----------- | ---- | ------------------------ |
-| id          | text | PRIMARY KEY (UUID)       |
-| group_id    | text | NOT NULL, FK → groups.id |
-| description | text | NOT NULL                 |
-| amount      | real | NOT NULL                 |
-| paid_by     | text | NOT NULL, FK → users.id  |
-| created_by  | text | NOT NULL, FK → users.id  |
-| created_at  | text | NOT NULL (ISO 8601)      |
-| updated_at  | text | NOT NULL (ISO 8601)      |
+| Column      | Type | Constraints               |
+| ----------- | ---- | ------------------------- |
+| id          | text | PRIMARY KEY (UUID)        |
+| group_id    | text | NOT NULL, FK → groups.id  |
+| description | text | NOT NULL                  |
+| amount      | real | NOT NULL                  |
+| split_type  | text | NOT NULL, DEFAULT 'equal' |
+| paid_by     | text | NOT NULL, FK → users.id   |
+| created_by  | text | NOT NULL, FK → users.id   |
+| created_at  | text | NOT NULL (ISO 8601)       |
+| updated_at  | text | NOT NULL (ISO 8601)       |
+
+Indexes:
+
+- `idx_expenses_group_id` on `group_id`
+- `idx_expenses_paid_by` on `paid_by`
 
 ---
 

@@ -21,7 +21,7 @@ export function getDetailedDebts(
 
   // Sort expenses ascending to apply settlements chronologically
   const sortedExpenses = [...groupExpenses].sort(
-    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at)
+    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at),
   );
 
   // Build raw detailed debts per expense
@@ -31,7 +31,7 @@ export function getDetailedDebts(
     const payerId = exp.paid_by;
     const payerName = memberMap.get(payerId) || "Unknown";
     const expParticipants = allParticipants.filter(
-      (p) => p && p.expense_id === exp.id
+      (p) => p && p.expense_id === exp.id,
     );
 
     for (const p of expParticipants) {
@@ -53,7 +53,7 @@ export function getDetailedDebts(
 
   // Sort settlements ascending to apply chronologically
   const sortedSettlements = [...groupSettlements].sort(
-    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at)
+    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at),
   );
 
   for (const s of sortedSettlements) {
@@ -186,7 +186,8 @@ export function simplifyDebts(balances: BalanceInfo[]): SimplifiedDebt[] {
       });
     }
 
-    creditor.net_balance = Math.round((creditor.net_balance - amount) * 100) / 100;
+    creditor.net_balance =
+      Math.round((creditor.net_balance - amount) * 100) / 100;
     debtor.net_balance = Math.round((debtor.net_balance - amount) * 100) / 100;
 
     if (creditor.net_balance <= 0.009) i++;

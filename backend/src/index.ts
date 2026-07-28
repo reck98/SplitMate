@@ -12,8 +12,8 @@ async function startServer() {
     const folder = fs.existsSync(cwdMigrations)
       ? cwdMigrations
       : fs.existsSync(backendMigrations)
-      ? backendMigrations
-      : null;
+        ? backendMigrations
+        : null;
 
     if (folder) {
       await migrate(db, { migrationsFolder: folder });

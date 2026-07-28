@@ -1,5 +1,34 @@
 # Changelog
 
+## v1.0.0 (Production Release & Application Stabilization)
+
+### Fixed & Stabilized
+
+- **Add Expense & Group Details Infinite Loading Resolution**:
+  - Replaced native `DOMContentLoaded` event listeners across all Astro page module scripts with `onDOMReady()` utility, ensuring page initialization executes immediately when DOM is interactive/complete.
+  - Hardened debt simplification algorithm (`simplifyDebts`) with upfront net-balance rounding and guaranteed pointer advancement to prevent infinite loops and 500 timeouts.
+  - Cleaned `groupId` parameter extraction (`split("/groups/")[1]?.split("/")[0]?.split("?")[0]?.split("#")[0]`) to strip trailing slashes, query strings, and hash parameters.
+
+- **Database Migrations & Auto-Application**:
+  - Generated and applied Drizzle migration `0002_fat_obadiah_stane.sql` adding missing `split_type` column (`DEFAULT 'equal' NOT NULL`) to `expenses` table.
+  - Added programmatic auto-migrations via `drizzle-orm/libsql/migrator` in `backend/src/index.ts`, automatically applying pending migrations to production Turso database on server boot.
+  - Created performance indexes across all foreign keys (`group_id`, `user_id`, `paid_by`, `payer_id`, `receiver_id`).
+
+- **Database Transactions & Error Resilience**:
+  - Wrapped all multi-table write operations (creating groups, deleting groups, creating/editing/deleting expenses) in `db.transaction(async (tx) => ...)` to prevent partial state mutations.
+  - Enhanced Express `errorHandler` to return detailed error messages in JSON responses when unexpected 500 errors occur, preventing silent failures.
+
+- **Security & XSS Prevention**:
+  - Applied `escapeHtml()` sanitization across all Astro pages rendering dynamic user strings (user names, group titles, expense descriptions).
+  - Enhanced Firebase ID token auto-refresh with forced token renewal on 401 response retry.
+
+### Added
+
+- **HTTP Request Logger (Morgan)**:
+  - Integrated `morgan("dev")` logging middleware in `backend/src/app.ts` to log method, URL, status code, and response time for every incoming API request.
+- **Comprehensive Test Suite**:
+  - Added unit test suite in `backend/src/__tests__/expenses.test.ts` for equal and custom expense split calculations and validation.
+
 ## v0.9.0
 
 ### Added

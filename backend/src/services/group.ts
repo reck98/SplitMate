@@ -179,11 +179,12 @@ export async function getGroupData(
       (e.paid_by === currentUserId ||
         e.created_by === currentUserId ||
         (Array.isArray(e.participants) &&
-          e.participants.some((p) => p && p.user_id === currentUserId)))
+          e.participants.some((p) => p && p.user_id === currentUserId))),
   );
 
   const visibleSettlements = settlementData.filter(
-    (s) => s && (s.payer_id === currentUserId || s.receiver_id === currentUserId)
+    (s) =>
+      s && (s.payer_id === currentUserId || s.receiver_id === currentUserId),
   );
 
   const visibleSimplifiedDebts = simplified_debts.filter(
@@ -191,7 +192,7 @@ export async function getGroupData(
       d &&
       d.from &&
       d.to &&
-      (d.from.user_id === currentUserId || d.to.user_id === currentUserId)
+      (d.from.user_id === currentUserId || d.to.user_id === currentUserId),
   );
 
   return {

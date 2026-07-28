@@ -723,3 +723,32 @@ Create a dedicated `GET /api/dashboard` endpoint that returns `{ user, groups[] 
 - If Firebase token verification becomes a bottleneck for other pages, consider a lightweight server-side token cache
 - For the group detail page (`GET /api/groups/:id`), similar N+1 and query optimization opportunities exist in the balance calculation and data serialization logic
 - If cold starts remain an issue, evaluate Turso's "point-in-time recovery" vs "hot" database tier
+
+---
+
+## D-011: Programmatic Migrations, Safe DOM Readiness, and Production Error Handling
+
+**Date:** 2026-07-28
+**Status:** Accepted
+
+**Context:**
+Production deployments encountered issues where:
+
+1. `DOMContentLoaded` listeners in Astro script modules failed to fire when DOM parsing finished before script execution.
+2. Production database missing `split_type` column caused runtime SQLite errors.
+3. Unhandled server exceptions returned generic 500 masks hiding root causes.
+4. Floating-point cent rounding in debt simplification caused rare infinite loops in `simplifyDebts`.
+
+**Decision:**
+
+- Standardize client script execution on `onDOMReady(fn)` which evaluates `document.readyState !== "loading"`.
+- Implement programmatic auto-migrations in `backend/src/index.ts` using `drizzle-orm/libsql/migrator`.
+- Add `morgan("dev")` middleware to log all incoming HTTP requests.
+- Include `err.message` in internal 500 error response JSON payloads.
+- Wrap all multi-table mutations in `db.transaction(...)`.
+
+**Reasoning:**
+
+- Eliminates race conditions in Astro ES module execution.
+- Guarantees database schema is always in sync with Drizzle ORM on server startup.
+- Enables rapid root-cause diagnosis via transparent logs and request metrics.
