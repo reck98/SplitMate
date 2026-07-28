@@ -172,7 +172,53 @@ Add environment variables from `backend/.env.example`.
 2. Copy the database URL and auth token
 3. Run `npm run db:migrate` to apply schema
 
-## Architecture
+## High-Level System Architecture
+
+```mermaid
+graph TD
+    subgraph ClientLayer["📱 Client Layer (Browser & PWA)"]
+        UI["Astro Glassmorphic UI<br/>(Tailwind CSS & Design Tokens)"]
+        PWA["PWA Service Worker<br/>(Workbox Offline Caching)"]
+        State["Nano Stores<br/>(Client-Side Reactive State)"]
+    end
+
+    subgraph FrontendServer["⚡ Frontend Server (Astro Node App / Vercel)"]
+        Pages["Astro Server Routes<br/>(Hybrid SSR & Static Pages)"]
+        APIClient["API Client / Fetch Wrapper<br/>(With SWR & Auth Headers)"]
+    end
+
+    subgraph BackendServer["⚙️ Backend Server (Express Node.js / Railway)"]
+        AuthMiddleware["Firebase Auth Middleware<br/>(ID Token Verification)"]
+        Routes["Express API Routes<br/>(/auth, /groups, /expenses, /settlements)"]
+        SSEEngine["SSE Broadcast Engine<br/>(Real-Time Live Updates)"]
+        DebtAlgo["Greedy Debt Minimizer<br/>(Zero-Storage Balance Algorithm)"]
+    end
+
+    subgraph DatabaseLayer["🗄️ Database Layer"]
+        Drizzle["Drizzle ORM Schema Client"]
+        Turso["Turso Database<br/>(SQLite-compatible Edge DB)"]
+    end
+
+    subgraph ExternalServices["🔌 External Services & Protocols"]
+        FirebaseAuth["Firebase Authentication<br/>(Google OAuth Provider)"]
+        UPIPay["Native UPI Deep Links<br/>(PhonePe, GPay, Paytm, CRED)"]
+    end
+
+    UI -->|"Google OAuth"| FirebaseAuth
+    UI -->|"HTTP REST API"| Routes
+    UI -->|"SSE Connection"| SSEEngine
+    UI -->|"1-Click Deep Links"| UPIPay
+
+    Pages --> APIClient
+    APIClient -->|"Bearer Token REST"| Routes
+
+    Routes --> AuthMiddleware
+    Routes --> DebtAlgo
+    Routes --> Drizzle
+    Routes --> SSEEngine
+
+    Drizzle -->|"SQL Driver"| Turso
+```
 
 See [docs/Architecture.md](docs/Architecture.md) for detailed architecture documentation.
 
