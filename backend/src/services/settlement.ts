@@ -12,33 +12,40 @@ export function getDetailedDebts(
 } {
   const memberMap = new Map(members.map((m) => [m.user_id, m.name]));
 
+  // Helper for safe timestamp comparison
+  const parseTime = (dateStr: any): number => {
+    if (!dateStr) return 0;
+    const t = new Date(dateStr).getTime();
+    return isNaN(t) ? 0 : t;
+  };
+
   // Sort expenses ascending to apply settlements chronologically
   const sortedExpenses = [...groupExpenses].sort(
-    (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at)
   );
 
   // Build raw detailed debts per expense
   const rawDebts: DetailedDebt[] = [];
   for (const exp of sortedExpenses) {
+    if (!exp) continue;
     const payerId = exp.paid_by;
     const payerName = memberMap.get(payerId) || "Unknown";
     const expParticipants = allParticipants.filter(
-      (p) => p.expense_id === exp.id,
+      (p) => p && p.expense_id === exp.id
     );
 
     for (const p of expParticipants) {
-      if (p.user_id !== payerId && p.share_amount > 0.01) {
+      if (p && p.user_id !== payerId && p.share_amount > 0.01) {
         const debtorName = memberMap.get(p.user_id) || "Unknown";
         rawDebts.push({
           id: `${exp.id}_${p.user_id}`,
           expense_id: exp.id,
-          description: exp.description,
+          description: exp.description || "",
           from: { user_id: p.user_id, name: debtorName },
           to: { user_id: payerId, name: payerName },
           amount: Math.round(p.share_amount * 100) / 100,
           original_amount: Math.round(p.share_amount * 100) / 100,
-          created_at: exp.created_at,
+          created_at: exp.created_at || new Date().toISOString(),
         });
       }
     }
@@ -46,14 +53,17 @@ export function getDetailedDebts(
 
   // Sort settlements ascending to apply chronologically
   const sortedSettlements = [...groupSettlements].sort(
-    (a, b) =>
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    (a, b) => parseTime(a?.created_at) - parseTime(b?.created_at)
   );
 
   for (const s of sortedSettlements) {
+    if (!s || !s.amount) continue;
     let remaining = s.amount;
     for (const debt of rawDebts) {
       if (
+        debt &&
+        debt.from &&
+        debt.to &&
         debt.from.user_id === s.payer_id &&
         debt.to.user_id === s.receiver_id &&
         debt.amount > 0.01
@@ -68,11 +78,8 @@ export function getDetailedDebts(
 
   // Active un-settled debts (descending by created_at so newest expenses show first in suggestions)
   const detailed_debts = rawDebts
-    .filter((d) => d.amount > 0.01)
-    .sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
+    .filter((d) => d && d.amount > 0.01)
+    .sort((a, b) => parseTime(b?.created_at) - parseTime(a?.created_at));
 
   // Compute member balances
   const balances: BalanceInfo[] = members.map((member) => {
