@@ -1,9 +1,14 @@
 import { initializeApp } from "firebase/app";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup,
-  onAuthStateChanged, onIdTokenChanged,
-  setPersistence, browserLocalPersistence,
-  type Auth, type User,
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  onAuthStateChanged,
+  onIdTokenChanged,
+  setPersistence,
+  browserLocalPersistence,
+  type Auth,
+  type User,
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -56,12 +61,14 @@ export async function signInWithGoogle(): Promise<string> {
   return token;
 }
 
-export async function getFirebaseToken(): Promise<string | null> {
-  if (cachedToken) return cachedToken;
-  const user = await authInit;
-  if (user) {
+export async function getFirebaseToken(
+  forceRefresh = false,
+): Promise<string | null> {
+  const currentUser = auth.currentUser || (await authInit);
+  if (currentUser) {
     try {
-      cachedToken = await user.getIdToken();
+      cachedToken = await currentUser.getIdToken(forceRefresh);
+      return cachedToken;
     } catch {
       cachedToken = null;
     }

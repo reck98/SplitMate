@@ -11,7 +11,11 @@ const router = Router();
 router.get(
   "/dashboard",
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const userGroups = await db
         .select({
@@ -40,7 +44,7 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

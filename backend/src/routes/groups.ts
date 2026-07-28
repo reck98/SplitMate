@@ -4,7 +4,14 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "../db/index.js";
-import { groups, groupMembers, users, expenses, expenseParticipants, settlements } from "../db/schema.js";
+import {
+  groups,
+  groupMembers,
+  users,
+  expenses,
+  expenseParticipants,
+  settlements,
+} from "../db/schema.js";
 import { requireAuth } from "../middleware/auth.js";
 import { validate } from "../middleware/validate.js";
 import { AppError } from "../middleware/error.js";
@@ -17,7 +24,10 @@ import { broadcast } from "../services/sse.js";
 const router = Router();
 
 const createGroupSchema = z.object({
-  name: z.string().min(1, "Group name is required").max(100, "Group name too long"),
+  name: z
+    .string()
+    .min(1, "Group name is required")
+    .max(100, "Group name too long"),
 });
 
 const joinGroupSchema = z.object({
@@ -28,25 +38,31 @@ router.post(
   "/",
   requireAuth,
   validate(createGroupSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { name } = req.body;
       const now = new Date().toISOString();
       const id = uuid();
       const inviteCode = generateInviteCode();
 
-      await db.insert(groups).values({
-        id,
-        name,
-        owner_id: req.user!.id,
-        invite_code: inviteCode,
-        created_at: now,
-      });
+      await db.transaction(async (tx) => {
+        await tx.insert(groups).values({
+          id,
+          name,
+          owner_id: req.user!.id,
+          invite_code: inviteCode,
+          created_at: now,
+        });
 
-      await db.insert(groupMembers).values({
-        group_id: id,
-        user_id: req.user!.id,
-        joined_at: now,
+        await tx.insert(groupMembers).values({
+          group_id: id,
+          user_id: req.user!.id,
+          joined_at: now,
+        });
       });
 
       const [group] = await db
@@ -62,13 +78,17 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.get(
   "/",
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const userGroups = await db
         .select({
@@ -94,13 +114,17 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.get(
   "/:id",
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const data = await getGroupData(req.params.id, req.user!.id);
       res.json({
@@ -110,13 +134,17 @@ router.get(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.delete(
   "/:id",
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -127,41 +155,43 @@ router.delete(
         .limit(1);
 
       if (!group) {
-        throw new AppError(404, "GROUP_NOT_FOUND", "The requested group does not exist.");
+        throw new AppError(
+          404,
+          "GROUP_NOT_FOUND",
+          "The requested group does not exist.",
+        );
       }
 
       if (group.owner_id !== req.user!.id) {
-        throw new AppError(403, "FORBIDDEN", "Only the group owner can delete this group.");
+        throw new AppError(
+          403,
+          "FORBIDDEN",
+          "Only the group owner can delete this group.",
+        );
       }
 
-      const groupExpenses = await db
-        .select({ id: expenses.id })
-        .from(expenses)
-        .where(eq(expenses.group_id, id));
+      await db.transaction(async (tx) => {
+        const groupExpenses = await tx
+          .select({ id: expenses.id })
+          .from(expenses)
+          .where(eq(expenses.group_id, id));
 
-      const expenseIds = groupExpenses.map((e) => e.id);
+        const expenseIds = groupExpenses.map((e) => e.id);
 
-      if (expenseIds.length > 0) {
-        await db
-          .delete(expenseParticipants)
-          .where(inArray(expenseParticipants.expense_id, expenseIds));
+        if (expenseIds.length > 0) {
+          await tx
+            .delete(expenseParticipants)
+            .where(inArray(expenseParticipants.expense_id, expenseIds));
 
-        await db
-          .delete(expenses)
-          .where(inArray(expenses.id, expenseIds));
-      }
+          await tx.delete(expenses).where(inArray(expenses.id, expenseIds));
+        }
 
-      await db
-        .delete(settlements)
-        .where(eq(settlements.group_id, id));
+        await tx.delete(settlements).where(eq(settlements.group_id, id));
 
-      await db
-        .delete(groupMembers)
-        .where(eq(groupMembers.group_id, id));
+        await tx.delete(groupMembers).where(eq(groupMembers.group_id, id));
 
-      await db
-        .delete(groups)
-        .where(eq(groups.id, id));
+        await tx.delete(groups).where(eq(groups.id, id));
+      });
 
       broadcast(id, "group_deleted", { groupId: id });
 
@@ -172,14 +202,18 @@ router.delete(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.post(
   "/join",
   requireAuth,
   validate(joinGroupSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { invite_code } = req.body;
 
@@ -190,7 +224,11 @@ router.post(
         .limit(1);
 
       if (!group) {
-        throw new AppError(404, "INVALID_INVITE_CODE", "Invalid invite code. Please check and try again.");
+        throw new AppError(
+          404,
+          "INVALID_INVITE_CODE",
+          "Invalid invite code. Please check and try again.",
+        );
       }
 
       const [existing] = await db
@@ -199,13 +237,17 @@ router.post(
         .where(
           and(
             eq(groupMembers.group_id, group.id),
-            eq(groupMembers.user_id, req.user!.id)
-          )
+            eq(groupMembers.user_id, req.user!.id),
+          ),
         )
         .limit(1);
 
       if (existing) {
-        throw new AppError(409, "ALREADY_MEMBER", "You are already a member of this group.");
+        throw new AppError(
+          409,
+          "ALREADY_MEMBER",
+          "You are already a member of this group.",
+        );
       }
 
       const [countResult] = await db
@@ -214,7 +256,11 @@ router.post(
         .where(eq(groupMembers.group_id, group.id));
 
       if (countResult.count >= 100) {
-        throw new AppError(409, "GROUP_FULL", "This group has reached the maximum of 100 members.");
+        throw new AppError(
+          409,
+          "GROUP_FULL",
+          "This group has reached the maximum of 100 members.",
+        );
       }
 
       await db.insert(groupMembers).values({
@@ -235,13 +281,17 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.post(
   "/:id/leave",
   requireAuth,
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { id } = req.params;
 
@@ -252,11 +302,19 @@ router.post(
         .limit(1);
 
       if (!group) {
-        throw new AppError(404, "GROUP_NOT_FOUND", "The requested group does not exist.");
+        throw new AppError(
+          404,
+          "GROUP_NOT_FOUND",
+          "The requested group does not exist.",
+        );
       }
 
       if (group.owner_id === req.user!.id) {
-        throw new AppError(409, "OWNER_CANNOT_LEAVE", "Group owner cannot leave. Delete the group instead.");
+        throw new AppError(
+          409,
+          "OWNER_CANNOT_LEAVE",
+          "Group owner cannot leave. Delete the group instead.",
+        );
       }
 
       const { balances } = await getBalances(id);
@@ -266,7 +324,7 @@ router.post(
         throw new AppError(
           409,
           "NON_ZERO_BALANCE",
-          `You have an outstanding balance of ₹${userBalance.net_balance.toFixed(2)}. Settle all debts before leaving.`
+          `You have an outstanding balance of ₹${userBalance.net_balance.toFixed(2)}. Settle all debts before leaving.`,
         );
       }
 
@@ -275,8 +333,8 @@ router.post(
         .where(
           and(
             eq(groupMembers.group_id, id),
-            eq(groupMembers.user_id, req.user!.id)
-          )
+            eq(groupMembers.user_id, req.user!.id),
+          ),
         );
 
       try {
@@ -291,7 +349,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

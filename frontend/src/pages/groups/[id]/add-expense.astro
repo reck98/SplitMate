@@ -76,13 +76,16 @@ import GlassButton from "../../../components/GlassButton.astro";
     import { api } from "../../../lib/api";
     import { authInit } from "../../../lib/firebase";
     import { $user, setUser } from "../../../stores/auth";
+    import { onDOMReady, escapeHtml } from "../../../lib/dom";
 
     const groupId = window.location.pathname.split("/groups/")[1]?.split("/")[0];
     let currentSplit = "equal";
     let members: any[] = [];
     let currentUser: any = null;
 
-    document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+    if (groupId) {
+      document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+    }
 
     $user.subscribe((u) => {
       currentUser = u;
@@ -90,15 +93,24 @@ import GlassButton from "../../../components/GlassButton.astro";
     });
 
     function updatePayerDisplay() {
-      if (!currentUser || !members.length) return;
-      const member = members.find((m: any) => m.user_id === currentUser.id);
-      if (!member) return;
       const nameEl = document.getElementById("payer-name");
       const avatarEl = document.getElementById("payer-avatar");
-      if (nameEl) nameEl.textContent = member.name;
+      if (!currentUser) {
+        if (nameEl) nameEl.textContent = "Loading...";
+        return;
+      }
+      if (members.length === 0) {
+        if (nameEl) nameEl.textContent = currentUser.name || "Your account";
+        if (avatarEl) {
+          avatarEl.textContent = (currentUser.name || "?").charAt(0).toUpperCase();
+        }
+        return;
+      }
+      const member = members.find((m: any) => m.user_id === currentUser.id);
+      const displayName = member?.name || currentUser.name || "Your account";
+      if (nameEl) nameEl.textContent = displayName;
       if (avatarEl) {
-        const initial = (member.name || "?").charAt(0).toUpperCase();
-        avatarEl.textContent = initial;
+        avatarEl.textContent = (displayName || "?").charAt(0).toUpperCase();
       }
     }
 
@@ -121,28 +133,50 @@ import GlassButton from "../../../components/GlassButton.astro";
     }
 
     async function loadMembers() {
+      const participantsList = document.getElementById("participants-list");
       try {
+        if (!groupId) {
+          throw new Error("Invalid group ID.");
+        }
         const data = await api.groups.get(groupId);
-        members = data.members;
+        members = data.members || [];
         updatePayerDisplay();
 
-        const participantsList = document.getElementById("participants-list")!;
-        participantsList.innerHTML = members
-          .map(
-            (m) => `
-            <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
-              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" checked />
-              <span class="text-sm text-[var(--color-text-primary)]">${m.name}</span>
-            </label>
-          `
-          )
-          .join("");
+        if (members.length === 0) {
+          if (participantsList) {
+            participantsList.innerHTML = `<p class="text-sm text-[var(--color-text-tertiary)]">No members in this group.</p>`;
+          }
+          return;
+        }
 
-        participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
-          cb.addEventListener("change", updateCustomSplitInputs);
-        });
+        if (participantsList) {
+          participantsList.innerHTML = members
+            .map(
+              (m) => `
+              <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
+                <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" checked />
+                <span class="text-sm text-[var(--color-text-primary)]">${escapeHtml(m.name)}</span>
+              </label>
+            `
+            )
+            .join("");
+
+          participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
+            cb.addEventListener("change", updateCustomSplitInputs);
+          });
+        }
       } catch (error: any) {
-        (window as any).showToast?.({ message: error.message, type: "error" });
+        const errorMsg = error?.message || "Unable to fetch group members.";
+        (window as any).showToast?.({ message: errorMsg, type: "error" });
+        if (participantsList) {
+          participantsList.innerHTML = `
+            <div class="rounded-glass-lg border border-[var(--color-danger-soft)] p-3 text-center">
+              <p class="text-xs text-[var(--color-danger)] mb-2">${escapeHtml(errorMsg)}</p>
+              <button type="button" id="retry-load-members" class="px-3 py-1 text-xs bg-[var(--color-accent)] text-white rounded-glass">Retry</button>
+            </div>
+          `;
+          document.getElementById("retry-load-members")?.addEventListener("click", loadMembers);
+        }
       }
     }
 
@@ -177,7 +211,7 @@ import GlassButton from "../../../components/GlassButton.astro";
           const div = document.createElement("div");
           div.className = "flex items-center gap-2";
           div.innerHTML = `
-            <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${member?.name || "Unknown"}</span>
+            <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${escapeHtml(member?.name || "Unknown")}</span>
             <input type="number" step="0.01" min="0" data-user-id="${userId}" value="${shareVal}" class="custom-share flex-1 rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]" placeholder="0.00" />
           `;
           inputsContainer.appendChild(div);
@@ -291,6 +325,6 @@ import GlassButton from "../../../components/GlassButton.astro";
       }
     });
 
-    document.addEventListener("DOMContentLoaded", initPage);
+    onDOMReady(initPage);
   </script>
 </BaseLayout>

@@ -4,13 +4,18 @@ export function getDetailedDebts(
   members: Array<{ user_id: string; name: string }>,
   groupExpenses: any[],
   allParticipants: any[],
-  groupSettlements: any[]
-): { balances: BalanceInfo[]; detailed_debts: DetailedDebt[]; simplified_debts: DetailedDebt[] } {
+  groupSettlements: any[],
+): {
+  balances: BalanceInfo[];
+  detailed_debts: DetailedDebt[];
+  simplified_debts: SimplifiedDebt[];
+} {
   const memberMap = new Map(members.map((m) => [m.user_id, m.name]));
 
   // Sort expenses ascending to apply settlements chronologically
   const sortedExpenses = [...groupExpenses].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
 
   // Build raw detailed debts per expense
@@ -18,7 +23,9 @@ export function getDetailedDebts(
   for (const exp of sortedExpenses) {
     const payerId = exp.paid_by;
     const payerName = memberMap.get(payerId) || "Unknown";
-    const expParticipants = allParticipants.filter((p) => p.expense_id === exp.id);
+    const expParticipants = allParticipants.filter(
+      (p) => p.expense_id === exp.id,
+    );
 
     for (const p of expParticipants) {
       if (p.user_id !== payerId && p.share_amount > 0.01) {
@@ -39,7 +46,8 @@ export function getDetailedDebts(
 
   // Sort settlements ascending to apply chronologically
   const sortedSettlements = [...groupSettlements].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    (a, b) =>
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   );
 
   for (const s of sortedSettlements) {
@@ -61,7 +69,10 @@ export function getDetailedDebts(
   // Active un-settled debts (descending by created_at so newest expenses show first in suggestions)
   const detailed_debts = rawDebts
     .filter((d) => d.amount > 0.01)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 
   // Compute member balances
   const balances: BalanceInfo[] = members.map((member) => {
@@ -104,10 +115,12 @@ export function getDetailedDebts(
     };
   });
 
+  const simplified_debts = simplifyDebts(balances);
+
   return {
     balances,
     detailed_debts,
-    simplified_debts: detailed_debts,
+    simplified_debts,
   };
 }
 

@@ -68,6 +68,7 @@ import Skeleton from "../components/Skeleton.astro";
     import { api } from "../lib/api";
     import { setUser, $user } from "../stores/auth";
     import { setGroups, loadGroupsCache, type GroupSummary } from "../stores/groups";
+    import { onDOMReady, escapeHtml } from "../lib/dom";
 
     function renderGroupsList(groupsList: GroupSummary[]) {
       const container = document.getElementById("groups-list");
@@ -97,10 +98,10 @@ import Skeleton from "../components/Skeleton.astro";
         <a href="/groups/${g.id}" class="glass rounded-glass-lg p-4 flex items-center justify-between transition-all duration-200 glass-hover animate-fade-in-up" style="animation-delay: ${i * 40}ms">
           <div class="flex items-center gap-3">
             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-accent-soft)] text-[var(--color-accent)] font-semibold text-sm">
-              ${g.name.charAt(0).toUpperCase()}
+              ${escapeHtml(g.name).charAt(0).toUpperCase()}
             </div>
             <div>
-              <h3 class="font-medium text-[var(--color-text-primary)]">${g.name}</h3>
+              <h3 class="font-medium text-[var(--color-text-primary)]">${escapeHtml(g.name)}</h3>
               <p class="text-sm text-[var(--color-text-tertiary)]">${g.member_count} member${g.member_count !== 1 ? "s" : ""}</p>
             </div>
           </div>
@@ -139,7 +140,7 @@ import Skeleton from "../components/Skeleton.astro";
         const userNameEl = document.getElementById("user-name");
         if (userNameEl) userNameEl.textContent = `Welcome, ${data.user.name}`;
         renderGroupsList(data.groups);
-      } catch (error) {
+      } catch (error: any) {
         if (!cachedGroups.length) {
           const container = document.getElementById("groups-list")!;
           const skeleton = document.getElementById("skeleton-loading");
@@ -152,7 +153,7 @@ import Skeleton from "../components/Skeleton.astro";
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Failed to load</h3>
-              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">Could not load your groups</p>
+              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">${escapeHtml(error.message || "Could not load your groups")}</p>
               <button onclick="location.reload()" class="mt-4 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
                 Retry
               </button>
@@ -162,6 +163,6 @@ import Skeleton from "../components/Skeleton.astro";
       }
     }
 
-    document.addEventListener("DOMContentLoaded", loadDashboard);
+    onDOMReady(loadDashboard);
   </script>
 </BaseLayout>

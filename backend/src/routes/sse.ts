@@ -12,7 +12,12 @@ router.get("/groups/:id/sse", async (req, res: Response) => {
   try {
     const token = req.query.token as string | undefined;
     if (!token) {
-      res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Authentication required." } });
+      res
+        .status(401)
+        .json({
+          success: false,
+          error: { code: "UNAUTHORIZED", message: "Authentication required." },
+        });
       return;
     }
 
@@ -20,7 +25,12 @@ router.get("/groups/:id/sse", async (req, res: Response) => {
     try {
       decoded = await getAuth().verifyIdToken(token);
     } catch {
-      res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Invalid or expired token." } });
+      res
+        .status(401)
+        .json({
+          success: false,
+          error: { code: "UNAUTHORIZED", message: "Invalid or expired token." },
+        });
       return;
     }
 
@@ -31,7 +41,12 @@ router.get("/groups/:id/sse", async (req, res: Response) => {
       .limit(1);
 
     if (!user) {
-      res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "User not found." } });
+      res
+        .status(401)
+        .json({
+          success: false,
+          error: { code: "UNAUTHORIZED", message: "User not found." },
+        });
       return;
     }
 
@@ -41,12 +56,23 @@ router.get("/groups/:id/sse", async (req, res: Response) => {
       .select()
       .from(groupMembers)
       .where(
-        and(eq(groupMembers.group_id, groupId), eq(groupMembers.user_id, user.id))
+        and(
+          eq(groupMembers.group_id, groupId),
+          eq(groupMembers.user_id, user.id),
+        ),
       )
       .limit(1);
 
     if (isMember.length === 0) {
-      res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "You are not a member of this group." } });
+      res
+        .status(403)
+        .json({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "You are not a member of this group.",
+          },
+        });
       return;
     }
 
@@ -62,7 +88,12 @@ router.get("/groups/:id/sse", async (req, res: Response) => {
     }
   } catch {
     if (!res.headersSent) {
-      res.status(500).json({ success: false, error: { code: "INTERNAL_ERROR", message: "Internal server error." } });
+      res
+        .status(500)
+        .json({
+          success: false,
+          error: { code: "INTERNAL_ERROR", message: "Internal server error." },
+        });
     }
   }
 });

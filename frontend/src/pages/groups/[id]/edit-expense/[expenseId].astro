@@ -76,6 +76,7 @@ import GlassButton from "../../../../components/GlassButton.astro";
     import { api } from "../../../../lib/api";
     import { authInit } from "../../../../lib/firebase";
     import { setUser } from "../../../../stores/auth";
+    import { onDOMReady, escapeHtml } from "../../../../lib/dom";
 
     const pathParts = window.location.pathname.split("/");
     const groupId = pathParts[2];
@@ -84,7 +85,9 @@ import GlassButton from "../../../../components/GlassButton.astro";
     let currentSplit = "equal";
     let members: any[] = [];
 
-    document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+    if (groupId) {
+      document.getElementById("back-link")?.setAttribute("href", `/groups/${groupId}`);
+    }
 
     async function initPage() {
       const fbUser = await authInit;
@@ -105,11 +108,12 @@ import GlassButton from "../../../../components/GlassButton.astro";
     }
 
     async function loadExpense() {
+      const participantsList = document.getElementById("participants-list");
       try {
         const data = await api.groups.get(groupId);
-        members = data.members;
+        members = data.members || [];
 
-        const expense = data.expenses.find((e: any) => e.id === expenseId);
+        const expense = data.expenses?.find((e: any) => e.id === expenseId);
         if (!expense) {
           (window as any).showToast?.({ message: "Expense not found.", type: "error" });
           window.location.href = `/groups/${groupId}`;
@@ -129,17 +133,22 @@ import GlassButton from "../../../../components/GlassButton.astro";
 
         const participantIds = expense.participants?.map((p: any) => p.user_id) || [];
 
-        const participantsList = document.getElementById("participants-list")!;
-        participantsList.innerHTML = members
-          .map(
-            (m) => `
-            <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
-              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" ${participantIds.includes(m.user_id) ? "checked" : ""} />
-              <span class="text-sm text-[var(--color-text-primary)]">${m.name}</span>
-            </label>
-          `
-          )
-          .join("");
+        if (participantsList) {
+          participantsList.innerHTML = members
+            .map(
+              (m) => `
+              <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
+                <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" ${participantIds.includes(m.user_id) ? "checked" : ""} />
+                <span class="text-sm text-[var(--color-text-primary)]">${escapeHtml(m.name)}</span>
+              </label>
+            `
+            )
+            .join("");
+
+          participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
+            cb.addEventListener("change", () => updateCustomSplitInputs());
+          });
+        }
 
         const isCustom = expense.split_type === "custom" || (
           expense.participants &&
@@ -160,17 +169,20 @@ import GlassButton from "../../../../components/GlassButton.astro";
           currentSplit = "custom";
           document.getElementById("custom-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white transition-all duration-200";
           document.getElementById("equal-split-btn")!.className = "flex-1 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm glass glass-hover text-[var(--color-text-secondary)] transition-all duration-200";
-        }
-
-        participantsList.querySelectorAll(".participant-checkbox").forEach((cb) => {
-          cb.addEventListener("change", () => updateCustomSplitInputs());
-        });
-
-        if (isCustom) {
           updateCustomSplitInputs(initialValuesMap);
         }
       } catch (error: any) {
-        (window as any).showToast?.({ message: error.message, type: "error" });
+        const errorMsg = error?.message || "Unable to fetch expense details.";
+        (window as any).showToast?.({ message: errorMsg, type: "error" });
+        if (participantsList) {
+          participantsList.innerHTML = `
+            <div class="rounded-glass-lg border border-[var(--color-danger-soft)] p-3 text-center">
+              <p class="text-xs text-[var(--color-danger)] mb-2">${escapeHtml(errorMsg)}</p>
+              <button type="button" id="retry-load-expense" class="px-3 py-1 text-xs bg-[var(--color-accent)] text-white rounded-glass">Retry</button>
+            </div>
+          `;
+          document.getElementById("retry-load-expense")?.addEventListener("click", loadExpense);
+        }
       }
     }
 
@@ -205,7 +217,7 @@ import GlassButton from "../../../../components/GlassButton.astro";
           const div = document.createElement("div");
           div.className = "flex items-center gap-2";
           div.innerHTML = `
-            <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${member?.name || "Unknown"}</span>
+            <span class="w-24 text-sm text-[var(--color-text-secondary)] truncate">${escapeHtml(member?.name || "Unknown")}</span>
             <input type="number" step="0.01" min="0" data-user-id="${userId}" value="${shareVal}" class="custom-share flex-1 rounded-glass-lg border border-[var(--color-border)] bg-[var(--color-bg)] px-3 py-1.5 text-sm text-[var(--color-text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]" placeholder="0.00" />
           `;
           inputsContainer.appendChild(div);
@@ -319,6 +331,6 @@ import GlassButton from "../../../../components/GlassButton.astro";
       }
     });
 
-    document.addEventListener("DOMContentLoaded", initPage);
+    onDOMReady(initPage);
   </script>
 </BaseLayout>

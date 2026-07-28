@@ -25,7 +25,11 @@ router.post(
   "/groups/:id/settlements",
   requireAuth,
   validate(createSettlementSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const groupId = req.params.id;
 
@@ -36,7 +40,11 @@ router.post(
         .limit(1);
 
       if (!group) {
-        throw new AppError(404, "GROUP_NOT_FOUND", "The requested group does not exist.");
+        throw new AppError(
+          404,
+          "GROUP_NOT_FOUND",
+          "The requested group does not exist.",
+        );
       }
 
       const isMember = await db
@@ -45,19 +53,27 @@ router.post(
         .where(
           and(
             eq(groupMembers.group_id, groupId),
-            eq(groupMembers.user_id, req.user!.id)
-          )
+            eq(groupMembers.user_id, req.user!.id),
+          ),
         )
         .limit(1);
 
       if (isMember.length === 0) {
-        throw new AppError(403, "NOT_MEMBER", "You are not a member of this group.");
+        throw new AppError(
+          403,
+          "NOT_MEMBER",
+          "You are not a member of this group.",
+        );
       }
 
       const { payer_id, receiver_id, amount } = req.body;
 
       if (payer_id === receiver_id) {
-        throw new AppError(400, "INVALID_SETTLEMENT", "Payer and receiver must be different.");
+        throw new AppError(
+          400,
+          "INVALID_SETTLEMENT",
+          "Payer and receiver must be different.",
+        );
       }
 
       const members = await db
@@ -68,23 +84,31 @@ router.post(
       const memberIds = new Set(members.map((m) => m.user_id));
 
       if (!memberIds.has(payer_id)) {
-        throw new AppError(400, "INVALID_PAYER", "Payer is not a member of this group.");
+        throw new AppError(
+          400,
+          "INVALID_PAYER",
+          "Payer is not a member of this group.",
+        );
       }
 
       if (!memberIds.has(receiver_id)) {
-        throw new AppError(400, "INVALID_RECEIVER", "Receiver is not a member of this group.");
+        throw new AppError(
+          400,
+          "INVALID_RECEIVER",
+          "Receiver is not a member of this group.",
+        );
       }
 
       const { simplified_debts } = await getBalances(groupId);
       const activeDebt = simplified_debts.find(
-        (d) => d.from.user_id === payer_id && d.to.user_id === receiver_id
+        (d) => d.from.user_id === payer_id && d.to.user_id === receiver_id,
       );
 
       if (!activeDebt) {
         throw new AppError(
           400,
           "NO_DEBT_FOUND",
-          "There is no outstanding debt between these members to settle."
+          "There is no outstanding debt between these members to settle.",
         );
       }
 
@@ -92,7 +116,7 @@ router.post(
         throw new AppError(
           400,
           "EXCEEDS_DEBT",
-          `Settlement amount (₹${amount.toFixed(2)}) cannot exceed the owed amount (₹${activeDebt.amount.toFixed(2)}).`
+          `Settlement amount (₹${amount.toFixed(2)}) cannot exceed the owed amount (₹${activeDebt.amount.toFixed(2)}).`,
         );
       }
 
@@ -125,7 +149,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

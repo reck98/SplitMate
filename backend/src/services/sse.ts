@@ -12,7 +12,11 @@ function sendEvent(res: Response, event: string, data: unknown): void {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
 
-export function subscribe(groupId: string, userId: string, res: Response): void {
+export function subscribe(
+  groupId: string,
+  userId: string,
+  res: Response,
+): void {
   res.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",

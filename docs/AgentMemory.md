@@ -77,18 +77,19 @@ node scripts/generate-pwa-icons.mjs
 ## Design System Components
 
 Located in `frontend/src/components/`:
-| Component | Purpose |
-|---|---|
-| GlassCard.astro | Glassmorphism card container (supports hover) |
+
+| Component         | Purpose                                                           |
+| ----------------- | ----------------------------------------------------------------- |
+| GlassCard.astro   | Glassmorphism card container (supports hover)                     |
 | GlassButton.astro | Button (primary/secondary/ghost/danger, sm/md/lg, link or button) |
-| GlassInput.astro | Form input with label, hint, error state |
-| GlassBadge.astro | Badge/tag (default/success/warning/danger/info) |
-| GlassAvatar.astro | Avatar with image or initial fallback |
-| GlassModal.astro | Modal dialog with backdrop blur |
-| Skeleton.astro | Loading skeleton with shimmer animation |
-| EmptyState.astro | Empty state with icon and action slot |
-| ThemeToggle.astro | Dark/light mode toggle |
-| Toast.astro | Toast notification container |
+| GlassInput.astro  | Form input with label, hint, error state                          |
+| GlassBadge.astro  | Badge/tag (default/success/warning/danger/info)                   |
+| GlassAvatar.astro | Avatar with image or initial fallback                             |
+| GlassModal.astro  | Modal dialog with backdrop blur                                   |
+| Skeleton.astro    | Loading skeleton with shimmer animation                           |
+| EmptyState.astro  | Empty state with icon and action slot                             |
+| ThemeToggle.astro | Dark/light mode toggle                                            |
+| Toast.astro       | Toast notification container                                      |
 
 ## Running the Project
 
@@ -126,6 +127,7 @@ npm run build
 **Completed:** Complete frontend redesign with glassmorphism design system, dark/light mode, animations, toast notifications, and skeleton loading.
 
 **Key changes:**
+
 - Created CSS design tokens system (`design-tokens.css`) with 40+ CSS custom properties for colors, spacing, shadows, blur, typography, and transitions
 - Created animation system (`animations.css`) with 11 keyframe animations and utility classes
 - Built 10 reusable Astro components (GlassCard, GlassButton, GlassInput, GlassBadge, GlassAvatar, Skeleton, EmptyState, GlassModal, ThemeToggle, Toast)
@@ -144,6 +146,7 @@ npm run build
 - Updated Tailwind config with emerald primary palette
 
 **Files created:**
+
 - `frontend/src/styles/design-tokens.css` — Design system CSS custom properties
 - `frontend/src/styles/animations.css` — Animation keyframes and utility classes
 - `frontend/src/components/GlassCard.astro`
@@ -158,6 +161,7 @@ npm run build
 - `frontend/src/components/Toast.astro`
 
 **Files modified:**
+
 - `frontend/package.json` — added `astro-icon`, `@iconify-json/lucide`
 - `frontend/astro.config.mjs` — added `astro-icon` integration
 - `frontend/tailwind.config.js` — emerald primary palette, Inter font
@@ -167,6 +171,7 @@ npm run build
 - All 10 page `.astro` files — refactored with design system
 
 **Docs updated:**
+
 - `docs/Architecture.md` — design system architecture section
 - `docs/AgentMemory.md` — full update with component table
 - `docs/Decisions.md` — added D-009 (CSS Design System) and D-010 (Toast over alert)
@@ -179,6 +184,7 @@ npm run build
 **Completed:** Full PWA transformation — installable, auto-updating, offline fallback with glassmorphism design.
 
 **Key changes:**
+
 - Integrated `@vite-pwa/astro` with Workbox `generateSW` strategy
 - Configured manifest: standalone display, portrait orientation, finance/productivity categories
 - Generated 5 PWA icons (192, 512, maskable ×2, apple-touch-icon) via Sharp with emerald gradient
@@ -189,6 +195,7 @@ npm run build
 - Caching strategy: precache static assets only, NetworkOnly for API, NavigateFallback for offline
 
 **Files created:**
+
 - `frontend/scripts/generate-pwa-icons.mjs` — Icon generation script (Sharp)
 - `frontend/src/pages/offline.astro` — Offline fallback page
 - `frontend/src/components/InstallPrompt.astro` — Install banner component
@@ -199,12 +206,14 @@ npm run build
 - `frontend/public/apple-touch-icon.png` — Apple Touch Icon
 
 **Files modified:**
+
 - `frontend/astro.config.mjs` — Added PWA integration with manifest, workbox, caching rules
 - `frontend/src/layouts/BaseLayout.astro` — Added apple-touch-icon, apple-mobile-web-app-title, InstallPrompt
 - `frontend/src/components/ThemeToggle.astro` — Syncs theme-color meta tag with theme changes
 - `frontend/package.json` — Added `@vite-pwa/astro` dependency
 
 **Docs updated:**
+
 - `docs/Architecture.md` — Added PWA architecture section with caching rules table and platform support
 - `docs/Development.md` — Added PWA development and icon generation notes
 - `docs/Decisions.md` — Added D-011 (PWA Support) with detailed context and reasoning

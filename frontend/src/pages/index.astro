@@ -834,12 +834,12 @@ import ThemeToggle from "../components/ThemeToggle.astro";
     </div>
   </div>
 
-  <!-- AUTHENTICATION & INTERACTIVE LANDING SCRIPT -->
   <script>
     import { authInit, auth, signInWithGoogle } from "../lib/firebase";
     import { api } from "../lib/api";
+    import { onDOMReady } from "../lib/dom";
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    onDOMReady(async () => {
       // 1. Auth Check & Auto Redirect
       const firebaseUser = await authInit;
 

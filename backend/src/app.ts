@@ -13,7 +13,7 @@ app.use(
   cors({
     origin: config.clientUrl,
     credentials: true,
-  })
+  }),
 );
 
 app.use(helmet());
@@ -32,7 +32,10 @@ app.use("/api", routes);
 app.use((_req, res) => {
   res.status(404).json({
     success: false,
-    error: { code: "NOT_FOUND", message: "The requested resource does not exist." },
+    error: {
+      code: "NOT_FOUND",
+      message: "The requested resource does not exist.",
+    },
   });
 });
 

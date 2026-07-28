@@ -12,6 +12,7 @@ All endpoints except `POST /auth/firebase` require authentication via `Authoriza
 ## Response Format
 
 Success:
+
 ```json
 {
   "success": true,
@@ -20,6 +21,7 @@ Success:
 ```
 
 Error:
+
 ```json
 {
   "success": false,
@@ -43,6 +45,7 @@ Authenticate with Firebase ID Token.
 **Request:** Empty body (token is in Authorization header).
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -71,6 +74,7 @@ Get current user profile.
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -99,6 +103,7 @@ Update current user profile.
 **Auth:** Required
 
 **Request:**
+
 ```json
 {
   "upi_id": "user@upi"
@@ -106,6 +111,7 @@ Update current user profile.
 ```
 
 **Validation:**
+
 - `upi_id`: Required, valid UPI ID format (e.g., `user@provider`)
 
 **Response:** Updated user object.
@@ -123,6 +129,7 @@ Create a new group.
 **Auth:** Required
 
 **Request:**
+
 ```json
 {
   "name": "Trip to Goa"
@@ -130,9 +137,11 @@ Create a new group.
 ```
 
 **Validation:**
+
 - `name`: Required, non-empty string
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -155,6 +164,7 @@ List all groups for the authenticated user.
 **Auth:** Required
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -180,6 +190,7 @@ Get group details including members, expenses, balances, and settlements.
 **Auth:** Required (must be a member)
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -271,6 +282,7 @@ Join a group using an invite code.
 **Auth:** Required
 
 **Request:**
+
 ```json
 {
   "invite_code": "A82DKP"
@@ -278,6 +290,7 @@ Join a group using an invite code.
 ```
 
 **Validation:**
+
 - `invite_code`: Required, non-empty string
 
 **Errors:** `404` if invalid code, `409` if already a member or group full.
@@ -305,6 +318,7 @@ The payer is always the authenticated user. The backend ignores any `paid_by` va
 **Auth:** Required (must be a member)
 
 **Request (Equal Split):**
+
 ```json
 {
   "description": "Dinner",
@@ -315,6 +329,7 @@ The payer is always the authenticated user. The backend ignores any `paid_by` va
 ```
 
 **Request (Custom Split):**
+
 ```json
 {
   "description": "Dinner",
@@ -330,6 +345,7 @@ The payer is always the authenticated user. The backend ignores any `paid_by` va
 ```
 
 **Validation:**
+
 - `description`: Required, non-empty string
 - `amount`: Required, number > 0
 - `split_type`: Required, "equal" or "custom"
@@ -374,6 +390,7 @@ Record a settlement between two members.
 **Auth:** Required (must be a member)
 
 **Request:**
+
 ```json
 {
   "payer_id": "uuid",
@@ -383,6 +400,7 @@ Record a settlement between two members.
 ```
 
 **Validation:**
+
 - `payer_id`: Required, must be a group member
 - `receiver_id`: Required, must be a group member
 - `amount`: Required, number > 0

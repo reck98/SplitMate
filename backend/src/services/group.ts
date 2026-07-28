@@ -1,6 +1,13 @@
 import { and, eq, inArray, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { groups, groupMembers, users, expenses, expenseParticipants, settlements } from "../db/schema.js";
+import {
+  groups,
+  groupMembers,
+  users,
+  expenses,
+  expenseParticipants,
+  settlements,
+} from "../db/schema.js";
 import { getBalances } from "./balance.js";
 import { AppError } from "../middleware/error.js";
 
@@ -54,19 +61,39 @@ export interface GroupData {
   }>;
 }
 
-export async function getGroupData(groupId: string, currentUserId: string): Promise<GroupData> {
+export async function getGroupData(
+  groupId: string,
+  currentUserId: string,
+): Promise<GroupData> {
   const [groupResult, isMemberResult] = await Promise.all([
     db.select().from(groups).where(eq(groups.id, groupId)).limit(1),
-    db.select().from(groupMembers).where(and(eq(groupMembers.group_id, groupId), eq(groupMembers.user_id, currentUserId))).limit(1),
+    db
+      .select()
+      .from(groupMembers)
+      .where(
+        and(
+          eq(groupMembers.group_id, groupId),
+          eq(groupMembers.user_id, currentUserId),
+        ),
+      )
+      .limit(1),
   ]);
 
   const group = groupResult[0];
   if (!group) {
-    throw new AppError(404, "GROUP_NOT_FOUND", "The requested group does not exist.");
+    throw new AppError(
+      404,
+      "GROUP_NOT_FOUND",
+      "The requested group does not exist.",
+    );
   }
 
   if (isMemberResult.length === 0) {
-    throw new AppError(403, "NOT_MEMBER", "You are not a member of this group.");
+    throw new AppError(
+      403,
+      "NOT_MEMBER",
+      "You are not a member of this group.",
+    );
   }
 
   const [members, groupExpenses, groupSettlements] = await Promise.all([
@@ -115,7 +142,8 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     amount: e.amount,
     split_type: e.split_type || "equal",
     paid_by: e.paid_by,
-    paid_by_name: members.find((m) => m.user_id === e.paid_by)?.name || "Unknown",
+    paid_by_name:
+      members.find((m) => m.user_id === e.paid_by)?.name || "Unknown",
     created_by: e.created_by,
     participants: allParticipants
       .filter((p) => p.expense_id === e.id)
@@ -130,9 +158,11 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
   const settlementData = groupSettlements.map((s) => ({
     id: s.id,
     payer_id: s.payer_id,
-    payer_name: members.find((m) => m.user_id === s.payer_id)?.name || "Unknown",
+    payer_name:
+      members.find((m) => m.user_id === s.payer_id)?.name || "Unknown",
     receiver_id: s.receiver_id,
-    receiver_name: members.find((m) => m.user_id === s.receiver_id)?.name || "Unknown",
+    receiver_name:
+      members.find((m) => m.user_id === s.receiver_id)?.name || "Unknown",
     amount: s.amount,
     created_at: s.created_at,
   }));
@@ -147,15 +177,15 @@ export async function getGroupData(groupId: string, currentUserId: string): Prom
     (e) =>
       e.paid_by === currentUserId ||
       e.created_by === currentUserId ||
-      e.participants.some((p) => p.user_id === currentUserId)
+      e.participants.some((p) => p.user_id === currentUserId),
   );
 
   const visibleSettlements = settlementData.filter(
-    (s) => s.payer_id === currentUserId || s.receiver_id === currentUserId
+    (s) => s.payer_id === currentUserId || s.receiver_id === currentUserId,
   );
 
   const visibleSimplifiedDebts = simplified_debts.filter(
-    (d) => d.from.user_id === currentUserId || d.to.user_id === currentUserId
+    (d) => d.from.user_id === currentUserId || d.to.user_id === currentUserId,
   );
 
   return {

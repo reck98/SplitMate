@@ -149,6 +149,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     import { setUser } from "../../stores/auth";
     import { saveGroupDetailCache, loadGroupDetailCache } from "../../stores/groups";
     import { connectGroupSSE, disconnectGroupSSE } from "../../lib/sse";
+    import { onDOMReady, escapeHtml } from "../../lib/dom";
 
     const groupId = window.location.pathname.split("/groups/")[1];
     let currentData: any = null;
@@ -180,7 +181,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
       document.getElementById("group-name")!.textContent = data.group.name;
       document.getElementById("group-invite")!.innerHTML = `
-        Invite Code: <span class="font-mono font-medium text-[var(--color-accent)]">${data.group.invite_code}</span>
+        Invite Code: <span class="font-mono font-medium text-[var(--color-accent)]">${escapeHtml(data.group.invite_code)}</span>
       `;
 
       const addExpenseLink = document.getElementById("add-expense-link") as HTMLAnchorElement;
@@ -229,8 +230,8 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </svg>
                 </div>
                 <div>
-                  <h4 class="font-medium text-[var(--color-text-primary)]">${exp.description}</h4>
-                  <p class="text-sm text-[var(--color-text-tertiary)]">Paid by <span class="font-medium text-[var(--color-text-secondary)]">${exp.paid_by_name}</span></p>
+                  <h4 class="font-medium text-[var(--color-text-primary)]">${escapeHtml(exp.description)}</h4>
+                  <p class="text-sm text-[var(--color-text-tertiary)]">Paid by <span class="font-medium text-[var(--color-text-secondary)]">${escapeHtml(exp.paid_by_name)}</span></p>
                 </div>
               </div>
               <div class="text-right shrink-0">
@@ -241,7 +242,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
               ${exp.participants
                 .map(
                   (p: any) =>
-                    `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]">${data.members.find((m: any) => m.user_id === p.user_id)?.name || "Unknown"}: ${formatCurrency(p.share_amount)}</span>`
+                    `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]">${escapeHtml(data.members?.find((m: any) => m.user_id === p.user_id)?.name || "Unknown")}: ${formatCurrency(p.share_amount)}</span>`
                 )
                 .join("")}
             </div>
@@ -331,7 +332,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const balancesListHtml = data.balances
         .map((b: any, i: number) => {
           const isCurrentUser = b.user_id === currentUserId;
-          const nameLabel = isCurrentUser ? `${b.name} (You)` : b.name;
+          const nameLabel = isCurrentUser ? `${escapeHtml(b.name)} (You)` : escapeHtml(b.name);
 
           return `
             <div class="glass rounded-glass-lg p-4 flex items-center justify-between animate-fade-in-up" style="animation-delay: ${i * 40}ms">
@@ -365,12 +366,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           (m: any, i: number) => `
           <div class="glass rounded-glass-lg p-4 flex items-center gap-3 animate-fade-in-up" style="animation-delay: ${i * 40}ms">
             ${m.avatar
-              ? `<img src="${m.avatar}" alt="${m.name}" class="h-10 w-10 rounded-full object-cover" loading="lazy">`
-              : `<div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-sm font-semibold text-[var(--color-accent)]">${m.name.charAt(0).toUpperCase()}</div>`
+              ? `<img src="${m.avatar}" alt="${escapeHtml(m.name)}" class="h-10 w-10 rounded-full object-cover" loading="lazy">`
+              : `<div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-sm font-semibold text-[var(--color-accent)]">${escapeHtml(m.name).charAt(0).toUpperCase()}</div>`
             }
             <div class="flex-1 min-w-0">
-              <p class="font-medium text-[var(--color-text-primary)] truncate">${m.name}</p>
-              <p class="text-xs text-[var(--color-text-tertiary)] truncate">${m.email}</p>
+              <p class="font-medium text-[var(--color-text-primary)] truncate">${escapeHtml(m.name)}</p>
+              <p class="text-xs text-[var(--color-text-tertiary)] truncate">${escapeHtml(m.email)}</p>
             </div>
             ${m.user_id === currentUserId ? '<span class="text-xs text-[var(--color-accent)] font-medium">You</span>' : ""}
           </div>
@@ -406,13 +407,13 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             .map((d: any, i: number) => {
               const isDebtor = d.from.user_id === currentUserId;
               const isCreditor = d.to.user_id === currentUserId;
-              const descTag = d.description ? ` for <span class="font-medium italic text-[var(--color-accent)]">"${d.description}"</span>` : "";
+              const descTag = d.description ? ` for <span class="font-medium italic text-[var(--color-accent)]">"${escapeHtml(d.description)}"</span>` : "";
 
               let label: string;
               if (isDebtor) {
-                label = `You should pay <span class="font-medium text-[var(--color-text-primary)]">${d.to.name}</span>${descTag}`;
+                label = `You should pay <span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(d.to.name)}</span>${descTag}`;
               } else {
-                label = `<span class="font-medium text-[var(--color-text-primary)]">${d.from.name}</span> should pay you${descTag}`;
+                label = `<span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(d.from.name)}</span> should pay you${descTag}`;
               }
 
               const showPayBtn = isDebtor;
@@ -495,9 +496,9 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                   </svg>
                 </div>
                 <span class="text-sm">
-                  <span class="font-medium text-[var(--color-text-primary)]">${s.payer_name}</span>
+                  <span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(s.payer_name)}</span>
                   <span class="text-[var(--color-text-tertiary)]"> paid </span>
-                  <span class="font-medium text-[var(--color-text-primary)]">${s.receiver_name}</span>
+                  <span class="font-medium text-[var(--color-text-primary)]">${escapeHtml(s.receiver_name)}</span>
                 </span>
               </div>
               <span class="font-semibold text-[var(--color-success)]">${formatCurrency(s.amount)}</span>
@@ -566,7 +567,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                 </svg>
               </div>
               <h3 class="text-lg font-semibold text-[var(--color-text-primary)]">Failed to load</h3>
-              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">${error.message}</p>
+              <p class="mt-1 text-sm text-[var(--color-text-tertiary)]">${escapeHtml(error.message)}</p>
               <button onclick="location.reload()" class="mt-4 inline-flex items-center justify-center gap-2 font-medium rounded-glass-lg px-4 py-2.5 text-sm bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200">
                 Retry
               </button>
@@ -678,7 +679,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     });
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    onDOMReady(async () => {
       // SWR: Render cached group data immediately if available
       const cachedData = loadGroupDetailCache(groupId);
       if (cachedData) {

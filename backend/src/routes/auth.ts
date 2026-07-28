@@ -16,7 +16,12 @@ const router = Router();
 
 const updateProfileSchema = z
   .object({
-    name: z.string().trim().min(1, "Display name cannot be empty").max(100, "Display name too long").optional(),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Display name cannot be empty")
+      .max(100, "Display name too long")
+      .optional(),
     upi_id: z.string().trim().min(1, "UPI ID is required").optional(),
   })
   .refine((data) => data.name !== undefined || data.upi_id !== undefined, {
@@ -77,7 +82,8 @@ router.post(
         };
       } else {
         const id = uuid();
-        const avatar = decoded.picture || generateAvatar(decoded.name || "User");
+        const avatar =
+          decoded.picture || generateAvatar(decoded.name || "User");
         const newUser = {
           id,
           firebase_uid: decoded.uid,
@@ -111,7 +117,7 @@ router.post(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 router.get(
@@ -122,14 +128,18 @@ router.get(
       success: true,
       data: req.user,
     });
-  }
+  },
 );
 
 router.patch(
   "/me",
   requireAuth,
   validate(updateProfileSchema),
-  async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+  async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+  ): Promise<void> => {
     try {
       const { name, upi_id } = req.body;
       const updates: Record<string, any> = {};
@@ -137,14 +147,22 @@ router.patch(
       if (name !== undefined) {
         const trimmedName = name.trim();
         if (!trimmedName) {
-          throw new AppError(400, "INVALID_NAME", "Display name cannot be empty.");
+          throw new AppError(
+            400,
+            "INVALID_NAME",
+            "Display name cannot be empty.",
+          );
         }
         updates.name = trimmedName;
       }
 
       if (upi_id !== undefined) {
         if (!validateUpiId(upi_id)) {
-          throw new AppError(400, "INVALID_UPI_ID", "Please enter a valid UPI ID (e.g., name@provider).");
+          throw new AppError(
+            400,
+            "INVALID_UPI_ID",
+            "Please enter a valid UPI ID (e.g., name@provider).",
+          );
         }
         updates.upi_id = upi_id;
         updates.is_profile_complete = true;
@@ -152,10 +170,7 @@ router.patch(
 
       updates.updated_at = new Date().toISOString();
 
-      await db
-        .update(users)
-        .set(updates)
-        .where(eq(users.id, req.user!.id));
+      await db.update(users).set(updates).where(eq(users.id, req.user!.id));
 
       const [updated] = await db
         .select()
@@ -170,7 +185,7 @@ router.patch(
     } catch (error) {
       next(error);
     }
-  }
+  },
 );
 
 export default router;

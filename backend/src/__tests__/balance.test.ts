@@ -5,7 +5,7 @@ import { BalanceInfo } from "../types/index.js";
 const makeBalance = (
   user_id: string,
   name: string,
-  net_balance: number
+  net_balance: number,
 ): BalanceInfo => ({
   user_id,
   name,
@@ -28,8 +28,20 @@ describe("getDetailedDebts", () => {
     // Expense 1: A pays 200 for A and B (Dinner)
     // Expense 2: B pays 200 for B and A (Cab)
     const expenses = [
-      { id: "e1", description: "Dinner", amount: 200, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
-      { id: "e2", description: "Cab", amount: 200, paid_by: "B", created_at: "2026-07-26T02:00:00Z" },
+      {
+        id: "e1",
+        description: "Dinner",
+        amount: 200,
+        paid_by: "A",
+        created_at: "2026-07-26T01:00:00Z",
+      },
+      {
+        id: "e2",
+        description: "Cab",
+        amount: 200,
+        paid_by: "B",
+        created_at: "2026-07-26T02:00:00Z",
+      },
     ];
 
     const participants = [
@@ -41,16 +53,25 @@ describe("getDetailedDebts", () => {
 
     const settlements: any[] = [];
 
-    const { balances, detailed_debts } = getDetailedDebts(members, expenses, participants, settlements);
+    const { balances, detailed_debts } = getDetailedDebts(
+      members,
+      expenses,
+      participants,
+      settlements,
+    );
 
     expect(detailed_debts).toHaveLength(2);
 
-    const bOwesA = detailed_debts.find((d) => d.from.user_id === "B" && d.to.user_id === "A");
+    const bOwesA = detailed_debts.find(
+      (d) => d.from.user_id === "B" && d.to.user_id === "A",
+    );
     expect(bOwesA).toBeDefined();
     expect(bOwesA!.amount).toBe(100);
     expect(bOwesA!.description).toBe("Dinner");
 
-    const aOwesB = detailed_debts.find((d) => d.from.user_id === "A" && d.to.user_id === "B");
+    const aOwesB = detailed_debts.find(
+      (d) => d.from.user_id === "A" && d.to.user_id === "B",
+    );
     expect(aOwesB).toBeDefined();
     expect(aOwesB!.amount).toBe(100);
     expect(aOwesB!.description).toBe("Cab");
@@ -176,11 +197,15 @@ describe("simplifyDebts", () => {
     const result = simplifyDebts(balances);
     expect(result).toHaveLength(2);
 
-    const bToA = result.find((d) => d.from.user_id === "B" && d.to.user_id === "A");
+    const bToA = result.find(
+      (d) => d.from.user_id === "B" && d.to.user_id === "A",
+    );
     expect(bToA).toBeDefined();
     expect(bToA!.amount).toBe(300);
 
-    const cToA = result.find((d) => d.from.user_id === "C" && d.to.user_id === "A");
+    const cToA = result.find(
+      (d) => d.from.user_id === "C" && d.to.user_id === "A",
+    );
     expect(cToA).toBeDefined();
     expect(cToA!.amount).toBe(300);
 
@@ -191,8 +216,14 @@ describe("simplifyDebts", () => {
   });
 
   it("settlement reduces net balance towards zero for creditor and debtor", () => {
-    const alicePaid = 100, aliceShare = 50, aliceReceived = 50, alicePaidOut = 0;
-    const bobPaid = 0, bobShare = 50, bobReceived = 0, bobPaidOut = 50;
+    const alicePaid = 100,
+      aliceShare = 50,
+      aliceReceived = 50,
+      alicePaidOut = 0;
+    const bobPaid = 0,
+      bobShare = 50,
+      bobReceived = 0,
+      bobPaidOut = 50;
 
     const aliceNet = alicePaid - aliceShare + alicePaidOut - aliceReceived;
     const bobNet = bobPaid - bobShare + bobPaidOut - bobReceived;

@@ -152,6 +152,7 @@ src/
 Balances are NEVER stored. They are computed on every group fetch.
 
 Algorithm:
+
 1. For each member, calculate total amount they paid across all expenses
 2. For each member, calculate total share they owe across all expense participations
 3. For each member, calculate total received via settlements (as receiver)
@@ -243,13 +244,13 @@ SplitMate is configured as a fully installable Progressive Web App:
 
 ### Caching Rules
 
-| Asset Type | Strategy | Purpose |
-|---|---|---|
-| CSS, JS | Precache | Always available, versioned by build hash |
-| Fonts (woff/woff2) | Precache | Inter font files |
-| Images, Icons | Precache | Logo, PWA icons, favicon |
-| API (`/api/*`) | NetworkOnly | Never cached, always fresh data |
-| Navigation (HTML) | NavigateFallback | Offline page when no network |
+| Asset Type         | Strategy         | Purpose                                   |
+| ------------------ | ---------------- | ----------------------------------------- |
+| CSS, JS            | Precache         | Always available, versioned by build hash |
+| Fonts (woff/woff2) | Precache         | Inter font files                          |
+| Images, Icons      | Precache         | Logo, PWA icons, favicon                  |
+| API (`/api/*`)     | NetworkOnly      | Never cached, always fresh data           |
+| Navigation (HTML)  | NavigateFallback | Offline page when no network              |
 
 ### Offline Experience
 
@@ -266,14 +267,14 @@ SplitMate is configured as a fully installable Progressive Web App:
 
 ### Icons
 
-| File | Size | Purpose |
-|---|---|---|
-| `pwa-192x192.png` | 192×192 | Standard manifest icon |
-| `pwa-512x512.png` | 512×512 | Large manifest icon |
+| File                       | Size    | Purpose                          |
+| -------------------------- | ------- | -------------------------------- |
+| `pwa-192x192.png`          | 192×192 | Standard manifest icon           |
+| `pwa-512x512.png`          | 512×512 | Large manifest icon              |
 | `pwa-192x192-maskable.png` | 192×192 | Adaptive maskable icon (Android) |
 | `pwa-512x512-maskable.png` | 512×512 | Adaptive maskable icon (Android) |
-| `apple-touch-icon.png` | 180×180 | Apple Touch Icon (iPhone/iPad) |
-| `favicon.svg` | 24×24 | Browser favicon |
+| `apple-touch-icon.png`     | 180×180 | Apple Touch Icon (iPhone/iPad)   |
+| `favicon.svg`              | 24×24   | Browser favicon                  |
 
 All icons use an emerald gradient background (`#10b981` → `#059669`) with a white clock symbol.
 
@@ -291,10 +292,10 @@ All icons use an emerald gradient background (`#10b981` → `#059669`) with a wh
 
 ### Platform Support
 
-| Platform | Install | Standalone | Icons |
-|---|---|---|---|
-| Android Chrome | ✓ | ✓ | Adaptive maskable |
-| Samsung Internet | ✓ | ✓ | Standard |
-| Microsoft Edge | ✓ | ✓ | Standard |
-| iPhone Safari | ✓ | ✓ | Apple Touch Icon |
-| iPad Safari | ✓ | ✓ | Apple Touch Icon |
+| Platform         | Install | Standalone | Icons             |
+| ---------------- | ------- | ---------- | ----------------- |
+| Android Chrome   | ✓       | ✓          | Adaptive maskable |
+| Samsung Internet | ✓       | ✓          | Standard          |
+| Microsoft Edge   | ✓       | ✓          | Standard          |
+| iPhone Safari    | ✓       | ✓          | Apple Touch Icon  |
+| iPad Safari      | ✓       | ✓          | Apple Touch Icon  |

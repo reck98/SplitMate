@@ -9,7 +9,7 @@ import { getAuth } from "../utils/firebase.js";
 export async function requireAuth(
   req: AuthenticatedRequest,
   _res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): Promise<void> {
   try {
     const authHeader = req.headers.authorization;

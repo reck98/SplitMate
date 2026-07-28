@@ -60,8 +60,9 @@ import GlassButton from "../components/GlassButton.astro";
   <script>
     import { authInit } from "../lib/firebase";
     import { api } from "../lib/api";
+    import { onDOMReady } from "../lib/dom";
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    onDOMReady(async () => {
       const firebaseUser = await authInit;
       if (!firebaseUser) {
         window.location.href = "/";

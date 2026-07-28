@@ -35,8 +35,9 @@ import Skeleton from "../components/Skeleton.astro";
     import { api } from "../lib/api";
     import { setUser, clearAuth } from "../stores/auth";
     import { disconnectGroupSSE } from "../lib/sse";
+    import { onDOMReady, escapeHtml } from "../lib/dom";
 
-    document.addEventListener("DOMContentLoaded", async () => {
+    onDOMReady(async () => {
       const firebaseUser = await authInit;
       if (!firebaseUser) {
         window.location.href = "/";
@@ -52,12 +53,12 @@ import Skeleton from "../components/Skeleton.astro";
           <div class="glass rounded-glass-xl p-6 animate-fade-in-up">
             <div class="flex items-center gap-4">
               ${user.avatar
-                ? `<img id="profile-avatar-img" src="${user.avatar}" alt="${user.name}" class="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--color-accent-soft)]" loading="lazy">`
-                : `<div id="profile-avatar-fallback" class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-2xl font-bold text-[var(--color-accent)] ring-2 ring-[var(--color-accent-soft)]">${user.name.charAt(0).toUpperCase()}</div>`
+                ? `<img id="profile-avatar-img" src="${user.avatar}" alt="${escapeHtml(user.name)}" class="h-16 w-16 rounded-full object-cover ring-2 ring-[var(--color-accent-soft)]" loading="lazy">`
+                : `<div id="profile-avatar-fallback" class="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-accent-soft)] text-2xl font-bold text-[var(--color-accent)] ring-2 ring-[var(--color-accent-soft)]">${escapeHtml(user.name).charAt(0).toUpperCase()}</div>`
               }
               <div>
-                <h2 id="profile-header-name" class="text-xl font-bold text-[var(--color-text-primary)]">${user.name}</h2>
-                <p class="text-sm text-[var(--color-text-tertiary)]">${user.email}</p>
+                <h2 id="profile-header-name" class="text-xl font-bold text-[var(--color-text-primary)]">${escapeHtml(user.name)}</h2>
+                <p class="text-sm text-[var(--color-text-tertiary)]">${escapeHtml(user.email)}</p>
                 <p class="text-xs text-[var(--color-text-tertiary)] mt-0.5">Avatar managed by Google/Firebase</p>
               </div>
             </div>
@@ -68,17 +69,17 @@ import Skeleton from "../components/Skeleton.astro";
             
             <div>
               <label for="display_name" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Display Name</label>
-              <input type="text" id="display_name" value="${user.name}" placeholder="Your display name" required class="w-full" />
+              <input type="text" id="display_name" value="${escapeHtml(user.name)}" placeholder="Your display name" required class="w-full" />
             </div>
 
             <div>
               <label for="profile_email" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">Email (Read-only)</label>
-              <input type="email" id="profile_email" value="${user.email}" readonly disabled class="w-full opacity-70 cursor-not-allowed bg-[var(--color-bg-glass-hover)]" />
+              <input type="email" id="profile_email" value="${escapeHtml(user.email)}" readonly disabled class="w-full opacity-70 cursor-not-allowed bg-[var(--color-bg-glass-hover)]" />
             </div>
 
             <div>
               <label for="upi_id" class="block text-xs font-medium text-[var(--color-text-secondary)] mb-1">UPI ID</label>
-              <input type="text" id="upi_id" value="${user.upi_id || ""}" placeholder="Set your UPI ID (e.g., name@upi)" class="w-full" />
+              <input type="text" id="upi_id" value="${escapeHtml(user.upi_id || "")}" placeholder="Set your UPI ID (e.g., name@upi)" class="w-full" />
             </div>
 
             <div class="pt-2 flex justify-end">

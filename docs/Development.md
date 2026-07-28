@@ -3,6 +3,7 @@
 ## Current Milestone: v1.0.0 — All Features Complete
 
 ### Completed
+
 - [x] Project root structure and monorepo configuration
 - [x] Documentation suite (PRD, Architecture, API, Database, Development, AgentMemory, Decisions, Changelog)
 - [x] Backend scaffold: Express + TypeScript + Drizzle ORM
@@ -24,9 +25,11 @@
 - [x] Tests for critical business logic (18 tests across 3 test files)
 
 ### Known Bugs
+
 - None
 
 ### Technical Debt
+
 - Firebase SDK adds ~152KB to client bundle (31KB gzipped)
 - `getStaticPaths` warning on dynamic group page (expected for SSR with Astro)
 - Frontend stores are defined but not yet deeply integrated with all page scripts
@@ -34,6 +37,7 @@
 - SSE connections are stored in-memory (module-level Map) — will not survive server restart. The auto-reconnect mechanism handles this transparently.
 
 ### Future Improvements
+
 - Replace in-memory SSE event bus with Redis pub/sub for horizontal scaling
 - Add SSE endpoint for dashboard (`GET /api/me/events`) to provide real-time group list updates
 - Add caching for balance calculation on large groups
@@ -43,6 +47,7 @@
 - Consider server-side caching for the `/api/dashboard` endpoint (e.g., 30s TTL with invalidation on group/expense changes)
 
 ### Performance Notes
+
 - Dashboard load uses a single `/api/dashboard` endpoint instead of two separate API calls, halving Firebase token verification overhead
 - N+1 query pattern in `GET /api/groups` was eliminated by using a correlated subquery for member counts
 - 8 database indexes added via migration `0001_add_performance_indexes` to accelerate foreign key lookups

@@ -9,7 +9,10 @@ import sseRoutes from "./sse.js";
 const router = Router();
 
 router.get("/health", (_req: Request, res: Response) => {
-  res.json({ success: true, data: { status: "ok", timestamp: new Date().toISOString() } });
+  res.json({
+    success: true,
+    data: { status: "ok", timestamp: new Date().toISOString() },
+  });
 });
 
 router.use("/", authRoutes);

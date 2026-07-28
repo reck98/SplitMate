@@ -13,17 +13,17 @@
 
 Core user profile.
 
-| Column             | Type      | Constraints                  |
-|--------------------|-----------|------------------------------|
-| id                 | text      | PRIMARY KEY (UUID)           |
-| firebase_uid       | text      | UNIQUE, NOT NULL             |
-| email              | text      | UNIQUE, NOT NULL             |
-| name               | text      | NOT NULL                     |
-| avatar             | text      |                              |
-| upi_id             | text      |                              |
-| is_profile_complete| integer   | NOT NULL, DEFAULT 0 (boolean)|
-| created_at         | text      | NOT NULL (ISO 8601)          |
-| updated_at         | text      | NOT NULL (ISO 8601)          |
+| Column              | Type    | Constraints                   |
+| ------------------- | ------- | ----------------------------- |
+| id                  | text    | PRIMARY KEY (UUID)            |
+| firebase_uid        | text    | UNIQUE, NOT NULL              |
+| email               | text    | UNIQUE, NOT NULL              |
+| name                | text    | NOT NULL                      |
+| avatar              | text    |                               |
+| upi_id              | text    |                               |
+| is_profile_complete | integer | NOT NULL, DEFAULT 0 (boolean) |
+| created_at          | text    | NOT NULL (ISO 8601)           |
+| updated_at          | text    | NOT NULL (ISO 8601)           |
 
 ---
 
@@ -31,15 +31,16 @@ Core user profile.
 
 Expense sharing groups.
 
-| Column     | Type      | Constraints                  |
-|------------|-----------|------------------------------|
-| id         | text      | PRIMARY KEY (UUID)           |
-| name       | text      | NOT NULL                     |
-| owner_id   | text      | NOT NULL, FK → users.id      |
-| invite_code| text      | UNIQUE, NOT NULL             |
-| created_at | text      | NOT NULL (ISO 8601)          |
+| Column      | Type | Constraints             |
+| ----------- | ---- | ----------------------- |
+| id          | text | PRIMARY KEY (UUID)      |
+| name        | text | NOT NULL                |
+| owner_id    | text | NOT NULL, FK → users.id |
+| invite_code | text | UNIQUE, NOT NULL        |
+| created_at  | text | NOT NULL (ISO 8601)     |
 
 Indexes:
+
 - `idx_groups_invite_code` on `invite_code`
 
 ---
@@ -48,11 +49,11 @@ Indexes:
 
 Join table linking users to groups.
 
-| Column   | Type      | Constraints                  |
-|----------|-----------|------------------------------|
-| group_id | text      | NOT NULL, FK → groups.id     |
-| user_id  | text      | NOT NULL, FK → users.id      |
-| joined_at| text      | NOT NULL (ISO 8601)          |
+| Column    | Type | Constraints              |
+| --------- | ---- | ------------------------ |
+| group_id  | text | NOT NULL, FK → groups.id |
+| user_id   | text | NOT NULL, FK → users.id  |
+| joined_at | text | NOT NULL (ISO 8601)      |
 
 Primary Key: `(group_id, user_id)`
 
@@ -62,16 +63,16 @@ Primary Key: `(group_id, user_id)`
 
 Expenses created within groups.
 
-| Column      | Type      | Constraints                  |
-|-------------|-----------|------------------------------|
-| id          | text      | PRIMARY KEY (UUID)           |
-| group_id    | text      | NOT NULL, FK → groups.id     |
-| description | text      | NOT NULL                     |
-| amount      | real      | NOT NULL                     |
-| paid_by     | text      | NOT NULL, FK → users.id      |
-| created_by  | text      | NOT NULL, FK → users.id      |
-| created_at  | text      | NOT NULL (ISO 8601)          |
-| updated_at  | text      | NOT NULL (ISO 8601)          |
+| Column      | Type | Constraints              |
+| ----------- | ---- | ------------------------ |
+| id          | text | PRIMARY KEY (UUID)       |
+| group_id    | text | NOT NULL, FK → groups.id |
+| description | text | NOT NULL                 |
+| amount      | real | NOT NULL                 |
+| paid_by     | text | NOT NULL, FK → users.id  |
+| created_by  | text | NOT NULL, FK → users.id  |
+| created_at  | text | NOT NULL (ISO 8601)      |
+| updated_at  | text | NOT NULL (ISO 8601)      |
 
 ---
 
@@ -79,11 +80,11 @@ Expenses created within groups.
 
 Individual shares for each expense.
 
-| Column       | Type      | Constraints                    |
-|--------------|-----------|--------------------------------|
-| expense_id   | text      | NOT NULL, FK → expenses.id     |
-| user_id      | text      | NOT NULL, FK → users.id        |
-| share_amount | real      | NOT NULL                       |
+| Column       | Type | Constraints                |
+| ------------ | ---- | -------------------------- |
+| expense_id   | text | NOT NULL, FK → expenses.id |
+| user_id      | text | NOT NULL, FK → users.id    |
+| share_amount | real | NOT NULL                   |
 
 Primary Key: `(expense_id, user_id)`
 
@@ -93,14 +94,14 @@ Primary Key: `(expense_id, user_id)`
 
 Recorded settlements between users.
 
-| Column      | Type      | Constraints                  |
-|-------------|-----------|------------------------------|
-| id          | text      | PRIMARY KEY (UUID)           |
-| group_id    | text      | NOT NULL, FK → groups.id     |
-| payer_id    | text      | NOT NULL, FK → users.id      |
-| receiver_id | text      | NOT NULL, FK → users.id      |
-| amount      | real      | NOT NULL                     |
-| created_at  | text      | NOT NULL (ISO 8601)          |
+| Column      | Type | Constraints              |
+| ----------- | ---- | ------------------------ |
+| id          | text | PRIMARY KEY (UUID)       |
+| group_id    | text | NOT NULL, FK → groups.id |
+| payer_id    | text | NOT NULL, FK → users.id  |
+| receiver_id | text | NOT NULL, FK → users.id  |
+| amount      | real | NOT NULL                 |
+| created_at  | text | NOT NULL (ISO 8601)      |
 
 ---
 

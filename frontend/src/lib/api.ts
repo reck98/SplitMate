@@ -7,10 +7,14 @@ interface ApiOptions {
   body?: unknown;
 }
 
-async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
+async function request<T>(
+  endpoint: string,
+  options: ApiOptions = {},
+  isRetry = false,
+): Promise<T> {
   const { method = "GET", body } = options;
 
-  const token = await getFirebaseToken();
+  let token = await getFirebaseToken(isRetry);
 
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -26,11 +30,32 @@ async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await response.json();
+  if (response.status === 401 && !isRetry) {
+    return request<T>(endpoint, options, true);
+  }
+
+  const data = await response.json().catch(() => ({
+    success: false,
+    error: {
+      code: "HTTP_ERROR",
+      message: `HTTP ${response.status} server error`,
+    },
+  }));
 
   if (!data.success) {
-    const error = new Error(data.error?.message || "An error occurred");
-    (error as any).code = data.error?.code;
+    let message = data.error?.message;
+    if (response.status === 401) {
+      message = "Session expired. Please login again.";
+    } else if (response.status === 403) {
+      message = message || "You do not have permission to perform this action.";
+    } else if (response.status === 404) {
+      message = message || "The requested resource was not found.";
+    } else if (!message || message === "An unexpected error occurred.") {
+      message = "Failed to complete request. Please try again.";
+    }
+
+    const error = new Error(message);
+    (error as any).code = data.error?.code || `HTTP_${response.status}`;
     (error as any).status = response.status;
     throw error;
   }
@@ -96,12 +121,10 @@ export const api = {
       }>(`/groups/${id}`),
     create: (name: string) =>
       request("/groups", { method: "POST", body: { name } }),
-    delete: (id: string) =>
-      request(`/groups/${id}`, { method: "DELETE" }),
+    delete: (id: string) => request(`/groups/${id}`, { method: "DELETE" }),
     join: (invite_code: string) =>
       request("/groups/join", { method: "POST", body: { invite_code } }),
-    leave: (id: string) =>
-      request(`/groups/${id}/leave`, { method: "POST" }),
+    leave: (id: string) => request(`/groups/${id}/leave`, { method: "POST" }),
   },
 
   expenses: {
@@ -112,7 +135,7 @@ export const api = {
         amount: number;
         split_type: "equal" | "custom";
         participants: string[] | { user_id: string; share_amount: number }[];
-      }
+      },
     ) =>
       request(`/groups/${groupId}/expenses`, {
         method: "POST",
@@ -125,14 +148,13 @@ export const api = {
         amount: number;
         split_type: "equal" | "custom";
         participants: string[] | { user_id: string; share_amount: number }[];
-      }
+      },
     ) =>
       request(`/expenses/${id}`, {
         method: "PATCH",
         body: data,
       }),
-    delete: (id: string) =>
-      request(`/expenses/${id}`, { method: "DELETE" }),
+    delete: (id: string) => request(`/expenses/${id}`, { method: "DELETE" }),
   },
 
   dashboard: {
@@ -160,7 +182,7 @@ export const api = {
   settlements: {
     create: (
       groupId: string,
-      data: { payer_id: string; receiver_id: string; amount: number }
+      data: { payer_id: string; receiver_id: string; amount: number },
     ) =>
       request(`/groups/${groupId}/settlements`, {
         method: "POST",

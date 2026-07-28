@@ -37,7 +37,10 @@ export function loadGroupsCache(): GroupSummary[] {
 
 export function saveGroupDetailCache(groupId: string, data: any): void {
   try {
-    localStorage.setItem(`${GROUP_DETAIL_CACHE_PREFIX}${groupId}`, JSON.stringify(data));
+    localStorage.setItem(
+      `${GROUP_DETAIL_CACHE_PREFIX}${groupId}`,
+      JSON.stringify(data),
+    );
   } catch {}
 }
 
@@ -49,4 +52,3 @@ export function loadGroupDetailCache(groupId: string): any | null {
     return null;
   }
 }
-

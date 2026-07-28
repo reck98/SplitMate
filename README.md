@@ -18,13 +18,13 @@ Lightweight expense-sharing application built for Indian users. Track expenses, 
 
 ## Technology Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | Astro, TypeScript, Tailwind CSS, Nano Stores |
-| Backend | Node.js, Express, TypeScript, Drizzle ORM |
-| Database | Turso (SQLite-compatible) |
-| Auth | Firebase Authentication (Google Provider) |
-| Deployment | Vercel (frontend), Railway (backend) |
+| Layer      | Technology                                   |
+| ---------- | -------------------------------------------- |
+| Frontend   | Astro, TypeScript, Tailwind CSS, Nano Stores |
+| Backend    | Node.js, Express, TypeScript, Drizzle ORM    |
+| Database   | Turso (SQLite-compatible)                    |
+| Auth       | Firebase Authentication (Google Provider)    |
+| Deployment | Vercel (frontend), Railway (backend)         |
 
 ## Project Structure
 
@@ -85,6 +85,7 @@ cp frontend/.env.example frontend/.env
 Fill in the required values:
 
 **backend/.env**
+
 ```
 PORT=3000
 CLIENT_URL=http://localhost:4321
@@ -97,6 +98,7 @@ FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY----
 ```
 
 **frontend/.env**
+
 ```
 PUBLIC_API_URL=http://localhost:3000
 PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
@@ -128,17 +130,17 @@ npm run dev:frontend  # http://localhost:4321
 
 ## Development Commands
 
-| Command | Description |
-|---|---|
-| `npm run dev` | Run both services |
-| `npm run dev:backend` | Run backend only |
-| `npm run dev:frontend` | Run frontend only |
-| `npm run build` | Build both services |
-| `npm run lint` | Type-check both services |
-| `npm run db:generate` | Generate Drizzle migrations |
-| `npm run db:migrate` | Apply migrations to Turso |
-| `npm run db:studio` | Open Drizzle Studio |
-| `npm run format` | Format all files with Prettier |
+| Command                | Description                    |
+| ---------------------- | ------------------------------ |
+| `npm run dev`          | Run both services              |
+| `npm run dev:backend`  | Run backend only               |
+| `npm run dev:frontend` | Run frontend only              |
+| `npm run build`        | Build both services            |
+| `npm run lint`         | Type-check both services       |
+| `npm run db:generate`  | Generate Drizzle migrations    |
+| `npm run db:migrate`   | Apply migrations to Turso      |
+| `npm run db:studio`    | Open Drizzle Studio            |
+| `npm run format`       | Format all files with Prettier |
 
 ## Deployment
 
@@ -146,23 +148,23 @@ npm run dev:frontend  # http://localhost:4321
 
 Since group pages are dynamically rendered, the frontend runs as a Node server.
 
-| Setting | Value |
-|---|---|
-| **Type** | Web Service |
+| Setting           | Value                                         |
+| ----------------- | --------------------------------------------- |
+| **Type**          | Web Service                                   |
 | **Build Command** | `cd frontend && npm install && npm run build` |
 | **Start Command** | `cd frontend && node ./dist/server/entry.mjs` |
-| **Node Version** | 18 |
+| **Node Version**  | 18                                            |
 
 Add environment variables from `frontend/.env.example`.
 
 ### Backend (Render — Web Service)
 
-| Setting | Value |
-|---|---|
-| **Type** | Web Service |
+| Setting           | Value                                        |
+| ----------------- | -------------------------------------------- |
+| **Type**          | Web Service                                  |
 | **Build Command** | `cd backend && npm install && npm run build` |
-| **Start Command** | `cd backend && npm start` |
-| **Node Version** | 18 |
+| **Start Command** | `cd backend && npm start`                    |
+| **Node Version**  | 18                                           |
 
 Add environment variables from `backend/.env.example`.
 
