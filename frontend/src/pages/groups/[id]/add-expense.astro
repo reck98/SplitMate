@@ -131,7 +131,7 @@ import GlassButton from "../../../components/GlassButton.astro";
           .map(
             (m) => `
             <label class="flex items-center gap-3 glass rounded-glass-lg p-3 cursor-pointer hover:bg-[var(--color-bg-glass-hover)] transition-colors">
-              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" />
+              <input type="checkbox" value="${m.user_id}" class="participant-checkbox h-4 w-4 rounded border-[var(--color-border-hover)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]" checked />
               <span class="text-sm text-[var(--color-text-primary)]">${m.name}</span>
             </label>
           `

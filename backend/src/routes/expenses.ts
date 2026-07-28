@@ -63,17 +63,18 @@ const updateExpenseSchema = z.discriminatedUnion("split_type", [
 ]);
 
 async function verifyGroupMembership(groupId: string, userIds: string[]): Promise<void> {
-  if (userIds.length === 0) return;
+  const uniqueUserIds = Array.from(new Set(userIds.filter(Boolean)));
+  if (uniqueUserIds.length === 0) return;
 
   const members = await db
     .select({ user_id: groupMembers.user_id })
     .from(groupMembers)
     .where(
-      and(eq(groupMembers.group_id, groupId), inArray(groupMembers.user_id, userIds))
+      and(eq(groupMembers.group_id, groupId), inArray(groupMembers.user_id, uniqueUserIds))
     );
 
   const memberIds = new Set(members.map((m) => m.user_id));
-  const invalidUserIds = userIds.filter((uid) => !memberIds.has(uid));
+  const invalidUserIds = uniqueUserIds.filter((uid) => !memberIds.has(uid));
 
   if (invalidUserIds.length > 0) {
     throw new AppError(
@@ -158,8 +159,12 @@ router.post(
       });
 
       if (split_type === "equal") {
-        const shareAmount = Math.round((amount / participants.length) * 100) / 100;
-        const shares = participants.map((userId: string) => ({
+        const uniqueParticipants = Array.from(new Set(participants as string[]));
+        if (uniqueParticipants.length === 0) {
+          throw new AppError(400, "INVALID_PARTICIPANTS", "At least one participant is required.");
+        }
+        const shareAmount = Math.round((amount / uniqueParticipants.length) * 100) / 100;
+        const shares = uniqueParticipants.map((userId: string) => ({
           expense_id: expenseId,
           user_id: userId,
           share_amount: shareAmount,
@@ -167,13 +172,21 @@ router.post(
 
         await db.insert(expenseParticipants).values(shares);
       } else {
-        const shares = participants.map(
-          (p: { user_id: string; share_amount: number }) => ({
-            expense_id: expenseId,
-            user_id: p.user_id,
-            share_amount: p.share_amount,
-          })
-        );
+        const pMap = new Map<string, number>();
+        for (const p of participants as Array<{ user_id: string; share_amount: number }>) {
+          if (p && p.user_id) {
+            pMap.set(p.user_id, (pMap.get(p.user_id) || 0) + p.share_amount);
+          }
+        }
+        const shares = Array.from(pMap.entries()).map(([userId, shareAmount]) => ({
+          expense_id: expenseId,
+          user_id: userId,
+          share_amount: Math.round(shareAmount * 100) / 100,
+        }));
+
+        if (shares.length === 0) {
+          throw new AppError(400, "INVALID_PARTICIPANTS", "At least one participant is required.");
+        }
 
         await db.insert(expenseParticipants).values(shares);
       }
@@ -201,6 +214,7 @@ router.post(
         broadcast(groupId, "group_updated", { groupId });
       } catch {}
     } catch (error) {
+      console.error("Error creating expense:", error);
       next(error);
     }
   }
@@ -279,8 +293,12 @@ router.patch(
         .where(eq(expenseParticipants.expense_id, expenseId));
 
       if (split_type === "equal") {
-        const shareAmount = Math.round((amount / participants.length) * 100) / 100;
-        const shares = participants.map((userId: string) => ({
+        const uniqueParticipants = Array.from(new Set(participants as string[]));
+        if (uniqueParticipants.length === 0) {
+          throw new AppError(400, "INVALID_PARTICIPANTS", "At least one participant is required.");
+        }
+        const shareAmount = Math.round((amount / uniqueParticipants.length) * 100) / 100;
+        const shares = uniqueParticipants.map((userId: string) => ({
           expense_id: expenseId,
           user_id: userId,
           share_amount: shareAmount,
@@ -288,13 +306,21 @@ router.patch(
 
         await db.insert(expenseParticipants).values(shares);
       } else {
-        const shares = participants.map(
-          (p: { user_id: string; share_amount: number }) => ({
-            expense_id: expenseId,
-            user_id: p.user_id,
-            share_amount: p.share_amount,
-          })
-        );
+        const pMap = new Map<string, number>();
+        for (const p of participants as Array<{ user_id: string; share_amount: number }>) {
+          if (p && p.user_id) {
+            pMap.set(p.user_id, (pMap.get(p.user_id) || 0) + p.share_amount);
+          }
+        }
+        const shares = Array.from(pMap.entries()).map(([userId, shareAmount]) => ({
+          expense_id: expenseId,
+          user_id: userId,
+          share_amount: Math.round(shareAmount * 100) / 100,
+        }));
+
+        if (shares.length === 0) {
+          throw new AppError(400, "INVALID_PARTICIPANTS", "At least one participant is required.");
+        }
 
         await db.insert(expenseParticipants).values(shares);
       }
@@ -322,6 +348,7 @@ router.patch(
         broadcast(expense.group_id, "group_updated", { groupId: expense.group_id });
       } catch {}
     } catch (error) {
+      console.error("Error updating expense:", error);
       next(error);
     }
   }
