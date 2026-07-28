@@ -151,7 +151,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     import { connectGroupSSE, disconnectGroupSSE } from "../../lib/sse";
     import { onDOMReady, escapeHtml } from "../../lib/dom";
 
-    const groupId = window.location.pathname.split("/groups/")[1];
+    const groupId = window.location.pathname.split("/groups/")[1]?.split("/")[0]?.split("?")[0]?.split("#")[0];
     let currentData: any = null;
     let currentUserId: string | null = null;
 

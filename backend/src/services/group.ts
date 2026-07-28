@@ -175,17 +175,23 @@ export async function getGroupData(
 
   const visibleExpenseData = expenseData.filter(
     (e) =>
-      e.paid_by === currentUserId ||
-      e.created_by === currentUserId ||
-      e.participants.some((p) => p.user_id === currentUserId),
+      e &&
+      (e.paid_by === currentUserId ||
+        e.created_by === currentUserId ||
+        (Array.isArray(e.participants) &&
+          e.participants.some((p) => p && p.user_id === currentUserId)))
   );
 
   const visibleSettlements = settlementData.filter(
-    (s) => s.payer_id === currentUserId || s.receiver_id === currentUserId,
+    (s) => s && (s.payer_id === currentUserId || s.receiver_id === currentUserId)
   );
 
   const visibleSimplifiedDebts = simplified_debts.filter(
-    (d) => d.from.user_id === currentUserId || d.to.user_id === currentUserId,
+    (d) =>
+      d &&
+      d.from &&
+      d.to &&
+      (d.from.user_id === currentUserId || d.to.user_id === currentUserId)
   );
 
   return {

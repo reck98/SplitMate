@@ -125,42 +125,65 @@ export function getDetailedDebts(
 }
 
 export function simplifyDebts(balances: BalanceInfo[]): SimplifiedDebt[] {
+  if (!balances || balances.length === 0) return [];
+
   const creditors = balances
-    .filter((b) => b.net_balance > 0.01)
+    .filter((b) => b && b.net_balance > 0.009)
     .sort((a, b) => b.net_balance - a.net_balance)
-    .map((b) => ({ ...b, net_balance: b.net_balance }));
+    .map((b) => ({
+      user_id: b.user_id,
+      name: b.name,
+      net_balance: Math.round(b.net_balance * 100) / 100,
+    }));
 
   const debtors = balances
-    .filter((b) => b.net_balance < -0.01)
+    .filter((b) => b && b.net_balance < -0.009)
     .sort((a, b) => a.net_balance - b.net_balance)
-    .map((b) => ({ ...b, net_balance: Math.abs(b.net_balance) }));
+    .map((b) => ({
+      user_id: b.user_id,
+      name: b.name,
+      net_balance: Math.round(Math.abs(b.net_balance) * 100) / 100,
+    }));
 
   const debts: SimplifiedDebt[] = [];
   let i = 0;
   let j = 0;
 
   while (i < creditors.length && j < debtors.length) {
-    const amount = Math.min(creditors[i].net_balance, debtors[j].net_balance);
+    const creditor = creditors[i];
+    const debtor = debtors[j];
 
-    if (amount > 0.01) {
+    if (!creditor || creditor.net_balance <= 0.009) {
+      i++;
+      continue;
+    }
+    if (!debtor || debtor.net_balance <= 0.009) {
+      j++;
+      continue;
+    }
+
+    const amount = Math.min(creditor.net_balance, debtor.net_balance);
+    const roundedAmount = Math.round(amount * 100) / 100;
+
+    if (roundedAmount >= 0.01) {
       debts.push({
         from: {
-          user_id: debtors[j].user_id,
-          name: debtors[j].name,
+          user_id: debtor.user_id,
+          name: debtor.name || "Unknown",
         },
         to: {
-          user_id: creditors[i].user_id,
-          name: creditors[i].name,
+          user_id: creditor.user_id,
+          name: creditor.name || "Unknown",
         },
-        amount: Math.round(amount * 100) / 100,
+        amount: roundedAmount,
       });
     }
 
-    creditors[i].net_balance -= amount;
-    debtors[j].net_balance -= amount;
+    creditor.net_balance = Math.round((creditor.net_balance - amount) * 100) / 100;
+    debtor.net_balance = Math.round((debtor.net_balance - amount) * 100) / 100;
 
-    if (creditors[i].net_balance < 0.01) i++;
-    if (debtors[j].net_balance < 0.01) j++;
+    if (creditor.net_balance <= 0.009) i++;
+    if (debtor.net_balance <= 0.009) j++;
   }
 
   return debts;
