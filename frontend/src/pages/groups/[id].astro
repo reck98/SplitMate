@@ -241,10 +241,16 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             </div>
             <div class="mt-3 flex flex-wrap gap-1.5">
               ${exp.participants
-                .map(
-                  (p: any) =>
-                    `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]">${escapeHtml(data.members?.find((m: any) => m.user_id === p.user_id)?.name || "Unknown")}: ${formatCurrency(p.share_amount)}</span>`
-                )
+                .map((p: any) => {
+                  const isPaidBy = p.user_id === exp.paid_by;
+                  const memberName = data.members?.find((m: any) => m.user_id === p.user_id)?.name || "Unknown";
+                  const formattedAmount = formatCurrency(p.share_amount);
+                  if (isPaidBy) {
+                    return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-tertiary)] line-through opacity-75" title="${escapeHtml(memberName)} paid this expense">${escapeHtml(memberName)}: ${formattedAmount}</span>`;
+                  } else {
+                    return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]">${escapeHtml(memberName)}: ${formattedAmount}</span>`;
+                  }
+                })
                 .join("")}
             </div>
             ${
@@ -460,78 +466,176 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             </div>
           `;
         } else {
-          listContent = displayedDebts
-            .map((d: any, i: number) => {
-              const debtorId = d.debtorId || d.debtor_id || d.from?.user_id;
-              const payerId = d.payerId || d.payer_id || d.to?.user_id;
-              const debtorName = d.debtorName || d.debtor_name || d.from?.name || "Unknown";
-              const payerName = d.payerName || d.payer_name || d.to?.name || "Unknown";
-              const expenseTitle = d.expenseTitle || d.description || "Expense";
-              const expenseId = d.expenseId || d.expense_id || "";
-              const groupName = data.group?.name || "";
-              const dateStr = d.createdAt || d.created_at;
-              const dateDisplay = dateStr ? new Date(dateStr).toLocaleDateString() : "";
+          // Group displayed debts by counterparty user
+          const groupMap = new Map<string, {
+            counterpartyId: string;
+            counterpartyName: string;
+            items: Array<{
+              id: string;
+              expenseId: string;
+              expenseTitle: string;
+              debtorId: string;
+              payerId: string;
+              amount: number;
+              dateDisplay: string;
+              isDebtor: boolean;
+            }>;
+            totalOwedByUser: number;
+            totalOwedToUser: number;
+            netAmount: number;
+          }>();
 
-              const isDebtor = debtorId === currentUserId;
-              const isCreditor = payerId === currentUserId;
+          for (const d of displayedDebts) {
+            const debtorId = d.debtorId || d.debtor_id || d.from?.user_id;
+            const payerId = d.payerId || d.payer_id || d.to?.user_id;
+            const debtorName = d.debtorName || d.debtor_name || d.from?.name || "Unknown";
+            const payerName = d.payerName || d.payer_name || d.to?.name || "Unknown";
+            const expenseTitle = d.expenseTitle || d.description || "Expense";
+            const expenseId = d.expenseId || d.expense_id || "";
+            const dateStr = d.createdAt || d.created_at;
+            const dateDisplay = dateStr ? new Date(dateStr).toLocaleDateString() : "";
+            const isDebtor = debtorId === currentUserId;
 
-              let label: string;
-              if (isDebtor) {
-                label = `You owe <span class="font-semibold text-[var(--color-text-primary)]">${escapeHtml(payerName)}</span>`;
+            const counterpartyId = isDebtor ? payerId : debtorId;
+            const counterpartyName = isDebtor ? payerName : debtorName;
+
+            if (!groupMap.has(counterpartyId)) {
+              groupMap.set(counterpartyId, {
+                counterpartyId,
+                counterpartyName,
+                items: [],
+                totalOwedByUser: 0,
+                totalOwedToUser: 0,
+                netAmount: 0,
+              });
+            }
+
+            const group = groupMap.get(counterpartyId)!;
+            group.items.push({
+              id: d.id,
+              expenseId,
+              expenseTitle,
+              debtorId,
+              payerId,
+              amount: d.amount,
+              dateDisplay,
+              isDebtor,
+            });
+
+            if (isDebtor) {
+              group.totalOwedByUser = Math.round((group.totalOwedByUser + d.amount) * 100) / 100;
+            } else {
+              group.totalOwedToUser = Math.round((group.totalOwedToUser + d.amount) * 100) / 100;
+            }
+            group.netAmount = Math.round((group.totalOwedByUser - group.totalOwedToUser) * 100) / 100;
+          }
+
+          const counterpartyGroups = Array.from(groupMap.values());
+
+          listContent = counterpartyGroups
+            .map((group, groupIdx) => {
+              const isNetOwedByUser = group.netAmount > 0.01;
+              const isNetOwedToUser = group.netAmount < -0.01;
+              const netAbsAmount = Math.abs(group.netAmount);
+
+              let summaryLabel = "";
+              let summaryColorClass = "";
+              if (isNetOwedByUser) {
+                summaryLabel = "Total You Owe";
+                summaryColorClass = "text-[var(--color-danger)]";
+              } else if (isNetOwedToUser) {
+                summaryLabel = "Total Owed to You";
+                summaryColorClass = "text-[var(--color-success)]";
               } else {
-                label = `<span class="font-semibold text-[var(--color-text-primary)]">${escapeHtml(debtorName)}</span> owes you`;
+                summaryLabel = "Balanced";
+                summaryColorClass = "text-[var(--color-text-secondary)]";
               }
 
-              const showPayBtn = isDebtor;
-              const showSettleCashBtn = isDebtor || isCreditor;
+              const itemsHtml = group.items
+                .map((item) => `
+                  <div class="flex items-center justify-between py-2 border-b border-[var(--color-border)]/40 last:border-0 text-xs sm:text-sm">
+                    <div class="min-w-0 pr-2">
+                      <div class="flex items-center gap-1.5 font-medium text-[var(--color-text-primary)]">
+                        <span class="text-[var(--color-accent)]">•</span>
+                        <span class="truncate">${escapeHtml(item.expenseTitle)}</span>
+                      </div>
+                      <div class="text-[11px] text-[var(--color-text-tertiary)] pl-3">
+                        ${item.isDebtor ? 'You owe' : 'Owes you'} ${item.dateDisplay ? `• ${escapeHtml(item.dateDisplay)}` : ''}
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <span class="font-semibold text-[var(--color-text-primary)]">${formatCurrency(item.amount)}</span>
+                      <button
+                        data-payer="${item.debtorId}"
+                        data-receiver="${item.payerId}"
+                        data-amount="${item.amount}"
+                        data-expense-id="${item.expenseId}"
+                        class="settle-cash-btn rounded-glass-sm px-2 py-1 text-[11px] font-medium glass glass-hover text-[var(--color-text-secondary)] hover:text-[var(--color-success)] transition-colors"
+                        title="Settle this expense line item"
+                      >
+                        Settle
+                      </button>
+                    </div>
+                  </div>
+                `)
+                .join("");
+
+              const primaryDebtorId = group.totalOwedByUser >= group.totalOwedToUser ? currentUserId : group.counterpartyId;
+              const primaryReceiverId = primaryDebtorId === currentUserId ? group.counterpartyId : currentUserId;
+              const primaryAmount = group.totalOwedByUser >= group.totalOwedToUser ? group.totalOwedByUser : group.totalOwedToUser;
+              const isUserDebtor = primaryDebtorId === currentUserId;
 
               return `
-            <div class="glass rounded-glass-lg p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2 animate-fade-in-up" style="animation-delay: ${i * 40}ms">
-              <div class="text-sm text-[var(--color-text-secondary)] flex-1 min-w-0">
-                <div class="font-medium text-[var(--color-text-primary)]">${label}</div>
-                <div class="text-xs text-[var(--color-text-tertiary)] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                  <span class="font-medium text-[var(--color-accent)]">(from ${escapeHtml(expenseTitle)})</span>
-                  ${groupName ? `<span>•</span><span>${escapeHtml(groupName)}</span>` : ""}
-                  ${dateDisplay ? `<span>•</span><span>${escapeHtml(dateDisplay)}</span>` : ""}
-                </div>
-              </div>
-              <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto justify-between sm:justify-end">
-                <span class="font-semibold text-[var(--color-text-primary)] mr-1 text-base sm:text-sm">${formatCurrency(d.amount)}</span>
-                <div class="flex items-center gap-2">
-                  ${showPayBtn
-                    ? `<button
-                        data-payer="${debtorId}"
-                        data-receiver="${payerId}"
-                        data-amount="${d.amount}"
-                        data-expense-id="${expenseId}"
-                        class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all duration-200"
+                <div class="glass rounded-glass-xl p-4 sm:p-5 mb-4 animate-fade-in-up" style="animation-delay: ${groupIdx * 40}ms">
+                  <div class="flex items-center justify-between border-b border-[var(--color-border)] pb-3 mb-3">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-accent-soft)] font-bold text-[var(--color-accent)] text-sm">
+                        ${escapeHtml(group.counterpartyName).charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 class="font-bold text-base text-[var(--color-text-primary)]">${escapeHtml(group.counterpartyName)}</h3>
+                        <p class="text-xs text-[var(--color-text-tertiary)]">${group.items.length} expense item${group.items.length > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-xs text-[var(--color-text-tertiary)] font-medium">${summaryLabel}</p>
+                      <p class="text-lg font-extrabold ${summaryColorClass}">${formatCurrency(netAbsAmount)}</p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-1 mb-4">
+                    ${itemsHtml}
+                  </div>
+
+                  <div class="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[var(--color-border)]">
+                    <span class="text-xs font-semibold text-[var(--color-text-tertiary)] mr-auto">Total: ${formatCurrency(primaryAmount)}</span>
+                    ${isUserDebtor ? `
+                      <button
+                        data-payer="${primaryDebtorId}"
+                        data-receiver="${primaryReceiverId}"
+                        data-amount="${primaryAmount}"
+                        class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-3 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all"
                       >
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                           <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
                         </svg>
-                        Pay via UPI
-                      </button>`
-                    : ""
-                  }
-                  ${showSettleCashBtn
-                    ? `<button
-                        data-payer="${debtorId}"
-                        data-receiver="${payerId}"
-                        data-amount="${d.amount}"
-                        data-expense-id="${expenseId}"
-                        class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-2.5 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all duration-200"
-                      >
-                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Settle Cash
-                      </button>`
-                    : ""
-                  }
+                        Pay via UPI (${formatCurrency(primaryAmount)})
+                      </button>
+                    ` : ''}
+                    <button
+                      data-payer="${primaryDebtorId}"
+                      data-receiver="${primaryReceiverId}"
+                      data-amount="${primaryAmount}"
+                      class="settle-cash-btn inline-flex items-center gap-1 rounded-glass-lg px-3 py-1.5 text-xs font-medium glass glass-hover text-[var(--color-text-primary)] hover:bg-[var(--color-success-soft)] hover:text-[var(--color-success)] transition-all"
+                    >
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Settle Cash (${formatCurrency(primaryAmount)})
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </div>
-          `;
+              `;
             })
             .join("");
         }

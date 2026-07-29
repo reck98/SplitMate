@@ -17,6 +17,7 @@ import { AppError } from "../middleware/error.js";
 import { AuthenticatedRequest } from "../types/index.js";
 import { getGroupData } from "../services/group.js";
 import { broadcast } from "../services/sse.js";
+import { calculateEqualShares } from "../utils/split.js";
 
 const router = Router();
 
@@ -190,22 +191,14 @@ router.post(
         }> = [];
 
         if (split_type === "equal") {
-          const uniqueParticipants = Array.from(
-            new Set(participants as string[]),
+          const calculatedShares = calculateEqualShares(
+            amount,
+            participants as string[],
           );
-          if (uniqueParticipants.length === 0) {
-            throw new AppError(
-              400,
-              "INVALID_PARTICIPANTS",
-              "At least one participant is required.",
-            );
-          }
-          const shareAmount =
-            Math.round((amount / uniqueParticipants.length) * 100) / 100;
-          shares = uniqueParticipants.map((userId: string) => ({
+          shares = calculatedShares.map((s) => ({
             expense_id: expenseId,
-            user_id: userId,
-            share_amount: shareAmount,
+            user_id: s.user_id,
+            share_amount: s.share_amount,
           }));
 
           await tx.insert(expenseParticipants).values(shares);
@@ -380,22 +373,14 @@ router.patch(
         }> = [];
 
         if (split_type === "equal") {
-          const uniqueParticipants = Array.from(
-            new Set(participants as string[]),
+          const calculatedShares = calculateEqualShares(
+            amount,
+            participants as string[],
           );
-          if (uniqueParticipants.length === 0) {
-            throw new AppError(
-              400,
-              "INVALID_PARTICIPANTS",
-              "At least one participant is required.",
-            );
-          }
-          const shareAmount =
-            Math.round((amount / uniqueParticipants.length) * 100) / 100;
-          shares = uniqueParticipants.map((userId: string) => ({
+          shares = calculatedShares.map((s) => ({
             expense_id: expenseId,
-            user_id: userId,
-            share_amount: shareAmount,
+            user_id: s.user_id,
+            share_amount: s.share_amount,
           }));
 
           await tx.insert(expenseParticipants).values(shares);

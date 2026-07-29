@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.2.0 (Equal Split Precision Fix, Grouped Suggested Payments & Payer Strike-Through)
+
+### Fixed
+- **Equal Split Calculation & Remainder Distribution**:
+  - Identified root cause in naive floating point division which led to share rounding errors (e.g. ₹9.50 instead of ₹10.00 or loss of ₹0.01 on odd splits).
+  - Implemented exact integer-paise remainder distribution in `calculateEqualShares` (`backend/src/utils/split.ts`).
+  - Total expense amount in paise is divided into `baseSharePaise` with `remainderPaise` distributed 1-paise at a time across participants. Total of participant shares ALWAYS equals total expense amount down to the exact paise.
+  - Preserved Custom Split implementation untouched.
+
+### Added & Enhanced
+- **Group Suggested Payments by Counterparty User**:
+  - Re-structured Suggested Payments UI on group page to group pending debt obligations by counterparty user (`Akash Singh`, `Aanid A Daz`, etc.).
+  - Line items display individual expense titles, dates, and amounts while headers display total accumulated counterparty debt.
+  - Quick action buttons support paying total counterparty debt or settling individual expense line items.
+  - Interactive filters (**All**, **You Owe**, **Owed to You**) continue functioning seamlessly.
+  - Responsive design for mobile and desktop viewports.
+- **Payer Strike-Through Visual Formatting**:
+  - Expense cards on Expenses tab now format the payer (`exp.paid_by`) with visual strike-through styling (`~~reck98 ₹10~~`).
+  - Non-payers display with standard styling (`Akash ₹10`).
+  - Fully compatible with Equal, Custom, Percentage, and Shares split types.
+- **Expanded Quality & Performance Test Suite**:
+  - Added unit test suites for equal split remainder distribution (`split.test.ts`), counterparty grouping (`grouping.test.ts`), full lifecycle integration (`integration.test.ts`), and 100-member / 1,000+ expense performance benchmarks (`performance.test.ts`). Total unit/integration tests passing: 32.
+  - Added new architecture documentation: `docs/SettlementEngine.md`, `docs/ExpenseRendering.md`, `docs/Testing.md`.
+
 ## v1.1.0 (Raw Expense Obligations & Suggested Payment Filters)
 
 ### Removed & Replaced
