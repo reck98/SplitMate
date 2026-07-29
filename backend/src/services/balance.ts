@@ -7,12 +7,12 @@ import {
   groupMembers,
 } from "../db/schema.js";
 import { eq, inArray } from "drizzle-orm";
-import { BalanceInfo, SimplifiedDebt } from "../types/index.js";
+import { BalanceInfo, SimplifiedDebt, DetailedDebt } from "../types/index.js";
 import { getDetailedDebts } from "./settlement.js";
 
 export async function getBalances(
   groupId: string,
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[] }>;
+): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }>;
 export async function getBalances(
   groupId: string,
   preFetched: {
@@ -20,7 +20,7 @@ export async function getBalances(
     allParticipants: any[];
     groupSettlements: any[];
   },
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[] }>;
+): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }>;
 export async function getBalances(
   groupId: string,
   preFetched?: {
@@ -28,7 +28,7 @@ export async function getBalances(
     allParticipants: any[];
     groupSettlements: any[];
   },
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[] }> {
+): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }> {
   const members = await db
     .select({
       user_id: groupMembers.user_id,
@@ -64,12 +64,12 @@ export async function getBalances(
       .from(settlements)
       .where(eq(settlements.group_id, groupId)));
 
-  const { balances, simplified_debts } = getDetailedDebts(
+  const { balances, simplified_debts, rawDebts } = getDetailedDebts(
     members,
     groupExpenses,
     allParticipants,
     groupSettlements,
   );
 
-  return { balances, simplified_debts };
+  return { balances, simplified_debts, rawDebts };
 }

@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.0 (Multi-Payer & Contributor Strike-Through Fix)
+
+### Fixed
+- **Multi-Payer Contributor Strike-Through Bug**:
+  - Identified root cause where expense participant rendering evaluated only `p.user_id === exp.paid_by`, assuming a single primary payer and ignoring participants who had settled/contributed towards paying their share of the expense.
+  - Enhanced backend `getGroupData` (`backend/src/services/group.ts`) to compute `contributors` array per expense and `is_paid` / `settled` flags per participant based on chronological settlement debt remaining.
+  - Updated frontend `renderExpenses` (`frontend/src/pages/groups/[id].astro`) to check `p.is_paid || exp.contributors?.includes(p.user_id) || p.user_id === exp.paid_by`.
+  - Every participant who has contributed or settled their share now displays with strike-through styling (`line-through opacity-75 decoration-2`), working across light and dark themes.
+
+### Added & Enhanced
+- **Contributor Detection Test Suite**:
+  - Added `backend/src/__tests__/contributors.test.ts` verifying single-payer, multi-contributor, and fully-settled expense states. Total backend tests passing: 35.
+
 ## v1.2.0 (Equal Split Precision Fix, Grouped Suggested Payments & Payer Strike-Through)
 
 ### Fixed

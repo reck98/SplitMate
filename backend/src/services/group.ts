@@ -133,24 +133,63 @@ export async function getGroupData(
       .where(inArray(expenseParticipants.expense_id, expenseIds));
   }
 
-  const expenseData = groupExpenses.map((e) => ({
-    id: e.id,
-    description: e.description,
-    amount: e.amount,
-    split_type: e.split_type || "equal",
-    paid_by: e.paid_by,
-    paid_by_name:
-      members.find((m) => m.user_id === e.paid_by)?.name || "Unknown",
-    created_by: e.created_by,
-    participants: allParticipants
-      .filter((p) => p.expense_id === e.id)
-      .map((p) => ({
+  const { balances, simplified_debts, rawDebts } = await getBalances(groupId, {
+    groupExpenses,
+    allParticipants,
+    groupSettlements,
+  });
+
+  const expenseData = groupExpenses.map((e) => {
+    const expParticipants = allParticipants.filter((p) => p.expense_id === e.id);
+    const paidParticipantUserIds: string[] = [e.paid_by];
+
+    const enrichedParticipants = expParticipants.map((p) => {
+      const isPrimaryPayer = p.user_id === e.paid_by;
+      let isPaid = isPrimaryPayer;
+      let paidAmount = isPrimaryPayer ? p.share_amount : 0;
+
+      if (!isPrimaryPayer) {
+        const debt = rawDebts.find(
+          (d) => d.expense_id === e.id && d.debtor_id === p.user_id,
+        );
+        const remainingDebt = debt ? debt.amount : 0;
+        paidAmount = Math.max(
+          0,
+          Math.round((p.share_amount - remainingDebt) * 100) / 100,
+        );
+        isPaid = remainingDebt <= 0.01;
+      }
+
+      if (isPaid) {
+        paidParticipantUserIds.push(p.user_id);
+      }
+
+      return {
         user_id: p.user_id,
         share_amount: p.share_amount,
-      })),
-    created_at: e.created_at,
-    updated_at: e.updated_at,
-  }));
+        is_paid: isPaid,
+        paid_amount: paidAmount,
+        settled: isPaid,
+      };
+    });
+
+    const contributors = Array.from(new Set(paidParticipantUserIds));
+
+    return {
+      id: e.id,
+      description: e.description,
+      amount: e.amount,
+      split_type: e.split_type || "equal",
+      paid_by: e.paid_by,
+      paid_by_name:
+        members.find((m) => m.user_id === e.paid_by)?.name || "Unknown",
+      contributors,
+      created_by: e.created_by,
+      participants: enrichedParticipants,
+      created_at: e.created_at,
+      updated_at: e.updated_at,
+    };
+  });
 
   const settlementData = groupSettlements.map((s) => ({
     id: s.id,
@@ -163,12 +202,6 @@ export async function getGroupData(
     amount: s.amount,
     created_at: s.created_at,
   }));
-
-  const { balances, simplified_debts } = await getBalances(groupId, {
-    groupExpenses,
-    allParticipants,
-    groupSettlements,
-  });
 
   const visibleExpenseData = expenseData.filter(
     (e) =>

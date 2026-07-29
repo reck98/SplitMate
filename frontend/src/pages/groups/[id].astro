@@ -242,11 +242,11 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <div class="mt-3 flex flex-wrap gap-1.5">
               ${exp.participants
                 .map((p: any) => {
-                  const isPaidBy = p.user_id === exp.paid_by;
+                  const isPaid = Boolean(p.is_paid || p.settled || exp.contributors?.includes(p.user_id) || p.user_id === exp.paid_by);
                   const memberName = data.members?.find((m: any) => m.user_id === p.user_id)?.name || "Unknown";
                   const formattedAmount = formatCurrency(p.share_amount);
-                  if (isPaidBy) {
-                    return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-tertiary)] line-through opacity-75" title="${escapeHtml(memberName)} paid this expense">${escapeHtml(memberName)}: ${formattedAmount}</span>`;
+                  if (isPaid) {
+                    return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-tertiary)] line-through opacity-75 decoration-2" title="${escapeHtml(memberName)} paid/contributed to this expense">${escapeHtml(memberName)}: ${formattedAmount}</span>`;
                   } else {
                     return `<span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-[var(--color-bg-glass-hover)] text-[var(--color-text-secondary)]">${escapeHtml(memberName)}: ${formattedAmount}</span>`;
                   }

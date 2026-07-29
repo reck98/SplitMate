@@ -9,6 +9,7 @@ export function getDetailedDebts(
   balances: BalanceInfo[];
   detailed_debts: DetailedDebt[];
   simplified_debts: SimplifiedDebt[];
+  rawDebts: DetailedDebt[];
 } {
   const memberMap = new Map(members.map((m) => [m.user_id, m.name]));
 
@@ -161,6 +162,7 @@ export function getDetailedDebts(
     balances,
     detailed_debts,
     simplified_debts,
+    rawDebts,
   };
 }
 
