@@ -1,181 +1,173 @@
 # SplitMate
 
-Lightweight expense-sharing application built for Indian users. Track expenses, calculate balances, and settle debts through your preferred UPI app — no payment gateways required.
+Modern expense sharing built for India with UPI QR settlements.
+
+Track group expenses, preserve original debt chains, and settle instantly using any UPI app—without payment gateway commissions.
+
+[![License](https://img.shields.io/github/license/reck98/SplitMate?style=flat)](LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate/stargazers)
+[![GitHub Forks](https://img.shields.io/github/forks/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate/network/members)
+[![GitHub Issues](https://img.shields.io/github/issues/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate/issues)
+[![GitHub Pull Requests](https://img.shields.io/github/issues-pr/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate/commits/main)
+[![Repository Size](https://img.shields.io/github/repo-size/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate)
+[![Top Language](https://img.shields.io/github/languages/top/reck98/SplitMate?style=flat)](https://github.com/reck98/SplitMate)
+[![Astro](https://img.shields.io/badge/Astro-BC52EE?style=flat&logo=astro&logoColor=white)](https://astro.build/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Drizzle ORM](https://img.shields.io/badge/Drizzle_ORM-C5F74F?style=flat&logo=drizzle&logoColor=black)](https://orm.drizzle.team/)
+[![Open Source](https://img.shields.io/badge/Open_Source-%E2%9D%A4-red?style=flat)](https://github.com/reck98/SplitMate)
+[![Maintained](https://img.shields.io/badge/Maintained-yes-brightgreen?style=flat)](https://github.com/reck98/SplitMate)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat)](https://github.com/reck98/SplitMate/pulls)
+
+<p align="center">
+  <img src="assets/dashboard.png" alt="SplitMate Landing Page & Dashboard" width="100%">
+</p>
+
+## Quick Navigation
+
+- [Features](#features)
+- [User Flow](#user-flow)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Installation](#installation)
+- [Environment Variables](#environment-variables)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Features
 
-- Google Sign-In via Firebase Authentication
-- Create groups with invite codes
-- Join groups via invite code or link
-- Add expenses with equal or custom splits (integer paise calculation)
-- Multi-payer contributor tracking with line-item settlement strike-throughs
-- Dynamic balance calculation (never stored)
-- Greedy debt minimization settlement algorithm
-- Show QR Payment Modal with dynamic UPI URI encoding, 1-click Copy UPI ID, and scannable PNG download
-- Manual & cash settlement recording (modal & inline cash settle)
-- Real-time live sync via Server-Sent Events (SSE)
-- Instant SWR client caching (<10ms load time)
-- Mobile-first responsive glassmorphic PWA design
+### Expense Management
 
-## Technology Stack
+- **Create Expenses**: Easily log bill items with customizable titles, dates, and amounts using integer paise calculation to eliminate rounding issues.
+- **Equal Split**: Evenly divide bill costs across all selected group members with automatic balance calculation.
+- **Unequal Split**: Assign exact custom debt amounts to individual participants.
+- **Exact Amount Split**: Input specific monetary contributions for each participant in a single bill.
+- **Percentage Split**: Allocate shared expenses based on precise percentage ratios across group members.
 
-| Layer      | Technology                                   |
-| ---------- | -------------------------------------------- |
-| Frontend   | Astro, TypeScript, Tailwind CSS, Nano Stores |
-| Backend    | Node.js, Express, TypeScript, Drizzle ORM    |
-| Database   | Turso (SQLite-compatible)                    |
-| Auth       | Firebase Authentication (Google Provider)    |
-| Deployment | Vercel (frontend), Railway (backend)         |
+### Groups
 
-## Project Structure
+- **Create Groups**: Organize expenses seamlessly for trips, shared households, events, or roommate bills.
+- **Invite Members**: Instantly onboard friends using unique group invite codes or shareable direct join links.
+- **Manage Members**: View active group participants, monitor contribution history, and manage access.
 
-```
-SplitMate/
-├── backend/             # Express API server
-│   └── src/
-│       ├── routes/      # Route handlers
-│       ├── middleware/   # Auth, validation, error handling
-│       ├── db/          # Drizzle schema + client
-│       ├── services/    # Business logic
-│       ├── utils/       # Utilities
-│       └── types/       # Shared types
-├── frontend/            # Astro web app
-│   └── src/
-│       ├── pages/       # Route pages
-│       ├── layouts/     # Layouts
-│       ├── components/  # UI components
-│       ├── stores/      # Nano Stores
-│       ├── lib/         # API client, helpers
-│       └── styles/      # Global CSS
-├── docs/                # Documentation
-└── scripts/             # Utility scripts
-```
+### Settlements
 
-## Local Setup
+- **Preserve Original Debt Chain**: Retain explicit debtor-creditor transaction chains or activate greedy debt minimization.
+- **Suggested Settlements**: Automatically generate the optimal, minimal set of transactions required to resolve all group balances.
+- **Generate UPI QR**: Dynamic generation of scannable UPI QR codes pre-filled with payee VPA and settlement amounts for apps like GPay, PhonePe, and Paytm.
+- **Copy UPI ID**: One-click action to instantly copy the payee's UPI VPA to clipboard.
+- **Download QR**: Export generated settlement QR codes as PNG images to share offline or via messaging apps.
+- **Mark Settlements as Paid**: Record manual cash or UPI settlements with live line-item strike-through balance updates.
 
-### Prerequisites
+### Authentication
 
-- Node.js 18+
-- npm
+- **Google Authentication**: Secure, one-click authentication powered by Firebase Authentication with Google OAuth 2.0.
 
-### 1. Clone and install
+### User Experience
 
-```bash
-git clone <repo-url>
-cd SplitMate
+- **Responsive Design**: Modern glassmorphic interface engineered for smooth performance on desktop, tablet, and mobile displays.
+- **Mobile-Friendly**: Installable Progressive Web App (PWA) with Workbox offline caching and app-like mobile experience.
+- **Fast Performance**: Instant client state hydrations (<10ms load times) using Nano Stores and SWR client-side caching.
+- **Real-Time Updates**: Instant live state synchronization across group members using Server-Sent Events (SSE).
 
-# Install backend dependencies
-cd backend && npm install
+## User Flow
 
-# Install frontend dependencies
-cd ../frontend && npm install
+The diagram below outlines the complete user journey within SplitMate, illustrating authentication, group management, expense splits, dynamic balance calculations, and UPI QR settlements:
 
-# Go back to root
-cd ..
-```
+```mermaid
+flowchart TD
+    subgraph Auth["🔐 1. Authentication Flow"]
+        A[Landing Page] --> B{Authenticated?}
+        B -- No --> C[Google OAuth Login]
+        C --> D[Firebase Auth Token Verification]
+        D --> E[Establish User Session]
+        B -- Yes --> E
+    end
 
-### 2. Environment variables
+    subgraph Workspace["📱 2. Group Workspace"]
+        E --> F[Dashboard]
+        F --> G{Select Action}
+        G -- Create --> H[Create New Group]
+        G -- Join --> I[Enter Invite Code / Link]
+        H --> J[Group Dashboard]
+        I --> J
+    end
 
-Copy the example env files:
+    subgraph ExpenseFlow["💸 3. Expense Creation & Splitting"]
+        J --> K[View Group Overview & Balances]
+        K --> L[Click 'Add Expense']
+        L --> M[Enter Amount, Title & Date]
+        M --> N{Select Split Type}
+        N -- Equal --> O1[Split Equally]
+        N -- Unequal --> O2[Specify Custom Amounts]
+        N -- Percentage --> O3[Allocate Percentages %]
+        O1 --> P[Validate & Save Expense]
+        O2 --> P
+        O3 --> P
+        P --> Q[Backend Transaction Saved]
+        Q --> R[Calculate Net Balances & Minimum Debt Graph]
+        R --> S[Real-Time SSE Sync to Group Members]
+    end
 
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-Fill in the required values:
-
-**backend/.env**
-
-```
-PORT=3000
-CLIENT_URL=http://localhost:4321
-JWT_SECRET=your-jwt-secret
-TURSO_DATABASE_URL=libsql://your-db.turso.io
-TURSO_AUTH_TOKEN=your-turso-auth-token
-FIREBASE_PROJECT_ID=your-firebase-project-id
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-```
-
-**frontend/.env**
-
-```
-PUBLIC_API_URL=http://localhost:3000
-PUBLIC_FIREBASE_API_KEY=your-firebase-api-key
-PUBLIC_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-PUBLIC_FIREBASE_PROJECT_ID=your-firebase-project-id
-PUBLIC_FIREBASE_APP_ID=1:123456789:web:abcdef
+    subgraph SettlementFlow["🤝 4. Settlement & UPI Payment"]
+        S --> T[View Updated Balances]
+        T --> U{User Action}
+        U -- View Details --> V[Expense History & Itemized Debts]
+        U -- Settle Debt --> W[View Suggested Settlements]
+        W --> X[Click 'Show QR Payment Modal']
+        X --> Y[Generate Dynamic UPI Payment URI & QR Code]
+        Y --> Z{Payment Action}
+        Z -- Scan QR --> AA1[Open GPay / PhonePe / Paytm / CRED]
+        Z -- Copy UPI ID --> AA2[Copy VPA to Clipboard]
+        Z -- Download QR --> AA3[Save QR PNG Image]
+        AA1 --> AB[Complete Payment in UPI App]
+        AA2 --> AB
+        AA3 --> AB
+        AB --> AC[Click 'Mark as Paid' / Cash Settle]
+        AC --> AD[Record Settlement Transaction]
+        AD --> AE[Re-calculate Balances & Update Status]
+    end
 ```
 
-### 3. Database setup
+## Tech Stack
 
-```bash
-# Generate migrations
-npm run db:generate
+### Frontend
 
-# Apply migrations
-npm run db:migrate
-```
+- **Astro**: High-performance web framework for hybrid server-side rendering and static pages.
+- **TypeScript**: End-to-end static typing for robust development and maintainability.
+- **Tailwind CSS**: Utility-first CSS framework with glassmorphism design tokens and dark mode.
+- **Nano Stores**: Lightweight, framework-agnostic reactive state management.
 
-### 4. Run development servers
+### Backend
 
-```bash
-# From root — runs both backend and frontend
-npm run dev
+- **Node.js**: Asynchronous event-driven JavaScript runtime environment.
+- **Express**: Fast, unopinionated REST API framework with Server-Sent Events (SSE).
+- **TypeScript**: Shared domain models, Drizzle schemas, and utility types.
 
-# Or run individually:
-npm run dev:backend   # http://localhost:3000
-npm run dev:frontend  # http://localhost:4321
-```
+### Database
 
-## Development Commands
+- **PostgreSQL / Turso (SQLite)**: Edge-replicated database engine for quick query responses.
+- **Drizzle ORM**: Type-safe SQL ORM and database migration toolkit.
 
-| Command                | Description                    |
-| ---------------------- | ------------------------------ |
-| `npm run dev`          | Run both services              |
-| `npm run dev:backend`  | Run backend only               |
-| `npm run dev:frontend` | Run frontend only              |
-| `npm run build`        | Build both services            |
-| `npm run lint`         | Type-check both services       |
-| `npm run db:generate`  | Generate Drizzle migrations    |
-| `npm run db:migrate`   | Apply migrations to Turso      |
-| `npm run db:studio`    | Open Drizzle Studio            |
-| `npm run format`       | Format all files with Prettier |
+### Authentication
 
-## Deployment
+- **Google OAuth 2.0**: Secure social authentication handled via Firebase Authentication.
 
-### Frontend (Render — Web Service)
+### Payments
 
-Since group pages are dynamically rendered, the frontend runs as a Node server.
+- **UPI QR**: Standardized Indian Unified Payments Interface URI scheme (`upi://pay`).
 
-| Setting           | Value                                         |
-| ----------------- | --------------------------------------------- |
-| **Type**          | Web Service                                   |
-| **Build Command** | `cd frontend && npm install && npm run build` |
-| **Start Command** | `cd frontend && node ./dist/server/entry.mjs` |
-| **Node Version**  | 18                                            |
+### Deployment
 
-Add environment variables from `frontend/.env.example`.
+- **Render**: Containerized edge hosting for production frontend and backend web services.
 
-### Backend (Render — Web Service)
+## Architecture
 
-| Setting           | Value                                        |
-| ----------------- | -------------------------------------------- |
-| **Type**          | Web Service                                  |
-| **Build Command** | `cd backend && npm install && npm run build` |
-| **Start Command** | `cd backend && npm start`                    |
-| **Node Version**  | 18                                           |
-
-Add environment variables from `backend/.env.example`.
-
-### Database (Turso)
-
-1. Create a Turso database
-2. Copy the database URL and auth token
-3. Run `npm run db:migrate` to apply schema
-
-## High-Level System Architecture
+SplitMate utilizes a modular, decoupled architecture dividing client presentation, server processing, database storage, and external integrations:
 
 ```mermaid
 graph TD
@@ -185,12 +177,12 @@ graph TD
         State["Nano Stores<br/>(Client-Side Reactive State)"]
     end
 
-    subgraph FrontendServer["⚡ Frontend Server (Astro Node App / Vercel)"]
+    subgraph FrontendServer["⚡ Frontend Server (Astro Node App / Render)"]
         Pages["Astro Server Routes<br/>(Hybrid SSR & Static Pages)"]
         APIClient["API Client / Fetch Wrapper<br/>(With SWR & Auth Headers)"]
     end
 
-    subgraph BackendServer["⚙️ Backend Server (Express Node.js / Railway)"]
+    subgraph BackendServer["⚙️ Backend Server (Express Node.js / Render)"]
         AuthMiddleware["Firebase Auth Middleware<br/>(ID Token Verification)"]
         Routes["Express API Routes<br/>(/auth, /groups, /expenses, /settlements)"]
         SSEEngine["SSE Broadcast Engine<br/>(Real-Time Live Updates)"]
@@ -199,7 +191,7 @@ graph TD
 
     subgraph DatabaseLayer["🗄️ Database Layer"]
         Drizzle["Drizzle ORM Schema Client"]
-        Turso["Turso Database<br/>(SQLite-compatible Edge DB)"]
+        Turso["Turso Database<br/>(SQLite / PostgreSQL compatible)"]
     end
 
     subgraph ExternalServices["🔌 External Services & Protocols"]
@@ -223,20 +215,140 @@ graph TD
     Drizzle -->|"SQL Driver"| Turso
 ```
 
-See [docs/Architecture.md](docs/Architecture.md) for detailed architecture documentation.
+### High-Level System Design
 
-## API
+- **Frontend Application**: Constructed with Astro SSR and Tailwind CSS, incorporating Nano Stores for fast client-side state transitions and Workbox PWA offline capabilities.
+- **Backend API & Real-Time Sync**: Express.js server providing REST API endpoints secured with Firebase Admin SDK middleware, broadcasting real-time data using Server-Sent Events (SSE).
+- **Database & Persistence**: Managed with Drizzle ORM connected to Turso/PostgreSQL, enforcing strict foreign key constraints and atomic transaction updates.
+- **Authentication System**: Google OAuth 2.0 via Firebase Auth. Client apps pass verified Bearer tokens on every backend request.
+- **Expense Calculation Engine**: Converts all financial inputs into integer paise to guarantee zero precision loss across equal, unequal, exact, and percentage split models.
+- **Settlement Engine**: Implements a Greedy Debt Minimization algorithm that computes optimal payment transfers on demand without unnecessary state persistence.
+- **UPI QR Engine**: Generates valid `upi://pay` URIs dynamically compiled into PNG QR codes containing recipient VPA, payee name, transaction note, and exact debt amount.
 
-See [docs/API.md](docs/API.md) for complete API documentation.
+## Installation
 
-## Database Schema
+Follow these steps to configure and run SplitMate locally on your system.
 
-See [docs/Database.md](docs/Database.md) for schema details.
+### Prerequisites
 
-## Development Status
+- **Node.js**: `v18.0.0` or higher
+- **npm**: `v9.0.0` or higher
+- **Git**: Installed on your system
 
-See [docs/Development.md](docs/Development.md) for current milestone and roadmap.
+### Setup Instructions
+
+1. **Clone the Repository**
+
+   ```bash
+   git clone https://github.com/reck98/SplitMate.git
+   cd SplitMate
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   # Install root dependencies
+   npm install
+
+   # Install backend dependencies
+   cd backend && npm install
+
+   # Install frontend dependencies
+   cd ../frontend && npm install
+
+   # Return to root directory
+   cd ..
+   ```
+
+3. **Configure Environment Variables**
+
+   ```bash
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env
+   ```
+
+4. **Initialize Database**
+
+   ```bash
+   # Generate Drizzle migration files
+   npm run db:generate
+
+   # Apply migrations to database
+   npm run db:migrate
+   ```
+
+5. **Run Development Servers**
+   ```bash
+   npm run dev
+   ```
+   - **Frontend App**: [http://localhost:4321](http://localhost:4321)
+   - **Backend API**: [http://localhost:3000](http://localhost:3000)
+
+## Environment Variables
+
+### Backend Configuration (`backend/.env`)
+
+| Variable                | Purpose                                                 | Required | Example / Default                    |
+| :---------------------- | :------------------------------------------------------ | :------: | :----------------------------------- |
+| `PORT`                  | Port number for Express REST API server                 |   Yes    | `3000`                               |
+| `CLIENT_URL`            | Frontend client URL allowed by CORS policy              |   Yes    | `http://localhost:4321`              |
+| `JWT_SECRET`            | Secret key used for internal JWT signature verification |   Yes    | `your-jwt-secret-key`                |
+| `TURSO_DATABASE_URL`    | Connection URL for Turso / SQLite edge database         |   Yes    | `libsql://your-db.turso.io`          |
+| `TURSO_AUTH_TOKEN`      | Authentication token for database connections           |   Yes    | `your-turso-auth-token`              |
+| `FIREBASE_PROJECT_ID`   | Firebase project ID for token verification              |   Yes    | `your-firebase-project-id`           |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin SDK service account email                |   Yes    | `firebase-adminsdk@...`              |
+| `FIREBASE_PRIVATE_KEY`  | Firebase Admin SDK service account private key          |   Yes    | `"-----BEGIN PRIVATE KEY-----\n..."` |
+
+### Frontend Configuration (`frontend/.env`)
+
+| Variable                      | Purpose                                        | Required | Example / Default              |
+| :---------------------------- | :--------------------------------------------- | :------: | :----------------------------- |
+| `PUBLIC_API_URL`              | Base URL of backend REST API server            |   Yes    | `http://localhost:3000`        |
+| `PUBLIC_FIREBASE_API_KEY`     | Firebase Web API key for client authentication |   Yes    | `AIzaSy...`                    |
+| `PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase Authentication domain host            |   Yes    | `your-project.firebaseapp.com` |
+| `PUBLIC_FIREBASE_PROJECT_ID`  | Firebase project ID for web app initialization |   Yes    | `your-firebase-project-id`     |
+| `PUBLIC_FIREBASE_APP_ID`      | Firebase App ID for web client initialization  |   Yes    | `1:123456789:web:abcdef`       |
+
+## Project Structure
+
+```text
+SplitMate/
+├── assets/                  # Documentation media & hero images
+├── backend/                 # Express API server
+│   └── src/
+│       ├── db/              # Drizzle ORM schema & database client
+│       ├── middleware/      # Auth verification & CORS middleware
+│       ├── routes/          # API route handlers (/auth, /groups, /expenses)
+│       ├── services/        # Business logic & greedy debt settlement engine
+│       ├── types/           # Domain TypeScript types & contracts
+│       └── utils/           # Logger & calculation utilities
+├── docs/                    # Architecture, API & DB documentation
+├── frontend/                # Astro frontend application
+│   └── src/
+│       ├── assets/          # Static UI icons & graphics
+│       ├── components/      # UI components (QR Modal, Expense Card, Forms)
+│       ├── layouts/         # Base layout wrappers
+│       ├── lib/             # API client, SWR cache & Firebase helpers
+│       ├── pages/           # Astro SSR pages & routes
+│       └── styles/          # Design system CSS tokens & Tailwind styles
+├── scripts/                 # Database migration & utility scripts
+├── LICENSE                  # MIT License
+├── package.json             # Root monorepo scripts & dependencies
+└── README.md                # Project README
+```
+
+## Contributing
+
+Contributions are welcome! If you'd like to report a bug, suggest an enhancement, or submit a feature:
+
+1. Fork the repository (`https://github.com/reck98/SplitMate/fork`)
+2. Create a new feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to your branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+Please run code formatting and lint checks (`npm run lint`, `npm run format`) before opening a PR.
 
 ## License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
