@@ -158,4 +158,3 @@ export const expenseSettlements = sqliteTable(
     debtorIdx: index("idx_expense_settlements_debtor_id").on(table.debtor_id),
   }),
 );
-

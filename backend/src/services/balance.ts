@@ -12,7 +12,11 @@ import { getDetailedDebts } from "./settlement.js";
 
 export async function getBalances(
   groupId: string,
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }>;
+): Promise<{
+  balances: BalanceInfo[];
+  simplified_debts: SimplifiedDebt[];
+  rawDebts: DetailedDebt[];
+}>;
 export async function getBalances(
   groupId: string,
   preFetched: {
@@ -20,7 +24,11 @@ export async function getBalances(
     allParticipants: any[];
     groupSettlements: any[];
   },
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }>;
+): Promise<{
+  balances: BalanceInfo[];
+  simplified_debts: SimplifiedDebt[];
+  rawDebts: DetailedDebt[];
+}>;
 export async function getBalances(
   groupId: string,
   preFetched?: {
@@ -28,7 +36,11 @@ export async function getBalances(
     allParticipants: any[];
     groupSettlements: any[];
   },
-): Promise<{ balances: BalanceInfo[]; simplified_debts: SimplifiedDebt[]; rawDebts: DetailedDebt[] }> {
+): Promise<{
+  balances: BalanceInfo[];
+  simplified_debts: SimplifiedDebt[];
+  rawDebts: DetailedDebt[];
+}> {
   const members = await db
     .select({
       user_id: groupMembers.user_id,

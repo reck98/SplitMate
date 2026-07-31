@@ -183,7 +183,12 @@ export const api = {
   settlements: {
     create: (
       groupId: string,
-      data: { payer_id: string; receiver_id: string; amount: number; expense_id?: string },
+      data: {
+        payer_id: string;
+        receiver_id: string;
+        amount: number;
+        expense_id?: string;
+      },
     ) =>
       request(`/groups/${groupId}/settlements`, {
         method: "POST",

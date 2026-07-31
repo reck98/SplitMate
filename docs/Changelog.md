@@ -3,6 +3,7 @@
 ## v1.4.0 (Show QR Payment Modal, Copy VPA, Download QR & SEO Engine)
 
 ### Added & Enhanced
+
 - **Show QR Code Payment Modal**:
   - Replaced legacy browser-dependent UPI deep links (`openUpiApp` / `window.location.href`) with a responsive, in-app **Show QR Payment Modal**.
   - Generated high-resolution, crisp QR codes (`width: 600px`, `errorCorrectionLevel: "M"`) dynamically via `qrcode` package, encoding standard `upi://pay?pa=...&pn=...&am=...&cu=INR&tn=SplitMate Settlement` URIs.
@@ -17,6 +18,7 @@
 ## v1.3.0 (Multi-Payer & Contributor Strike-Through Fix)
 
 ### Fixed
+
 - **Multi-Payer Contributor Strike-Through Bug**:
   - Identified root cause where expense participant rendering evaluated only `p.user_id === exp.paid_by`, assuming a single primary payer and ignoring participants who had settled/contributed towards paying their share of the expense.
   - Enhanced backend `getGroupData` (`backend/src/services/group.ts`) to compute `contributors` array per expense and `is_paid` / `settled` flags per participant based on chronological settlement debt remaining.
@@ -24,12 +26,14 @@
   - Every participant who has contributed or settled their share now displays with strike-through styling (`line-through opacity-75 decoration-2`), working across light and dark themes.
 
 ### Added & Enhanced
+
 - **Contributor Detection Test Suite**:
   - Added `backend/src/__tests__/contributors.test.ts` verifying single-payer, multi-contributor, and fully-settled expense states. Total backend tests passing: 35.
 
 ## v1.2.0 (Equal Split Precision Fix, Grouped Suggested Payments & Payer Strike-Through)
 
 ### Fixed
+
 - **Equal Split Calculation & Remainder Distribution**:
   - Identified root cause in naive floating point division which led to share rounding errors (e.g. ₹9.50 instead of ₹10.00 or loss of ₹0.01 on odd splits).
   - Implemented exact integer-paise remainder distribution in `calculateEqualShares` (`backend/src/utils/split.ts`).
@@ -37,6 +41,7 @@
   - Preserved Custom Split implementation untouched.
 
 ### Added & Enhanced
+
 - **Group Suggested Payments by Counterparty User**:
   - Re-structured Suggested Payments UI on group page to group pending debt obligations by counterparty user (`Akash Singh`, `Aanid A Daz`, etc.).
   - Line items display individual expense titles, dates, and amounts while headers display total accumulated counterparty debt.
@@ -54,11 +59,13 @@
 ## v1.1.0 (Raw Expense Obligations & Suggested Payment Filters)
 
 ### Removed & Replaced
+
 - **Disabled Debt Simplification Algorithm**:
   - Removed graph reduction, net-balance optimization, and third-party debt rerouting algorithms from `backend/src/services/settlement.ts`.
   - SplitMate now preserves exact per-expense debtor-creditor obligations without merging across expenses or transferring debt to unrelated members.
 
 ### Added & Enhanced
+
 - **Database Table for Expense Obligations**:
   - Added `expense_settlements` table (`id`, `expense_id`, `group_id`, `payer_id`, `debtor_id`, `amount`, `settled_amount`, `is_settled`, `created_at`) to track individual obligation records per participant per expense.
   - Added `expense_id` foreign key reference to `settlements` table for targeted single-obligation settlement tracking.

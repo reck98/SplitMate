@@ -2,7 +2,7 @@ import { AppError } from "../middleware/error.js";
 
 /**
  * Calculates equal split shares using integer paise arithmetic and remainder distribution.
- * 
+ *
  * Rounding Policy:
  * 1. Total expense amount is converted to integer paise (`Math.round(amount * 100)`).
  * 2. `baseSharePaise = Math.floor(totalPaise / N)`
@@ -16,7 +16,11 @@ export function calculateEqualShares(
   participantIds: string[],
 ): Array<{ user_id: string; share_amount: number }> {
   const uniqueParticipants = Array.from(
-    new Set(participantIds.filter((id) => typeof id === "string" && id.trim().length > 0)),
+    new Set(
+      participantIds.filter(
+        (id) => typeof id === "string" && id.trim().length > 0,
+      ),
+    ),
   );
 
   if (uniqueParticipants.length === 0) {

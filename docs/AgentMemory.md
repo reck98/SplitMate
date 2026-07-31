@@ -242,6 +242,7 @@ npm run build
 **Completed:** Replaced browser-dependent UPI deep links with an in-app responsive **Show QR Code Payment Modal**, added Copy UPI ID + PNG Download features, integer paise split math, multi-payer strike-through fixes, and full SEO/Lighthouse optimization.
 
 **Key changes:**
+
 - Removed `openUpiApp` / `window.location.href` redirects; replaced all "Pay via UPI" buttons with **Show QR**.
 - Integrated `qrcode` package to dynamically generate 600×600px high-resolution canvas QR codes encoding standard `upi://pay` URIs.
 - Built responsive `#qr-modal` with glassmorphic styling, background scroll lock (`document.body.style.overflow = "hidden"`), ESC key listener, and backdrop click to close.
@@ -252,4 +253,3 @@ npm run build
 - Pushed commits to GitHub `origin/main`.
 
 **Build verification:** ✅ Frontend build (`astro build`, 12 pages) clean, backend build (`tsc`) clean.
-

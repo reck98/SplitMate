@@ -32,16 +32,12 @@
       "indexes": {
         "idx_expense_participants_expense_id": {
           "name": "idx_expense_participants_expense_id",
-          "columns": [
-            "expense_id"
-          ],
+          "columns": ["expense_id"],
           "isUnique": false
         },
         "idx_expense_participants_user_id": {
           "name": "idx_expense_participants_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -50,12 +46,8 @@
           "name": "expense_participants_expense_id_expenses_id_fk",
           "tableFrom": "expense_participants",
           "tableTo": "expenses",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -63,22 +55,15 @@
           "name": "expense_participants_user_id_users_id_fk",
           "tableFrom": "expense_participants",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "expense_participants_expense_id_user_id_pk": {
-          "columns": [
-            "expense_id",
-            "user_id"
-          ],
+          "columns": ["expense_id", "user_id"],
           "name": "expense_participants_expense_id_user_id_pk"
         }
       },
@@ -156,30 +141,22 @@
       "indexes": {
         "idx_expense_settlements_group_id": {
           "name": "idx_expense_settlements_group_id",
-          "columns": [
-            "group_id"
-          ],
+          "columns": ["group_id"],
           "isUnique": false
         },
         "idx_expense_settlements_expense_id": {
           "name": "idx_expense_settlements_expense_id",
-          "columns": [
-            "expense_id"
-          ],
+          "columns": ["expense_id"],
           "isUnique": false
         },
         "idx_expense_settlements_payer_id": {
           "name": "idx_expense_settlements_payer_id",
-          "columns": [
-            "payer_id"
-          ],
+          "columns": ["payer_id"],
           "isUnique": false
         },
         "idx_expense_settlements_debtor_id": {
           "name": "idx_expense_settlements_debtor_id",
-          "columns": [
-            "debtor_id"
-          ],
+          "columns": ["debtor_id"],
           "isUnique": false
         }
       },
@@ -188,12 +165,8 @@
           "name": "expense_settlements_expense_id_expenses_id_fk",
           "tableFrom": "expense_settlements",
           "tableTo": "expenses",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -201,12 +174,8 @@
           "name": "expense_settlements_group_id_groups_id_fk",
           "tableFrom": "expense_settlements",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -214,12 +183,8 @@
           "name": "expense_settlements_payer_id_users_id_fk",
           "tableFrom": "expense_settlements",
           "tableTo": "users",
-          "columnsFrom": [
-            "payer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -227,12 +192,8 @@
           "name": "expense_settlements_debtor_id_users_id_fk",
           "tableFrom": "expense_settlements",
           "tableTo": "users",
-          "columnsFrom": [
-            "debtor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["debtor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -311,16 +272,12 @@
       "indexes": {
         "idx_expenses_group_id": {
           "name": "idx_expenses_group_id",
-          "columns": [
-            "group_id"
-          ],
+          "columns": ["group_id"],
           "isUnique": false
         },
         "idx_expenses_paid_by": {
           "name": "idx_expenses_paid_by",
-          "columns": [
-            "paid_by"
-          ],
+          "columns": ["paid_by"],
           "isUnique": false
         }
       },
@@ -329,12 +286,8 @@
           "name": "expenses_group_id_groups_id_fk",
           "tableFrom": "expenses",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -342,12 +295,8 @@
           "name": "expenses_paid_by_users_id_fk",
           "tableFrom": "expenses",
           "tableTo": "users",
-          "columnsFrom": [
-            "paid_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["paid_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -355,12 +304,8 @@
           "name": "expenses_created_by_users_id_fk",
           "tableFrom": "expenses",
           "tableTo": "users",
-          "columnsFrom": [
-            "created_by"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["created_by"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -396,16 +341,12 @@
       "indexes": {
         "idx_group_members_group_id": {
           "name": "idx_group_members_group_id",
-          "columns": [
-            "group_id"
-          ],
+          "columns": ["group_id"],
           "isUnique": false
         },
         "idx_group_members_user_id": {
           "name": "idx_group_members_user_id",
-          "columns": [
-            "user_id"
-          ],
+          "columns": ["user_id"],
           "isUnique": false
         }
       },
@@ -414,12 +355,8 @@
           "name": "group_members_group_id_groups_id_fk",
           "tableFrom": "group_members",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -427,22 +364,15 @@
           "name": "group_members_user_id_users_id_fk",
           "tableFrom": "group_members",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {
         "group_members_group_id_user_id_pk": {
-          "columns": [
-            "group_id",
-            "user_id"
-          ],
+          "columns": ["group_id", "user_id"],
           "name": "group_members_group_id_user_id_pk"
         }
       },
@@ -490,23 +420,17 @@
       "indexes": {
         "groups_invite_code_unique": {
           "name": "groups_invite_code_unique",
-          "columns": [
-            "invite_code"
-          ],
+          "columns": ["invite_code"],
           "isUnique": true
         },
         "idx_groups_owner_id": {
           "name": "idx_groups_owner_id",
-          "columns": [
-            "owner_id"
-          ],
+          "columns": ["owner_id"],
           "isUnique": false
         },
         "idx_groups_invite_code": {
           "name": "idx_groups_invite_code",
-          "columns": [
-            "invite_code"
-          ],
+          "columns": ["invite_code"],
           "isUnique": false
         }
       },
@@ -515,12 +439,8 @@
           "name": "groups_owner_id_users_id_fk",
           "tableFrom": "groups",
           "tableTo": "users",
-          "columnsFrom": [
-            "owner_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["owner_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -584,30 +504,22 @@
       "indexes": {
         "idx_settlements_group_id": {
           "name": "idx_settlements_group_id",
-          "columns": [
-            "group_id"
-          ],
+          "columns": ["group_id"],
           "isUnique": false
         },
         "idx_settlements_payer_id": {
           "name": "idx_settlements_payer_id",
-          "columns": [
-            "payer_id"
-          ],
+          "columns": ["payer_id"],
           "isUnique": false
         },
         "idx_settlements_receiver_id": {
           "name": "idx_settlements_receiver_id",
-          "columns": [
-            "receiver_id"
-          ],
+          "columns": ["receiver_id"],
           "isUnique": false
         },
         "idx_settlements_expense_id": {
           "name": "idx_settlements_expense_id",
-          "columns": [
-            "expense_id"
-          ],
+          "columns": ["expense_id"],
           "isUnique": false
         }
       },
@@ -616,12 +528,8 @@
           "name": "settlements_group_id_groups_id_fk",
           "tableFrom": "settlements",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -629,12 +537,8 @@
           "name": "settlements_payer_id_users_id_fk",
           "tableFrom": "settlements",
           "tableTo": "users",
-          "columnsFrom": [
-            "payer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["payer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -642,12 +546,8 @@
           "name": "settlements_receiver_id_users_id_fk",
           "tableFrom": "settlements",
           "tableTo": "users",
-          "columnsFrom": [
-            "receiver_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["receiver_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -655,12 +555,8 @@
           "name": "settlements_expense_id_expenses_id_fk",
           "tableFrom": "settlements",
           "tableTo": "expenses",
-          "columnsFrom": [
-            "expense_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["expense_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -739,16 +635,12 @@
       "indexes": {
         "users_firebase_uid_unique": {
           "name": "users_firebase_uid_unique",
-          "columns": [
-            "firebase_uid"
-          ],
+          "columns": ["firebase_uid"],
           "isUnique": true
         },
         "users_email_unique": {
           "name": "users_email_unique",
-          "columns": [
-            "email"
-          ],
+          "columns": ["email"],
           "isUnique": true
         }
       },

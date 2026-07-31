@@ -104,15 +104,15 @@ Recorded settlements between users.
 
 Recorded settlements between users.
 
-| Column      | Type | Constraints                |
-| ----------- | ---- | -------------------------- |
-| id          | text | PRIMARY KEY (UUID)         |
-| group_id    | text | NOT NULL, FK → groups.id   |
-| payer_id    | text | NOT NULL, FK → users.id    |
-| receiver_id | text | NOT NULL, FK → users.id    |
-| amount      | real | NOT NULL                   |
-| expense_id  | text | FK → expenses.id (optional)|
-| created_at  | text | NOT NULL (ISO 8601)        |
+| Column      | Type | Constraints                 |
+| ----------- | ---- | --------------------------- |
+| id          | text | PRIMARY KEY (UUID)          |
+| group_id    | text | NOT NULL, FK → groups.id    |
+| payer_id    | text | NOT NULL, FK → users.id     |
+| receiver_id | text | NOT NULL, FK → users.id     |
+| amount      | real | NOT NULL                    |
+| expense_id  | text | FK → expenses.id (optional) |
+| created_at  | text | NOT NULL (ISO 8601)         |
 
 ---
 

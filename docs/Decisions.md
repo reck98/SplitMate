@@ -764,6 +764,7 @@ Production deployments encountered issues where:
 The previous implementation applied greedy graph optimization (`simplifyDebts`) to minimize group cash flow transactions. However, this behavior rerouted debts through intermediate members and merged debts across multiple unrelated expenses. Users reported that this obscured who owed whom for specific expenses (e.g. Dinner vs Cab vs Snacks).
 
 **Decision:**
+
 1. Disable debt simplification graph reduction across SplitMate.
 2. Calculate and preserve individual raw obligations directly from every expense.
 3. Introduce an `expense_settlements` table in the database to store individual obligation records per participant per expense.
@@ -771,6 +772,7 @@ The previous implementation applied greedy graph optimization (`simplifyDebts`) 
 5. Provide segmented filter tabs (**All**, **You Owe**, **Owed to You**) with count badges in the Suggested Payments UI for enhanced mobile and laptop UX.
 
 **Reasoning:**
+
 - Ensures complete transparency: users see exactly which expense generated a debt and to whom.
 - Prevents unintended debt transfers between unrelated group members.
 - Settling a payment marks only that specific obligation as settled without altering unrelated debts.
@@ -786,6 +788,7 @@ The previous implementation applied greedy graph optimization (`simplifyDebts`) 
 The previous payment flow relied on standard browser deep links (`window.location.href = upi://pay?...`). On various mobile devices and desktop browsers, deep-link handling failed silently, blocked redirects, or gave inconsistent user experiences.
 
 **Decision:**
+
 1. Completely remove `window.location` deep-link redirects and obsolete helper functions (`openUpiApp`).
 2. Replace all "Pay via UPI" buttons with **"Show QR"** buttons across the application.
 3. Implement a centered, responsive **Show QR Code Payment Modal** (`#qr-modal`) with backdrop blur and background scroll prevention (`document.body.style.overflow = "hidden"`).
@@ -794,7 +797,7 @@ The previous payment flow relied on standard browser deep links (`window.locatio
 6. Include a **Download QR** action button generating a scannable PNG file with custom white padding background (`splitmate-payment-{receiver}-{amount}.png`).
 
 **Reasoning:**
+
 - QR codes provide a 100% reliable payment initiation vector compatible with all mobile UPI apps (PhonePe, Google Pay, Paytm, CRED).
 - In-app rendering prevents browser popup blocks and OS redirect failures.
 - Canvas rendering at 600×600px ensures zero blurriness on Retina and high-DPI displays.
-

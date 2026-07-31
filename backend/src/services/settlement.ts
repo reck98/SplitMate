@@ -86,7 +86,8 @@ export function getDetailedDebts(
       );
       if (targetDebt) {
         const applied = Math.min(remaining, targetDebt.amount);
-        targetDebt.amount = Math.round((targetDebt.amount - applied) * 100) / 100;
+        targetDebt.amount =
+          Math.round((targetDebt.amount - applied) * 100) / 100;
         remaining = Math.round((remaining - applied) * 100) / 100;
       }
     }
@@ -170,4 +171,3 @@ export function getDetailedDebts(
 export function simplifyDebts(balances: BalanceInfo[]): SimplifiedDebt[] {
   return [];
 }
-

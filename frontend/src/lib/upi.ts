@@ -15,15 +15,14 @@ export function generateUpiUri(params: UpiParams): string {
     transactionNote = "SplitMate Settlement",
   } = params;
 
-  const queryParts: string[] = [
-    `pa=${encodeURIComponent(payeeAddress)}`,
-  ];
+  const queryParts: string[] = [`pa=${encodeURIComponent(payeeAddress)}`];
 
   if (payeeName && payeeName.trim().length > 0) {
     queryParts.push(`pn=${encodeURIComponent(payeeName.trim())}`);
   }
 
-  const numericAmount = typeof amount === "number" ? amount : parseFloat(amount);
+  const numericAmount =
+    typeof amount === "number" ? amount : parseFloat(amount);
   const formattedAmount = isNaN(numericAmount) ? "0" : numericAmount.toString();
   queryParts.push(`am=${encodeURIComponent(formattedAmount)}`);
   queryParts.push(`cu=${encodeURIComponent(currency)}`);
@@ -36,4 +35,3 @@ export function generateUpiUri(params: UpiParams): string {
 }
 
 export const generateUpiLink = generateUpiUri;
-

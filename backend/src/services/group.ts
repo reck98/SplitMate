@@ -140,7 +140,9 @@ export async function getGroupData(
   });
 
   const expenseData = groupExpenses.map((e) => {
-    const expParticipants = allParticipants.filter((p) => p.expense_id === e.id);
+    const expParticipants = allParticipants.filter(
+      (p) => p.expense_id === e.id,
+    );
     const paidParticipantUserIds: string[] = [e.paid_by];
 
     const enrichedParticipants = expParticipants.map((p) => {

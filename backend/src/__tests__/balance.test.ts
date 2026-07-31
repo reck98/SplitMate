@@ -34,7 +34,12 @@ describe("getDetailedDebts without Debt Simplification", () => {
       { expense_id: "e2", user_id: "B", share_amount: 60 },
     ];
 
-    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
+    const { detailed_debts } = getDetailedDebts(
+      members,
+      expenses,
+      participants,
+      [],
+    );
 
     expect(detailed_debts).toHaveLength(3);
 
@@ -108,9 +113,15 @@ describe("getDetailedDebts without Debt Simplification", () => {
     expect(detailed_debts).toHaveLength(3);
     expect(simplified_debts).toHaveLength(3);
 
-    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
-    const cOwesA = detailed_debts.find((d) => d.expense_id === "e1" && d.debtor_id === "C" && d.payer_id === "A");
-    const cOwesB = detailed_debts.find((d) => d.expense_id === "e2" && d.debtor_id === "C" && d.payer_id === "B");
+    const bOwesA = detailed_debts.find(
+      (d) => d.debtor_id === "B" && d.payer_id === "A",
+    );
+    const cOwesA = detailed_debts.find(
+      (d) => d.expense_id === "e1" && d.debtor_id === "C" && d.payer_id === "A",
+    );
+    const cOwesB = detailed_debts.find(
+      (d) => d.expense_id === "e2" && d.debtor_id === "C" && d.payer_id === "B",
+    );
 
     expect(bOwesA!.amount).toBe(100);
     expect(cOwesA!.amount).toBe(100);
@@ -119,9 +130,27 @@ describe("getDetailedDebts without Debt Simplification", () => {
 
   it("preserves circular debts without cancelling them out", () => {
     const expenses = [
-      { id: "e1", description: "A for B", amount: 100, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
-      { id: "e2", description: "B for C", amount: 100, paid_by: "B", created_at: "2026-07-26T02:00:00Z" },
-      { id: "e3", description: "C for A", amount: 100, paid_by: "C", created_at: "2026-07-26T03:00:00Z" },
+      {
+        id: "e1",
+        description: "A for B",
+        amount: 100,
+        paid_by: "A",
+        created_at: "2026-07-26T01:00:00Z",
+      },
+      {
+        id: "e2",
+        description: "B for C",
+        amount: 100,
+        paid_by: "B",
+        created_at: "2026-07-26T02:00:00Z",
+      },
+      {
+        id: "e3",
+        description: "C for A",
+        amount: 100,
+        paid_by: "C",
+        created_at: "2026-07-26T03:00:00Z",
+      },
     ];
 
     const participants = [
@@ -130,13 +159,24 @@ describe("getDetailedDebts without Debt Simplification", () => {
       { expense_id: "e3", user_id: "A", share_amount: 100 },
     ];
 
-    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
+    const { detailed_debts } = getDetailedDebts(
+      members,
+      expenses,
+      participants,
+      [],
+    );
 
     // Circular debt (A->B 100, B->C 100, C->A 100) must remain as 3 separate obligations!
     expect(detailed_debts).toHaveLength(3);
-    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
-    const cOwesB = detailed_debts.find((d) => d.debtor_id === "C" && d.payer_id === "B");
-    const aOwesC = detailed_debts.find((d) => d.debtor_id === "A" && d.payer_id === "C");
+    const bOwesA = detailed_debts.find(
+      (d) => d.debtor_id === "B" && d.payer_id === "A",
+    );
+    const cOwesB = detailed_debts.find(
+      (d) => d.debtor_id === "C" && d.payer_id === "B",
+    );
+    const aOwesC = detailed_debts.find(
+      (d) => d.debtor_id === "A" && d.payer_id === "C",
+    );
 
     expect(bOwesA!.amount).toBe(100);
     expect(cOwesB!.amount).toBe(100);
@@ -145,7 +185,13 @@ describe("getDetailedDebts without Debt Simplification", () => {
 
   it("handles custom split accurately", () => {
     const expenses = [
-      { id: "e1", description: "Custom Feast", amount: 600, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
+      {
+        id: "e1",
+        description: "Custom Feast",
+        amount: 600,
+        paid_by: "A",
+        created_at: "2026-07-26T01:00:00Z",
+      },
     ];
 
     const participants = [
@@ -154,11 +200,20 @@ describe("getDetailedDebts without Debt Simplification", () => {
       { expense_id: "e1", user_id: "C", share_amount: 300 },
     ];
 
-    const { detailed_debts } = getDetailedDebts(members, expenses, participants, []);
+    const { detailed_debts } = getDetailedDebts(
+      members,
+      expenses,
+      participants,
+      [],
+    );
 
     expect(detailed_debts).toHaveLength(2);
-    const bOwesA = detailed_debts.find((d) => d.debtor_id === "B" && d.payer_id === "A");
-    const cOwesA = detailed_debts.find((d) => d.debtor_id === "C" && d.payer_id === "A");
+    const bOwesA = detailed_debts.find(
+      (d) => d.debtor_id === "B" && d.payer_id === "A",
+    );
+    const cOwesA = detailed_debts.find(
+      (d) => d.debtor_id === "C" && d.payer_id === "A",
+    );
 
     expect(bOwesA!.amount).toBe(200);
     expect(cOwesA!.amount).toBe(300);
@@ -166,9 +221,27 @@ describe("getDetailedDebts without Debt Simplification", () => {
 
   it("only marks the target obligation as settled when debtor settles", () => {
     const expenses = [
-      { id: "e1", description: "Dinner", amount: 200, paid_by: "A", created_at: "2026-07-26T01:00:00Z" },
-      { id: "e2", description: "Cab", amount: 100, paid_by: "A", created_at: "2026-07-26T02:00:00Z" },
-      { id: "e3", description: "Hotel", amount: 150, paid_by: "A", created_at: "2026-07-26T03:00:00Z" },
+      {
+        id: "e1",
+        description: "Dinner",
+        amount: 200,
+        paid_by: "A",
+        created_at: "2026-07-26T01:00:00Z",
+      },
+      {
+        id: "e2",
+        description: "Cab",
+        amount: 100,
+        paid_by: "A",
+        created_at: "2026-07-26T02:00:00Z",
+      },
+      {
+        id: "e3",
+        description: "Hotel",
+        amount: 150,
+        paid_by: "A",
+        created_at: "2026-07-26T03:00:00Z",
+      },
     ];
 
     const participants = [
@@ -179,10 +252,22 @@ describe("getDetailedDebts without Debt Simplification", () => {
 
     // B settles ₹100 specifically for Cab (e2)
     const settlements = [
-      { id: "s1", payer_id: "B", receiver_id: "A", amount: 100, expense_id: "e2", created_at: "2026-07-26T04:00:00Z" },
+      {
+        id: "s1",
+        payer_id: "B",
+        receiver_id: "A",
+        amount: 100,
+        expense_id: "e2",
+        created_at: "2026-07-26T04:00:00Z",
+      },
     ];
 
-    const { detailed_debts } = getDetailedDebts(members, expenses, participants, settlements);
+    const { detailed_debts } = getDetailedDebts(
+      members,
+      expenses,
+      participants,
+      settlements,
+    );
 
     // Cab (e2) is settled and excluded; Dinner (e1 ₹200) and Hotel (e3 ₹150) remain active
     expect(detailed_debts).toHaveLength(2);
@@ -199,4 +284,3 @@ describe("getDetailedDebts without Debt Simplification", () => {
     expect(bCab).toBeUndefined();
   });
 });
-
