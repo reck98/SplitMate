@@ -5,6 +5,7 @@ import icon from "astro-icon";
 import AstroPWA from "@vite-pwa/astro";
 
 export default defineConfig({
+  site: "https://splitmate.app",
   output: "hybrid",
   adapter: node({ mode: "standalone" }),
   integrations: [

@@ -1,0 +1,95 @@
+---
+export interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+export interface Props {
+  items: FAQItem[];
+  idPrefix?: string;
+}
+
+const { items, idPrefix = "faq" } = Astro.props;
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": items.map((item) => ({
+    "@type": "Question",
+    "name": item.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": item.answer,
+    },
+  })),
+};
+---
+
+<div class="space-y-3.5 sm:space-y-4" id={`${idPrefix}-accordion`}>
+  {
+    items.map((item, index) => {
+      const qId = `${idPrefix}-q-${index}`;
+      const aId = `${idPrefix}-a-${index}`;
+      return (
+        <div class="glass-strong rounded-2xl border border-[var(--color-border)] overflow-hidden transition-all duration-200 hover:border-[var(--color-accent-soft)]">
+          <button
+            id={qId}
+            aria-expanded="false"
+            aria-controls={aId}
+            class="w-full p-4 sm:p-5 text-left font-bold text-sm sm:text-base flex justify-between items-center text-[var(--color-text-primary)] faq-toggle min-h-[48px] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] cursor-pointer"
+          >
+            <span>{item.question}</span>
+            <svg
+              class="h-5 w-5 text-[var(--color-accent)] shrink-0 transition-transform duration-200 faq-icon"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            id={aId}
+            role="region"
+            aria-labelledby={qId}
+            class="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed hidden faq-answer"
+          >
+            <p set:html={item.answer} />
+          </div>
+        </div>
+      );
+    })
+  }
+</div>
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(faqSchema)} />
+
+<script>
+  function setupFaqs() {
+    const toggles = document.querySelectorAll(".faq-toggle");
+    toggles.forEach((button) => {
+      button.addEventListener("click", () => {
+        const isExpanded = button.getAttribute("aria-expanded") === "true";
+        const answerId = button.getAttribute("aria-controls");
+        const answerEl = answerId ? document.getElementById(answerId) : null;
+        const icon = button.querySelector(".faq-icon");
+
+        // Toggle state
+        button.setAttribute("aria-expanded", String(!isExpanded));
+        if (answerEl) {
+          answerEl.classList.toggle("hidden", isExpanded);
+        }
+        if (icon) {
+          icon.classList.toggle("rotate-180", !isExpanded);
+        }
+      });
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupFaqs);
+  } else {
+    setupFaqs();
+  }
+</script>

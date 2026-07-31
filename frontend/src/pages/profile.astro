@@ -2,19 +2,15 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GlassCard from "../components/GlassCard.astro";
 import Skeleton from "../components/Skeleton.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 ---
 
-<BaseLayout title="Profile - SplitMate">
-  <main class="mx-auto max-w-2xl px-4 py-6">
+<BaseLayout title="My Profile — SplitMate" description="Manage your account profile, display name, and default UPI VPA." noindex={true}>
+  <div class="mx-auto max-w-2xl px-4 py-6 w-full">
+    <Breadcrumbs items={[{ label: "Dashboard", url: "/dashboard" }, { label: "Profile", url: "/profile" }]} />
     <header class="mb-6 animate-fade-in-down">
-      <a href="/dashboard" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors mb-4">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-        Back to Dashboard
-      </a>
-      <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">Profile</h1>
-      <p class="mt-1 text-sm text-[var(--color-text-secondary)]">Manage your account settings</p>
+      <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">My Profile</h1>
+      <p class="mt-1 text-sm text-[var(--color-text-secondary)]">Manage your display name and payment UPI ID</p>
     </header>
 
     <div id="profile-content" class="space-y-4">
@@ -28,7 +24,7 @@ import Skeleton from "../components/Skeleton.astro";
         </div>
       </GlassCard>
     </div>
-  </main>
+  </div>
 
   <script>
     import { authInit, auth } from "../lib/firebase";

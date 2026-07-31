@@ -5,8 +5,8 @@ import GlassButton from "../components/GlassButton.astro";
 import Skeleton from "../components/Skeleton.astro";
 ---
 
-<BaseLayout title="Dashboard - SplitMate">
-  <main class="mx-auto max-w-2xl px-4 py-6">
+<BaseLayout title="Dashboard — SplitMate" description="Manage your active expense sharing groups, net balances, and pending settlements." noindex={true}>
+  <div class="mx-auto max-w-2xl px-4 py-6 w-full">
     <header class="mb-8 animate-fade-in-down">
       <p id="user-name" class="text-sm font-medium text-[var(--color-accent)]">Loading...</p>
       <h1 class="mt-1 text-3xl font-bold text-[var(--color-text-primary)]">Your Groups</h1>
@@ -61,7 +61,7 @@ import Skeleton from "../components/Skeleton.astro";
         </div>
       </div>
     </section>
-  </main>
+  </div>
 
   <script>
     import { authInit } from "../lib/firebase";

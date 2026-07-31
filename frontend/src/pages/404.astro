@@ -3,22 +3,27 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import GlassButton from "../components/GlassButton.astro";
 ---
 
-<BaseLayout hideNav title="404 - SplitMate">
-  <main class="flex min-h-[100dvh] flex-col items-center justify-center px-4">
+<BaseLayout hideNav title="Page Not Found — SplitMate" description="The page you are looking for does not exist on SplitMate." noindex={true}>
+  <div class="flex flex-1 flex-col items-center justify-center px-4 py-16">
     <div class="w-full max-w-sm animate-fade-in-scale">
-      <div class="glass-strong rounded-glass-xl p-8 text-center">
-        <div class="mb-6">
-          <div class="text-7xl font-bold text-gradient">404</div>
+      <div class="glass-strong rounded-3xl p-8 text-center border border-[var(--color-border)] shadow-2xl">
+        <div class="mb-4">
+          <span class="text-7xl font-extrabold text-gradient">404</span>
         </div>
         <h1 class="mb-2 text-2xl font-bold text-[var(--color-text-primary)]">Page Not Found</h1>
-        <p class="mb-6 text-sm text-[var(--color-text-secondary)]">The page you're looking for doesn't exist.</p>
-        <GlassButton href="/" variant="primary" size="lg">
-          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-          </svg>
-          Go Home
-        </GlassButton>
+        <p class="mb-6 text-sm text-[var(--color-text-secondary)]">The page you're looking for doesn't exist or has been moved.</p>
+        <div class="flex flex-col gap-3">
+          <GlassButton href="/" variant="primary" size="lg">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
+            Go to Homepage
+          </GlassButton>
+          <GlassButton href="/dashboard" variant="secondary" size="md">
+            Go to Dashboard
+          </GlassButton>
+        </div>
       </div>
     </div>
-  </main>
+  </div>
 </BaseLayout>

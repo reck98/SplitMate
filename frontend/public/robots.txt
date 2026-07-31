@@ -1,4 +1,11 @@
 User-agent: *
 Allow: /
 
+# Private & Authenticated App Routes
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /complete-profile
+Disallow: /groups/
+Disallow: /api/
+
 Sitemap: https://splitmate.app/sitemap.xml

@@ -3,17 +3,27 @@ import "../styles/global.css";
 import ThemeToggle from "../components/ThemeToggle.astro";
 import Toast from "../components/Toast.astro";
 import InstallPrompt from "../components/InstallPrompt.astro";
+import SEO from "../components/SEO.astro";
 
 interface Props {
   title?: string;
   description?: string;
+  keywords?: string[];
+  noindex?: boolean;
+  ogImage?: string;
   hideNav?: boolean;
+  structuredData?: Record<string, any> | Record<string, any>[];
 }
 
-const { title = "SplitMate — Smart, Instant & Free Expense Sharing for India", description = "Split group expenses, track balances, and settle debts instantly via UPI with zero payment gateway fees. Crafted for trips, flatmates, and group events.", hideNav = false } = Astro.props;
-
-const canonicalURL = new URL(Astro.url.pathname, "https://splitmate.app");
-const siteImage = "https://splitmate.app/apple-touch-icon.png";
+const {
+  title = "SplitMate — Free Expense Sharing App with UPI QR Settlements",
+  description = "Split group expenses, track balances, and settle debts instantly via UPI with zero payment gateway fees. Crafted for trips, flatmates, and group events in India.",
+  keywords,
+  noindex = false,
+  ogImage,
+  hideNav = false,
+  structuredData,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -33,25 +43,16 @@ const siteImage = "https://splitmate.app/apple-touch-icon.png";
         } catch(e) {}
       })();
     </script>
-    <title>{title}</title>
-    <meta name="description" content={description} />
-    <link rel="canonical" href={canonicalURL} />
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content={canonicalURL} />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={description} />
-    <meta property="og:image" content={siteImage} />
-    <meta property="og:site_name" content="SplitMate" />
-    <meta property="og:locale" content="en_IN" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:url" content={canonicalURL} />
-    <meta name="twitter:title" content={title} />
-    <meta name="twitter:description" content={description} />
-    <meta name="twitter:image" content={siteImage} />
+    <!-- SEO System Component -->
+    <SEO
+      title={title}
+      description={description}
+      keywords={keywords}
+      noindex={noindex}
+      ogImage={ogImage}
+      structuredData={structuredData}
+    />
 
     <!-- PWA & Mobile Web App -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -65,33 +66,20 @@ const siteImage = "https://splitmate.app/apple-touch-icon.png";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-
-    <!-- Structured Data (JSON-LD) -->
-    <script type="application/ld+json" is:inline>
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "SplitMate",
-        "url": "https://splitmate.app",
-        "description": "Smart, instant & free expense sharing application for Indian users with UPI QR Code settlement and real-time live sync.",
-        "applicationCategory": "FinanceApplication",
-        "operatingSystem": "All",
-        "offers": {
-          "@type": "Offer",
-          "price": "0",
-          "priceCurrency": "INR"
-        },
-        "author": {
-          "@type": "Person",
-          "name": "reck98"
-        }
-      }
-    </script>
   </head>
   <body class="flex flex-col min-h-screen">
+    <!-- Skip to main content for Accessibility -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2.5 focus:bg-[var(--color-accent)] focus:text-white focus:font-bold focus:rounded-xl focus:shadow-xl"
+    >
+      Skip to main content
+    </a>
+
     <Toast />
+
     {!hideNav && (
-      <nav class="sticky top-0 z-40 glass-strong border-b border-[var(--color-border)]">
+      <nav aria-label="Main Navigation" class="sticky top-0 z-40 glass-strong border-b border-[var(--color-border)]">
         <div class="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
           <a href="/dashboard" class="flex items-center gap-2 text-lg font-bold">
             <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-accent)] text-white text-sm font-bold">S</span>
@@ -122,9 +110,12 @@ const siteImage = "https://splitmate.app/apple-touch-icon.png";
         </div>
       </nav>
     )}
-    <div class="flex-1">
+
+    <!-- Main Content Landmark -->
+    <main id="main-content" tabindex="-1" class="flex-1 flex flex-col focus:outline-none">
       <slot />
-    </div>
+    </main>
+
     <footer class="mt-auto py-4 border-t border-[var(--color-border)] glass text-center text-xs text-[var(--color-text-tertiary)]">
       <div class="mx-auto max-w-2xl px-4 flex items-center justify-center gap-1">
         <span>Made with ❤️ by</span>

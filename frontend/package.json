@@ -15,6 +15,7 @@
   "dependencies": {
     "@astrojs/check": "^0.7.0",
     "@astrojs/node": "^8.3.0",
+    "@astrojs/sitemap": "^3.7.3",
     "@astrojs/tailwind": "^5.1.0",
     "@iconify-json/lucide": "^1.2.119",
     "@types/qrcode": "^1.5.6",

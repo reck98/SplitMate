@@ -1,0 +1,68 @@
+---
+export interface BreadcrumbItem {
+  label: string;
+  url: string;
+}
+
+export interface Props {
+  items: BreadcrumbItem[];
+}
+
+const { items } = Astro.props;
+
+const siteDomain = "https://splitmate.app";
+
+const schemaItems = [
+  { label: "Home", url: "/" },
+  ...items,
+];
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": schemaItems.map((item, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "name": item.label,
+    "item": item.url.startsWith("http") ? item.url : `${siteDomain}${item.url.startsWith("/") ? "" : "/"}${item.url}`,
+  })),
+};
+---
+
+<nav aria-label="Breadcrumb" class="my-4">
+  <ol class="flex items-center space-x-2 text-xs sm:text-sm text-[var(--color-text-tertiary)] flex-wrap">
+    <li>
+      <a
+        href="/"
+        class="hover:text-[var(--color-accent)] transition-colors font-medium flex items-center gap-1"
+      >
+        <span>Home</span>
+      </a>
+    </li>
+
+    {
+      items.map((item, index) => {
+        const isLast = index === items.length - 1;
+        return (
+          <li class="flex items-center space-x-2">
+            <span class="text-[var(--color-border)] select-none">/</span>
+            {isLast ? (
+              <span class="font-semibold text-[var(--color-text-primary)]" aria-current="page">
+                {item.label}
+              </span>
+            ) : (
+              <a
+                href={item.url}
+                class="hover:text-[var(--color-accent)] transition-colors font-medium"
+              >
+                {item.label}
+              </a>
+            )}
+          </li>
+        );
+      })
+    }
+  </ol>
+</nav>
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(breadcrumbSchema)} />

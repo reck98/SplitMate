@@ -3,7 +3,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import GlassButton from "../components/GlassButton.astro";
 ---
 
-<BaseLayout hideNav title="Complete Profile - SplitMate">
+<BaseLayout hideNav title="Complete Profile — SplitMate" description="Set up your display name and UPI ID." noindex={true}>
   <div id="loading-splash" class="fixed inset-0 z-50 flex items-center justify-center" style="background: var(--color-bg);">
     <div class="flex flex-col items-center gap-3">
       <div class="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-accent)] border-t-transparent"></div>
@@ -11,8 +11,8 @@ import GlassButton from "../components/GlassButton.astro";
     </div>
   </div>
 
-  <div id="profile-content" class="hidden">
-    <main class="flex min-h-[100dvh] flex-col items-center justify-center px-4">
+  <div id="profile-content" class="hidden flex-1 flex flex-col justify-center">
+    <div class="flex flex-1 flex-col items-center justify-center px-4 py-12">
       <div class="w-full max-w-sm animate-fade-in-up">
         <div class="glass-strong rounded-glass-xl p-8">
           <div class="mb-6 text-center">
@@ -54,7 +54,7 @@ import GlassButton from "../components/GlassButton.astro";
           </form>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 
   <script>

@@ -2,17 +2,13 @@
 export const prerender = false;
 
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Breadcrumbs from "../../components/Breadcrumbs.astro";
 ---
 
-<BaseLayout title="Group - SplitMate">
-  <main class="mx-auto max-w-2xl px-4 py-6">
+<BaseLayout title="Group Details — SplitMate" description="Group expenses, balances, and UPI QR settlements." noindex={true}>
+  <div class="mx-auto max-w-2xl px-4 py-6 w-full">
+    <Breadcrumbs items={[{ label: "Dashboard", url: "/dashboard" }, { label: "Group", url: "#" }]} />
     <header class="mb-6 animate-fade-in-down">
-      <a href="/dashboard" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors mb-4">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-        Back to Dashboard
-      </a>
       <div class="flex items-start justify-between gap-4">
         <div>
           <h1 id="group-name" class="text-3xl font-bold text-[var(--color-text-primary)]">Loading...</h1>
@@ -95,7 +91,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       </div>
       <div id="members-list" class="space-y-2"></div>
     </div>
-  </main>
+  </div>
 
   <!-- Debt Settlement Modal -->
   <div id="settlement-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm hidden animate-fade-in">

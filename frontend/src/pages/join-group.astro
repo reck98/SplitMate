@@ -1,17 +1,13 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import GlassButton from "../components/GlassButton.astro";
+import Breadcrumbs from "../components/Breadcrumbs.astro";
 ---
 
-<BaseLayout title="Join Group - SplitMate">
-  <main class="mx-auto max-w-2xl px-4 py-6">
+<BaseLayout title="Join Group — SplitMate" description="Join an existing SplitMate expense sharing group using a 6-digit invite code." noindex={true}>
+  <div class="mx-auto max-w-2xl px-4 py-6 w-full">
+    <Breadcrumbs items={[{ label: "Dashboard", url: "/dashboard" }, { label: "Join Group", url: "/join-group" }]} />
     <header class="mb-6 animate-fade-in-down">
-      <a href="/dashboard" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-accent)] transition-colors mb-4">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-        </svg>
-        Back to Dashboard
-      </a>
       <h1 class="text-3xl font-bold text-[var(--color-text-primary)]">Join Group</h1>
       <p class="mt-1 text-sm text-[var(--color-text-secondary)]">
         Enter the invite code shared by a friend.
@@ -47,7 +43,7 @@ import GlassButton from "../components/GlassButton.astro";
         </GlassButton>
       </form>
     </div>
-  </main>
+  </div>
 
   <script>
     import { api } from "../lib/api";
