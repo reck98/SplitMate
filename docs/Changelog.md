@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.4.0 (Show QR Payment Modal, Copy VPA, Download QR & SEO Engine)
+
+### Added & Enhanced
+- **Show QR Code Payment Modal**:
+  - Replaced legacy browser-dependent UPI deep links (`openUpiApp` / `window.location.href`) with a responsive, in-app **Show QR Payment Modal**.
+  - Generated high-resolution, crisp QR codes (`width: 600px`, `errorCorrectionLevel: "M"`) dynamically via `qrcode` package, encoding standard `upi://pay?pa=...&pn=...&am=...&cu=INR&tn=SplitMate Settlement` URIs.
+  - Sized QR code container responsively across 320px ultra-mobile, tablet (240px), and desktop (280px) breakpoints with zero layout shifts or horizontal scroll.
+  - Implemented **Copy UPI ID** button using Clipboard API with graceful fallback and `UPI ID copied` toast notifications.
+  - Implemented **Download QR** button generating scannable PNG images with white padding background and sanitized filenames (`splitmate-payment-{receiver}-{amount}.png`).
+- **Comprehensive SEO & Lighthouse Optimizations**:
+  - Added Open Graph (`og:*`), Twitter Cards (`twitter:*`), canonical link, and JSON-LD `SoftwareApplication` / `WebApplication` schema markup in `BaseLayout.astro`.
+  - Created `robots.txt` and `sitemap.xml` in `public/`.
+  - Added Google Fonts `display=swap` optimization and touch-target padding across all interactive landing page buttons.
+
 ## v1.3.0 (Multi-Payer & Contributor Strike-Through Fix)
 
 ### Fixed

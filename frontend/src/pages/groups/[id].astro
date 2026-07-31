@@ -146,40 +146,52 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
   <!-- QR Code Payment Modal -->
   <div
     id="qr-modal"
-    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden opacity-0 transition-opacity duration-200"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md hidden opacity-0 transition-opacity duration-200 p-4"
     role="dialog"
     aria-modal="true"
     aria-labelledby="qr-modal-title"
   >
     <div
-      class="relative w-[92%] max-w-sm glass-strong rounded-glass-xl p-6 shadow-2xl border border-[var(--color-border)] text-center max-h-[90vh] overflow-y-auto"
+      class="relative w-[90vw] max-w-[420px] sm:max-w-[480px] md:max-w-[540px] glass-strong rounded-[24px] p-5 sm:p-7 shadow-2xl border border-[var(--color-border)] text-left max-h-[90vh] overflow-y-auto"
       id="qr-modal-container"
     >
-      <!-- Close Button -->
-      <button
-        id="close-qr-modal-btn"
-        type="button"
-        aria-label="Close"
-        class="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+      <!-- Header Bar -->
+      <div class="flex items-center justify-between pb-3.5 border-b border-[var(--color-border)] mb-4">
+        <h3 id="qr-modal-title" class="text-xl sm:text-[22px] font-bold text-[var(--color-text-primary)] tracking-tight">
+          Payment QR
+        </h3>
 
-      <!-- Title -->
-      <h3 id="qr-modal-title" class="text-xl font-extrabold text-[var(--color-text-primary)] mb-5">
-        Pay via UPI
-      </h3>
+        <!-- Red Soft Circular Close Button -->
+        <button
+          id="close-qr-modal-btn"
+          type="button"
+          aria-label="Close payment dialog"
+          class="h-8 w-8 rounded-full flex items-center justify-center bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/80 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 shrink-0 cursor-pointer"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Recipient Information -->
+      <div class="mb-4">
+        <p class="text-xs uppercase font-semibold tracking-wider text-[var(--color-text-tertiary)]">
+          Paying
+        </p>
+        <p id="qr-receiver-name-display" class="text-base sm:text-lg font-semibold text-[var(--color-text-primary)] mt-0.5">
+          -
+        </p>
+      </div>
 
       <!-- QR Code Container -->
-      <div class="flex justify-center my-3 sm:my-4">
-        <div class="p-3 sm:p-4 bg-white rounded-2xl shadow-md border border-gray-100 inline-block max-w-full transition-transform hover:scale-[1.02]">
+      <div class="flex flex-col items-center justify-center my-4">
+        <div class="p-3 bg-white rounded-2xl shadow-md border border-gray-100 inline-block max-w-full">
           <canvas
             id="qr-code-canvas"
-            class="w-[180px] h-[180px] min-[375px]:w-[210px] min-[375px]:h-[210px] sm:w-[250px] sm:h-[250px] md:w-[280px] md:h-[280px] max-w-full aspect-square object-contain block mx-auto"
+            class="w-[200px] h-[200px] min-[380px]:w-[220px] min-[380px]:h-[220px] sm:w-[230px] sm:h-[230px] md:w-[240px] md:h-[240px] max-w-full aspect-square object-contain block mx-auto"
           ></canvas>
-          <div id="qr-no-upi-fallback" class="hidden flex flex-col items-center justify-center w-[180px] h-[180px] min-[375px]:w-[210px] min-[375px]:h-[210px] sm:w-[250px] sm:h-[250px] text-gray-500 p-4">
+          <div id="qr-no-upi-fallback" class="hidden flex flex-col items-center justify-center w-[200px] h-[200px] sm:w-[230px] sm:h-[230px] text-gray-500 p-4">
             <svg class="h-10 w-10 text-amber-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
             </svg>
@@ -187,34 +199,39 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             <span class="text-[11px] text-gray-500 text-center mt-1">Receiver has not configured a UPI ID</span>
           </div>
         </div>
-      </div>
 
-      <!-- UPI ID Section -->
-      <div class="mt-4 text-center">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">
-          UPI ID
-        </p>
-        <p id="qr-upi-id-display" class="mt-0.5 text-sm sm:text-base font-bold text-[var(--color-text-primary)] break-all select-all">
-          -
+        <!-- Instruction Text -->
+        <p class="text-xs text-[var(--color-text-tertiary)] font-medium text-center mt-3">
+          Scan this QR using any UPI app
         </p>
       </div>
 
-      <!-- Amount Section -->
-      <div class="mt-3 text-center">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">
-          Amount
-        </p>
-        <p id="qr-amount-display" class="mt-0.5 text-2xl sm:text-3xl font-black text-[var(--color-accent)]">
-          ₹0.00
-        </p>
+      <!-- Payment Information Compact Elevated Card -->
+      <div class="glass p-4 rounded-xl space-y-3 my-5 border border-[var(--color-border)] bg-[var(--color-bg-secondary)]/40">
+        <div>
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            UPI ID
+          </p>
+          <p id="qr-upi-id-display" class="text-sm sm:text-base font-medium text-[var(--color-text-primary)] break-all select-all mt-0.5">
+            -
+          </p>
+        </div>
+        <div class="border-t border-[var(--color-border)]/60 pt-2.5">
+          <p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+            Amount
+          </p>
+          <p id="qr-amount-display" class="text-2xl sm:text-[32px] font-extrabold text-[var(--color-accent)] leading-tight mt-0.5">
+            ₹0.00
+          </p>
+        </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="mt-6 space-y-2.5">
+      <div class="space-y-3">
         <button
           id="qr-copy-upi-btn"
           type="button"
-          class="w-full flex items-center justify-center gap-2 rounded-glass-lg px-4 py-2.5 text-sm font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition-all duration-150 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full h-11 sm:h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-bold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition-all duration-150 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.75v-6.75a1.125 1.125 0 00-1.125-1.125H16.5" />
@@ -225,7 +242,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         <button
           id="qr-download-btn"
           type="button"
-          class="w-full flex items-center justify-center gap-2 rounded-glass-lg px-4 py-2.5 text-sm font-semibold glass glass-hover text-[var(--color-text-primary)] active:scale-[0.98] transition-all duration-150 border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+          class="w-full h-11 sm:h-12 flex items-center justify-center gap-2 rounded-xl text-sm font-bold glass glass-hover text-[var(--color-text-primary)] active:scale-[0.98] transition-all duration-150 border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -801,6 +818,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const modal = document.getElementById("qr-modal");
       const canvas = document.getElementById("qr-code-canvas") as HTMLCanvasElement;
       const fallback = document.getElementById("qr-no-upi-fallback");
+      const receiverNameDisplay = document.getElementById("qr-receiver-name-display");
       const upiIdDisplay = document.getElementById("qr-upi-id-display")!;
       const amountDisplay = document.getElementById("qr-amount-display")!;
       const copyBtn = document.getElementById("qr-copy-upi-btn") as HTMLButtonElement;
@@ -810,6 +828,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       currentQrReceiverName = receiverName;
       currentQrAmount = amount;
 
+      if (receiverNameDisplay) receiverNameDisplay.textContent = receiverName || "Recipient";
       amountDisplay.textContent = `₹${amount.toFixed(2)}`;
 
       if (upiId && upiId.trim().length > 0) {

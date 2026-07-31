@@ -11,11 +11,11 @@
 
 SplitMate is a lightweight expense-sharing application built specifically for Indian users.
 
-Instead of integrating payment gateways, SplitMate focuses on making expense tracking effortless while allowing users to settle debts through their preferred UPI application using native UPI deep links.
+Instead of integrating payment gateways, SplitMate focuses on making expense tracking effortless while allowing users to settle debts through their preferred UPI application using a responsive Show QR Payment Modal with Copy UPI ID and scannable PNG QR download capabilities.
 
 The product philosophy is:
 
-> **Track expenses. Calculate balances. Launch UPI. Never handle money.**
+> **Track expenses. Calculate balances. Show UPI QR. Never handle money.**
 
 This keeps the product simple, privacy-friendly, and easy to maintain.
 
@@ -28,9 +28,9 @@ This keeps the product simple, privacy-friendly, and easy to maintain.
 - Extremely simple onboarding
 - Google Sign-In only
 - Mobile-first UI
-- One-click UPI payments
+- Show QR Code Payment Modal with 1-click Copy UPI ID and PNG download
 - Split expenses with friends
-- Equal & Custom splits
+- Equal & Custom splits (integer paise accuracy)
 - Minimal number of settlement transactions
 - Fast (<300ms API responses under normal load)
 

@@ -774,3 +774,27 @@ The previous implementation applied greedy graph optimization (`simplifyDebts`) 
 - Ensures complete transparency: users see exactly which expense generated a debt and to whom.
 - Prevents unintended debt transfers between unrelated group members.
 - Settling a payment marks only that specific obligation as settled without altering unrelated debts.
+
+---
+
+## D-013: Show QR Code Payment Modal Architecture & Deep Link Removal
+
+**Date:** 2026-07-31  
+**Status:** Accepted
+
+**Context:**
+The previous payment flow relied on standard browser deep links (`window.location.href = upi://pay?...`). On various mobile devices and desktop browsers, deep-link handling failed silently, blocked redirects, or gave inconsistent user experiences.
+
+**Decision:**
+1. Completely remove `window.location` deep-link redirects and obsolete helper functions (`openUpiApp`).
+2. Replace all "Pay via UPI" buttons with **"Show QR"** buttons across the application.
+3. Implement a centered, responsive **Show QR Code Payment Modal** (`#qr-modal`) with backdrop blur and background scroll prevention (`document.body.style.overflow = "hidden"`).
+4. Dynamically generate high-resolution QR codes (`width: 600px`, `errorCorrectionLevel: "M"`) onto HTML5 `<canvas>` using `qrcode`.
+5. Include a **Copy UPI ID** action button using `navigator.clipboard` (with fallback) and toast notifications.
+6. Include a **Download QR** action button generating a scannable PNG file with custom white padding background (`splitmate-payment-{receiver}-{amount}.png`).
+
+**Reasoning:**
+- QR codes provide a 100% reliable payment initiation vector compatible with all mobile UPI apps (PhonePe, Google Pay, Paytm, CRED).
+- In-app rendering prevents browser popup blocks and OS redirect failures.
+- Canvas rendering at 600×600px ensures zero blurriness on Retina and high-DPI displays.
+

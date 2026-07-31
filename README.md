@@ -7,14 +7,15 @@ Lightweight expense-sharing application built for Indian users. Track expenses, 
 - Google Sign-In via Firebase Authentication
 - Create groups with invite codes
 - Join groups via invite code or link
-- Add expenses with equal or custom splits
+- Add expenses with equal or custom splits (integer paise calculation)
+- Multi-payer contributor tracking with line-item settlement strike-throughs
 - Dynamic balance calculation (never stored)
-- Simplified debt settlement algorithm
-- One-click UPI deep links for payments
+- Greedy debt minimization settlement algorithm
+- Show QR Payment Modal with dynamic UPI URI encoding, 1-click Copy UPI ID, and scannable PNG download
 - Manual & cash settlement recording (modal & inline cash settle)
-- Real-time updates via Server-Sent Events (SSE)
+- Real-time live sync via Server-Sent Events (SSE)
 - Instant SWR client caching (<10ms load time)
-- Mobile-first responsive glassmorphic design
+- Mobile-first responsive glassmorphic PWA design
 
 ## Technology Stack
 
@@ -203,13 +204,13 @@ graph TD
 
     subgraph ExternalServices["🔌 External Services & Protocols"]
         FirebaseAuth["Firebase Authentication<br/>(Google OAuth Provider)"]
-        UPIPay["Native UPI Deep Links<br/>(PhonePe, GPay, Paytm, CRED)"]
+        UPIPay["UPI QR Payment Flow<br/>(PhonePe, GPay, Paytm, CRED)"]
     end
 
     UI -->|"Google OAuth"| FirebaseAuth
     UI -->|"HTTP REST API"| Routes
     UI -->|"SSE Connection"| SSEEngine
-    UI -->|"1-Click Deep Links"| UPIPay
+    UI -->|"Show QR / Copy VPA"| UPIPay
 
     Pages --> APIClient
     APIClient -->|"Bearer Token REST"| Routes

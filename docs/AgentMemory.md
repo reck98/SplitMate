@@ -237,3 +237,19 @@ npm run build
 
 **Build verification:** ✅ Tests pass (`npm test`, 19 passed), backend TypeScript clean (`tsc --noEmit`), frontend build clean (`astro build`).
 
+### 2026-07-31 — Show QR Code Payment Modal & SEO Engine (v1.4.0)
+
+**Completed:** Replaced browser-dependent UPI deep links with an in-app responsive **Show QR Code Payment Modal**, added Copy UPI ID + PNG Download features, integer paise split math, multi-payer strike-through fixes, and full SEO/Lighthouse optimization.
+
+**Key changes:**
+- Removed `openUpiApp` / `window.location.href` redirects; replaced all "Pay via UPI" buttons with **Show QR**.
+- Integrated `qrcode` package to dynamically generate 600×600px high-resolution canvas QR codes encoding standard `upi://pay` URIs.
+- Built responsive `#qr-modal` with glassmorphic styling, background scroll lock (`document.body.style.overflow = "hidden"`), ESC key listener, and backdrop click to close.
+- Implemented **Copy UPI ID** via `navigator.clipboard` with toast confirmation.
+- Implemented **Download QR** saving crisp PNG files with custom white background padding (`splitmate-payment-{receiver}-{amount}.png`).
+- Added `robots.txt`, `sitemap.xml`, Open Graph meta, Twitter Card meta, Canonical links, and JSON-LD `SoftwareApplication` structured data.
+- Optimized Google Fonts (`font-display: swap`) and touch-target padding for 100/100 Lighthouse scores.
+- Pushed commits to GitHub `origin/main`.
+
+**Build verification:** ✅ Frontend build (`astro build`, 12 pages) clean, backend build (`tsc`) clean.
+
