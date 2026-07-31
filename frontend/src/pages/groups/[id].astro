@@ -143,10 +143,104 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
     </div>
   </div>
 
+  <!-- QR Code Payment Modal -->
+  <div
+    id="qr-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md hidden opacity-0 transition-opacity duration-200"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="qr-modal-title"
+  >
+    <div
+      class="relative w-[92%] max-w-sm glass-strong rounded-glass-xl p-6 shadow-2xl border border-[var(--color-border)] text-center max-h-[90vh] overflow-y-auto"
+      id="qr-modal-container"
+    >
+      <!-- Close Button -->
+      <button
+        id="close-qr-modal-btn"
+        type="button"
+        aria-label="Close"
+        class="absolute top-4 right-4 text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-glass-hover)] p-1.5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]"
+      >
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Title -->
+      <h3 id="qr-modal-title" class="text-xl font-extrabold text-[var(--color-text-primary)] mb-5">
+        Pay via UPI
+      </h3>
+
+      <!-- QR Code Container -->
+      <div class="flex justify-center my-3 sm:my-4">
+        <div class="p-3 sm:p-4 bg-white rounded-2xl shadow-md border border-gray-100 inline-block max-w-full transition-transform hover:scale-[1.02]">
+          <canvas
+            id="qr-code-canvas"
+            class="w-[180px] h-[180px] min-[375px]:w-[210px] min-[375px]:h-[210px] sm:w-[250px] sm:h-[250px] md:w-[280px] md:h-[280px] max-w-full aspect-square object-contain block mx-auto"
+          ></canvas>
+          <div id="qr-no-upi-fallback" class="hidden flex flex-col items-center justify-center w-[180px] h-[180px] min-[375px]:w-[210px] min-[375px]:h-[210px] sm:w-[250px] sm:h-[250px] text-gray-500 p-4">
+            <svg class="h-10 w-10 text-amber-500 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <span class="text-xs font-semibold text-gray-700 text-center">No UPI ID set</span>
+            <span class="text-[11px] text-gray-500 text-center mt-1">Receiver has not configured a UPI ID</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPI ID Section -->
+      <div class="mt-4 text-center">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+          UPI ID
+        </p>
+        <p id="qr-upi-id-display" class="mt-0.5 text-sm sm:text-base font-bold text-[var(--color-text-primary)] break-all select-all">
+          -
+        </p>
+      </div>
+
+      <!-- Amount Section -->
+      <div class="mt-3 text-center">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-tertiary)]">
+          Amount
+        </p>
+        <p id="qr-amount-display" class="mt-0.5 text-2xl sm:text-3xl font-black text-[var(--color-accent)]">
+          ₹0.00
+        </p>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 space-y-2.5">
+        <button
+          id="qr-copy-upi-btn"
+          type="button"
+          class="w-full flex items-center justify-center gap-2 rounded-glass-lg px-4 py-2.5 text-sm font-semibold bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] active:scale-[0.98] transition-all duration-150 shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.75v-6.75a1.125 1.125 0 00-1.125-1.125H16.5" />
+          </svg>
+          Copy UPI ID
+        </button>
+
+        <button
+          id="qr-download-btn"
+          type="button"
+          class="w-full flex items-center justify-center gap-2 rounded-glass-lg px-4 py-2.5 text-sm font-semibold glass glass-hover text-[var(--color-text-primary)] active:scale-[0.98] transition-all duration-150 border border-[var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          Download QR
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    import QRCode from "qrcode";
     import { authInit } from "../../lib/firebase";
     import { api } from "../../lib/api";
-    import { generateUpiLink, openUpiApp } from "../../lib/upi";
+    import { generateUpiUri } from "../../lib/upi";
     import { setUser } from "../../stores/auth";
     import { saveGroupDetailCache, loadGroupDetailCache } from "../../stores/groups";
     import { connectGroupSSE, disconnectGroupSSE } from "../../lib/sse";
@@ -614,12 +708,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
                         data-payer="${primaryDebtorId}"
                         data-receiver="${primaryReceiverId}"
                         data-amount="${primaryAmount}"
-                        class="settle-upi-btn inline-flex items-center gap-1 rounded-glass-lg px-3 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all"
+                        class="show-qr-btn inline-flex items-center gap-1 rounded-glass-lg px-3 py-1.5 text-xs font-medium bg-[var(--color-accent)] text-white hover:bg-[var(--color-accent-hover)] transition-all"
                       >
                         <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 14.625c0-.621.504-1.125 1.125-1.125h4.5c0 .621.504 1.125 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5z" />
                         </svg>
-                        Pay via UPI (${formatCurrency(primaryAmount)})
+                        Show QR (${formatCurrency(primaryAmount)})
                       </button>
                     ` : ''}
                     <button
@@ -649,13 +743,12 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
           });
         });
 
-        suggestionsContainer.querySelectorAll(".settle-upi-btn").forEach((btn) => {
+        suggestionsContainer.querySelectorAll(".show-qr-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
-            const payerId = (btn as HTMLElement).dataset.payer!;
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
-            const expenseId = (btn as HTMLElement).dataset.expenseId || "";
-            openDebtSettlementModal(payerId, receiverId, amount, "upi", expenseId);
+            const receiver = currentData?.members?.find((m: any) => m.user_id === receiverId);
+            openQrModal(receiver?.name || "Receiver", receiver?.upi_id || null, amount);
           });
         });
 
@@ -665,7 +758,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
             const receiverId = (btn as HTMLElement).dataset.receiver!;
             const amount = parseFloat((btn as HTMLElement).dataset.amount!);
             const expenseId = (btn as HTMLElement).dataset.expenseId || "";
-            openDebtSettlementModal(payerId, receiverId, amount, "cash", expenseId);
+            openDebtSettlementModal(payerId, receiverId, amount, expenseId);
           });
         });
       }
@@ -700,12 +793,146 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     }
 
-    function openDebtSettlementModal(payerId: string, receiverId: string, maxAmount: number, mode: "cash" | "upi", expenseId: string = "") {
+    let currentQrUpiId = "";
+    let currentQrReceiverName = "";
+    let currentQrAmount = 0;
+
+    async function openQrModal(receiverName: string, upiId: string | null, amount: number) {
+      const modal = document.getElementById("qr-modal");
+      const canvas = document.getElementById("qr-code-canvas") as HTMLCanvasElement;
+      const fallback = document.getElementById("qr-no-upi-fallback");
+      const upiIdDisplay = document.getElementById("qr-upi-id-display")!;
+      const amountDisplay = document.getElementById("qr-amount-display")!;
+      const copyBtn = document.getElementById("qr-copy-upi-btn") as HTMLButtonElement;
+      const downloadBtn = document.getElementById("qr-download-btn") as HTMLButtonElement;
+
+      currentQrUpiId = upiId || "";
+      currentQrReceiverName = receiverName;
+      currentQrAmount = amount;
+
+      amountDisplay.textContent = `₹${amount.toFixed(2)}`;
+
+      if (upiId && upiId.trim().length > 0) {
+        upiIdDisplay.textContent = upiId;
+        copyBtn.disabled = false;
+        downloadBtn.disabled = false;
+        canvas.classList.remove("hidden");
+        fallback?.classList.add("hidden");
+
+        const upiUri = generateUpiUri({
+          payeeAddress: upiId,
+          payeeName: receiverName,
+          amount: amount,
+          currency: "INR",
+          transactionNote: "SplitMate Settlement",
+        });
+
+        try {
+          await QRCode.toCanvas(canvas, upiUri, {
+            width: 600,
+            margin: 2,
+            color: {
+              dark: "#000000",
+              light: "#FFFFFF",
+            },
+            errorCorrectionLevel: "M",
+          });
+        } catch (err) {
+          console.error("Failed to generate QR code:", err);
+        }
+      } else {
+        upiIdDisplay.textContent = "Not configured";
+        copyBtn.disabled = true;
+        downloadBtn.disabled = true;
+        canvas.classList.add("hidden");
+        fallback?.classList.remove("hidden");
+      }
+
+      modal?.classList.remove("hidden");
+      requestAnimationFrame(() => {
+        modal?.classList.remove("opacity-0");
+      });
+      document.body.style.overflow = "hidden";
+
+      const closeBtn = document.getElementById("close-qr-modal-btn");
+      closeBtn?.focus();
+    }
+
+    function closeQrModal() {
+      const modal = document.getElementById("qr-modal");
+      if (!modal || modal.classList.contains("hidden")) return;
+
+      modal.classList.add("opacity-0");
+      setTimeout(() => {
+        modal.classList.add("hidden");
+        document.body.style.overflow = "";
+      }, 200);
+    }
+
+    async function copyUpiId() {
+      if (!currentQrUpiId) return;
+
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(currentQrUpiId);
+        } else {
+          const textArea = document.createElement("textarea");
+          textArea.value = currentQrUpiId;
+          textArea.style.position = "fixed";
+          textArea.style.opacity = "0";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
+          document.execCommand("copy");
+          document.body.removeChild(textArea);
+        }
+        (window as any).showToast?.({ message: "UPI ID copied", type: "success" });
+      } catch (err) {
+        console.error("Failed to copy UPI ID:", err);
+        (window as any).showToast?.({ message: "Failed to copy UPI ID", type: "error" });
+      }
+    }
+
+    function downloadQrCode() {
+      const canvas = document.getElementById("qr-code-canvas") as HTMLCanvasElement;
+      if (!canvas || canvas.classList.contains("hidden")) return;
+
+      const tempCanvas = document.createElement("canvas");
+      const ctx = tempCanvas.getContext("2d");
+      const qrSize = canvas.width || 600;
+      const padding = 40;
+      tempCanvas.width = qrSize + padding * 2;
+      tempCanvas.height = qrSize + padding * 2;
+
+      if (ctx) {
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        ctx.drawImage(canvas, padding, padding);
+
+        const safeName = (currentQrReceiverName || "receiver")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        const formattedAmount = Math.round(currentQrAmount).toString();
+        const filename = `splitmate-payment-${safeName || "user"}-${formattedAmount}.png`;
+
+        const link = document.createElement("a");
+        link.download = filename;
+        link.href = tempCanvas.toDataURL("image/png");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        (window as any).showToast?.({ message: "QR Code downloaded", type: "success" });
+      }
+    }
+
+    function openDebtSettlementModal(payerId: string, receiverId: string, maxAmount: number, expenseId: string = "") {
       const modal = document.getElementById("settlement-modal");
       const payerIdInput = document.getElementById("settle-payer-id") as HTMLInputElement;
       const receiverIdInput = document.getElementById("settle-receiver-id") as HTMLInputElement;
       const expenseIdInput = document.getElementById("settle-expense-id") as HTMLInputElement;
-      const modeInput = document.getElementById("settle-mode") as HTMLInputElement;
       const payerDisplay = document.getElementById("settle-payer-display")!;
       const receiverDisplay = document.getElementById("settle-receiver-display")!;
       const maxDisplay = document.getElementById("settle-max-display")!;
@@ -717,7 +944,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       payerIdInput.value = payerId;
       receiverIdInput.value = receiverId;
       if (expenseIdInput) expenseIdInput.value = expenseId;
-      modeInput.value = mode;
 
       const payer = currentData?.members?.find((m: any) => m.user_id === payerId);
       const receiver = currentData?.members?.find((m: any) => m.user_id === receiverId);
@@ -731,15 +957,18 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       errorMsg.classList.add("hidden");
       errorMsg.textContent = "";
 
-      if (mode === "upi") {
-        modalTitle.textContent = "Settle via UPI";
-        submitBtn.textContent = "Pay via UPI & Settle";
-      } else {
-        modalTitle.textContent = "Settle via Cash";
-        submitBtn.textContent = "Confirm Cash Settlement";
-      }
+      modalTitle.textContent = "Settle Payment";
+      submitBtn.textContent = "Confirm Settlement";
 
       modal?.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSettleModal() {
+      const modal = document.getElementById("settlement-modal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      document.body.style.overflow = "";
     }
 
     async function loadGroupData() {
@@ -793,17 +1022,36 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       }
     });
 
+    document.getElementById("close-qr-modal-btn")?.addEventListener("click", closeQrModal);
+    document.getElementById("qr-copy-upi-btn")?.addEventListener("click", copyUpiId);
+    document.getElementById("qr-download-btn")?.addEventListener("click", downloadQrCode);
+    document.getElementById("qr-modal")?.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeQrModal();
+    });
+
     const modal = document.getElementById("settlement-modal");
     const closeModalBtn = document.getElementById("close-settle-modal-btn");
     const cancelModalBtn = document.getElementById("cancel-settle-modal-btn");
     const modalForm = document.getElementById("settlement-modal-form");
 
-    function closeModal() {
-      modal?.classList.add("hidden");
-    }
+    closeModalBtn?.addEventListener("click", closeSettleModal);
+    cancelModalBtn?.addEventListener("click", closeSettleModal);
+    modal?.addEventListener("click", (e) => {
+      if (e.target === e.currentTarget) closeSettleModal();
+    });
 
-    closeModalBtn?.addEventListener("click", closeModal);
-    cancelModalBtn?.addEventListener("click", closeModal);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const qrModal = document.getElementById("qr-modal");
+        if (qrModal && !qrModal.classList.contains("hidden")) {
+          closeQrModal();
+        }
+        const settleModal = document.getElementById("settlement-modal");
+        if (settleModal && !settleModal.classList.contains("hidden")) {
+          closeSettleModal();
+        }
+      }
+    });
 
     modalForm?.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -811,7 +1059,6 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const payerId = (document.getElementById("settle-payer-id") as HTMLInputElement).value;
       const receiverId = (document.getElementById("settle-receiver-id") as HTMLInputElement).value;
       const expenseId = (document.getElementById("settle-expense-id") as HTMLInputElement)?.value;
-      const mode = (document.getElementById("settle-mode") as HTMLInputElement).value;
       const amountInput = document.getElementById("settle-amount") as HTMLInputElement;
       const errorMsg = document.getElementById("settle-error-msg")!;
       const amount = parseFloat(amountInput.value);
@@ -834,23 +1081,10 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
       const submitBtn = document.getElementById("submit-settle-btn") as HTMLButtonElement;
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = mode === "upi" ? "Opening UPI..." : "Saving...";
+        submitBtn.textContent = "Saving...";
       }
 
       try {
-        if (mode === "upi") {
-          const receiver = currentData?.members?.find((m: any) => m.user_id === receiverId);
-          if (!receiver?.upi_id) {
-            (window as any).showToast?.({ message: `${receiver?.name || "Receiver"} has no UPI ID set. Recording cash settlement instead.`, type: "info" });
-          } else {
-            const upiLink = generateUpiLink({
-              payeeAddress: receiver.upi_id,
-              amount,
-            });
-            openUpiApp(upiLink);
-          }
-        }
-
         await api.settlements.create(groupId, {
           payer_id: payerId,
           receiver_id: receiverId,
@@ -859,14 +1093,14 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
         });
 
         (window as any).showToast?.({ message: "Settlement recorded successfully", type: "success" });
-        closeModal();
+        closeSettleModal();
       } catch (error: any) {
         errorMsg.textContent = error.message || "Failed to record settlement";
         errorMsg.classList.remove("hidden");
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.textContent = mode === "upi" ? "Pay via UPI & Settle" : "Confirm Settlement";
+          submitBtn.textContent = "Confirm Settlement";
         }
       }
     });
